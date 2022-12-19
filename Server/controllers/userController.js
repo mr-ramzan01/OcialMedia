@@ -3,41 +3,41 @@ const userModel = require("../models/userModel.js");
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
+const { options } = require("../routers/userRouter.js");
 dotenv.config();
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
 
 
-async function getUser(req, res, next) {
+async function LoginUser(req, res, next) {
     try {
         // Checking User email
-        let user = await userModel.findOne({ email: req.body.email });
-        if(!user) {
+        let existingUser = await userModel.findOne({ email: req.body.email });
+        if(!existingUser) {
             return res.status(401).send({
                 success: false,
                 message: 'Invalid Credentials'
             })
         }
-        // Hashing Password
-        const passwordMatches = await bcrypt.compare(req.body.password, user.password);
 
+        const passwordMatches = await bcrypt.compare(req.body.password, existingUser.password);
         if(passwordMatches) {
-            // Hashing password
-            const hashPassword = await bcrypt.hash(req.body.password, 10);
-
-            // Creating payload for token
-            const payload = {};
-            payload.email = user.email;
-            payload.id = user._id;
-            payload.password = hashPassword;
 
             // Generating token
-            const token = jwt.sign(payload, jwt_secret_key);
-
-            return res.send({
+            const token = jwt.sign({
+                email: existingUser.email,
+                _id: existingUser._id,
+            }, jwt_secret_key);
+            
+            const options = {
+                expires: new Date(Date.now() + 13 * 60 * 60 * 60* 1000),
+                // maxAge: 500000000,
+                httpOnly: true,
+                // secure: true
+            };
+            res.status(200).cookie("ocialMedia_jwt", token, {...options}).send({
                 success: true,
                 message: 'Login Successfully',
-                token: token
-            });
+            })
         }
         else {
             return res.status(401).send({
@@ -48,12 +48,12 @@ async function getUser(req, res, next) {
     } catch (error) {
         // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
-            status: "Error",
+            success: false,
             message: error.message
         });
     }
 }
-async function postUser(req, res, next) {
+async function SignUPUser(req, res, next) {
     try {
         // Checking User
         let user = await userModel.findOne({ email: req.body.email });
@@ -68,25 +68,31 @@ async function postUser(req, res, next) {
 
         // Creating User
         const newUser = await userModel.create({...req.body, password: hashPassword});
-        const payload = {};
-        payload.email = newUser.email;
-        payload.id = newUser._id;
-        payload.password = hashPassword;
 
         // Generating token
-        const token = jwt.sign(payload, jwt_secret_key);
-        return res.send({
+        const token = jwt.sign({
+            email: newUser.email,
+            _id: newUser._id,
+            password: newUser.password
+        }, jwt_secret_key);
+
+        const options = {
+            expires: new Date(Date.now() + 13 * 60 * 60 * 60* 1000),
+            // maxAge: 500000000,
+            httpOnly: true,
+            // secure: true
+        };
+        res.status(200).cookie("ocialMedia_jwt", token, {...options}).send({
             success: true,
-            message: 'User created successfully',
-            token: token
-        });
+            message: 'Signup successfully',
+        })
     } catch (error) {
         // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
-            status: "Error",
+            success: false,
             message: error.message
         });
     }
 }
 
-module.exports = { postUser, getUser };
+module.exports = { SignUPUser, LoginUser };
