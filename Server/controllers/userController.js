@@ -3,7 +3,6 @@ const userModel = require("../models/userModel.js");
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
-const { options } = require("../routers/userRouter.js");
 dotenv.config();
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
 
@@ -11,7 +10,7 @@ const jwt_secret_key = process.env.JWT_SECRET_KEY;
 async function LoginUser(req, res, next) {
     try {
         // Checking User email
-        let existingUser = await userModel.findOne({ email: req.body.email });
+        let existingUser = await userModel.findOne({ $or: [{email: req.body.emailorusername}, {username: req.body.emailorusername} ] });
         if(!existingUser) {
             return res.status(401).send({
                 success: false,
@@ -53,6 +52,9 @@ async function LoginUser(req, res, next) {
         });
     }
 }
+
+
+
 async function SignUPUser(req, res, next) {
     try {
         // Checking User
@@ -61,6 +63,14 @@ async function SignUPUser(req, res, next) {
             return res.status(403).send({
                 success: false,
                 message: 'User already exists'
+            })
+        }
+        // Checking username
+        let username = await userModel.findOne({ username: req.body.username})
+        if(username) {
+            return res.status(400).send({
+                success: false,
+                message: 'Username already taken'
             })
         }
         // Hashing Password

@@ -1,6 +1,8 @@
-import { Avatar, Box, Button, Container, CssBaseline, FormControl, Checkbox, FormControlLabel, FormHelperText, Grid, Input, InputLabel, Link, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
-// import {LockOutlinedIcon} from '@mui/icons-material';
+import { Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,Link, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
 
+// Bottom copyright
 function Copyright(props) {
   return (
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -17,14 +19,40 @@ function Copyright(props) {
 const theme = createTheme(); 
 
 export const Login = () => {
+  const [data, setData] = useState({emailorusername: '', password: ''});
+  const [passwordError, setPasswordError] = useState({error: false, text: ''});
+  const [emailOrUsername, setEmailOrUsername]  = useState({error: false, text: ''});
+  const navigate = useNavigate();
 
+  // Storing the data on input change
+  const handleChange = (e) => {
+    const {name, value} = e.target;
+    setData({...data, [name]: value});
+  }
+
+  // Submitting the data of user
   const handleSubmit = (event) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    fetch('/users/login', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then((res) => res.json())
+      .then((res) => {
+        if(res.success) {
+          alert(res.message);
+          navigate('/')
+        }
+        else {
+          setEmailOrUsername({...emailOrUsername, error: true, text: 'Invalid email'})
+          setPasswordError({...passwordError, error: true, text: 'Invalid password'})
+        }
+      }).catch((err) => {
+        console.log(err, 'res err');
+      })
   };
 
   return (
@@ -48,16 +76,19 @@ export const Login = () => {
           <Typography sx={{mt: 2}} component="h1" variant="h5">
             Log In
           </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
             <TextField
               margin="normal"
               required
               fullWidth
               id="email"
-              label="Email Address"
-              name="email"
+              label="Username or email"
+              name="emailorusername"
               autoComplete="email"
               autoFocus
+              onChange={handleChange}
+              error={emailOrUsername.error}
+              helperText={emailOrUsername.text}
             />
             <TextField
               margin="normal"
@@ -68,6 +99,9 @@ export const Login = () => {
               type="password"
               id="password"
               autoComplete="current-password"
+              onChange={handleChange}
+              error={passwordError.error}
+              helperText={passwordError.text}
             />
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}

@@ -1,9 +1,11 @@
-import { Avatar, Box, Button, Container, CssBaseline, FormControl, Checkbox, FormControlLabel, FormHelperText, Grid, Input, InputLabel, Link, TextField, ThemeProvider, Typography, createTheme, Alert, AlertTitle } from '@mui/material'
-import { Stack } from '@mui/system';
-import validator from ''
+import {  Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid, Link, TextField, ThemeProvider, Typography, createTheme, InputAdornment, IconButton } from '@mui/material'
+import {MdVisibilityOff} from 'react-icons/md';
+import {MdVisibility} from 'react-icons/md';
+import validator from 'validator'
 import { useState } from 'react';
-// import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useNavigate } from 'react-router-dom'
 
+// Bottom Copyright
 function Copyright(props) {
   return (
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -21,32 +23,35 @@ const theme = createTheme();
 
 export const Signup = () => {
   const [data, setData] = useState({full_name: '', email: '', username: '', password: ''});
-  const [submitError, setSubmitError] = useState(false);
   const [emailError, setEmailError]  = useState({error: false, text: ''});
   const [usernameError, setUsernameError] = useState({error: false, text: ''});
   const [passwordError, setPasswordError] = useState({error: false, text: ''});
+  const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const navigate = useNavigate();
 
+  // Storing the data on every input change
   const handleChange = (e) => {
     const {name, value} = e.target;
     setData({...data, [name]: value});
-    dataValidation();
+    dataValidation(name, value);
   }
 
-  const dataValidation = () => {
-    if(data.email.length > 0) {
-      if(!data.email.includes('@') || !data.email.includes(".")) {
+  // Validation for all input fields
+  const dataValidation = (name, value) => {
+    if(name === 'email' && value.length > 0) {
+      if(!value.includes('@') || !value.includes(".")) {
         setEmailError({...emailError, error: true, text: "Your email address should includes '@' and '.' "})
         return false;
       }
-      else if(data.email[data.email.length-1] === '.' || data.email[data.email.length-1] === '@') {
+      else if(value[value.length-1] === '.' || value[value.length-1] === '@') {
         setEmailError({...emailError, error: true, text: "Your email address should not end with '@' and '.' "})
       }
       else {
         setEmailError({...emailError, error: false, text: ''})
       }
     }
-    if(data.username.length > 0) {
-      if(!data.username.includes('-') && !data.username.includes('_') ) {
+    if(name === 'username' && value.length > 0) {
+      if(!value.includes('-') && !value.includes('_') ) {
         setUsernameError({...usernameError, error: true, text: "username should contain '-' and '_' "})
         return false;
       }
@@ -54,40 +59,58 @@ export const Signup = () => {
         setUsernameError({...usernameError, error: false, text: ''})
       }
     }
-    if(data.password.length > 0) {
-      
+    if(name === 'password' && value.length > 0) {
+      if(validator.isStrongPassword(value, {
+        minLength: 4,
+        minLowercase: 1,
+        minUppercase: 1,
+        minNumbers: 1,
+        minSymbols: 1
+      })) {
+        setPasswordError({...passwordError, error: false, text: ''})
+      }
+      else {
+        setPasswordError({...passwordError, error: true, text: 'Password must includes at least one lowercase, uppercase, numbers and symbols.'})
+        return false;
+      }
     }
     return true;
   }
 
+  // Submit the form 
   const handleSubmit = (event) => {
     event.preventDefault();
-    setSubmitError(true);
-    console.log(data, 'data');
     let validate = dataValidation();
+
+    // If all input fields are valid
     if(validate) {
-      console.log("validation Success");
+      fetch('/users/signup', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+      })
+      .then((res) => res.json())
+      .then((res) => {
+        if(res.success) {
+          alert(res.message);
+          navigate('/')
+        }
+        if(res.message==='Username already taken') {
+          setUsernameError({...usernameError, error: true, text: res.message});
+        }
+        if(res.message==='User already exists') {
+          setEmailError({...emailError, error: true, text: res.message});
+        }
+      }).catch((err) => {
+        console.log(err, 'res err');
+        alert("Someting went wrong!! Internal server error");
+      })
     }
-    // fetch('http://localhost:8080/users/signup', {
-    //   method: 'POST',
-    //   body: JSON.stringify({
-    //     "full_name": "Ramzan2",
-    //     "email": "aa@.com",
-    //     "password": "true",
-    //     "username": "ramzan01"
-    // }),
-    // headers: {
-    //   'Content-Type': 'application/json'
-    // }
-    // }).then((res) => res.json())
-    // .then((res) => {
-    //   console.log(res, 'res data');
-    // }).catch((err) => {
-    //   console.log(err, 'res err');
-    // })
   };
   return (
-    <Box border='1px solid red'>
+    <Box>
      <ThemeProvider theme={theme}>
       <Container component="main" maxWidth="xs">
         <CssBaseline/>
@@ -154,11 +177,20 @@ export const Signup = () => {
                   fullWidth
                   name="password"
                   label="Password"
-                  type="password"
+                  type={passwordVisibility?"text":"password"}
                   id="password"
                   autoComplete="new-password"
                   onChange={handleChange}
-                  inputProps={{minLength: 8}}
+                  inputProps={{minLength: 8,}}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton edge="end" color="primary" onClick={() => setPasswordVisibility(!passwordVisibility)}>
+                          {passwordVisibility?<MdVisibility />: <MdVisibilityOff />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                   error={passwordError.error}
                   helperText={passwordError.text}
                 />
@@ -166,7 +198,7 @@ export const Signup = () => {
               <Grid item xs={12}>
                 <FormControlLabel
                   control={<Checkbox required color="primary" />}
-                  label={<Typography fontSize={14}>I have read all the Terms & Conditions, Privacy Policy, and Cookie Settings</Typography>}
+                  label={<Typography fontSize={14} color='#8d929b'>I have read all the Terms & Conditions, Privacy Policy, and Cookie Settings.</Typography>}
                 />
               </Grid>
             </Grid>
