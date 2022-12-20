@@ -34,7 +34,7 @@ async function LoginUser(req, res, next) {
                 httpOnly: true,
                 // secure: true
             };
-            res.status(200).cookie("ocialMedia_jwt", token, {...options}).send({
+            res.status(200).cookie("ocialMedia_token", token, {...options}).send({
                 success: true,
                 message: 'Login Successfully',
             })
@@ -93,7 +93,7 @@ async function SignUPUser(req, res, next) {
             httpOnly: true,
             // secure: true
         };
-        res.status(200).cookie("ocialMedia_jwt", token, {...options}).send({
+        res.status(200).cookie("ocialMedia_token", token, {...options}).send({
             success: true,
             message: 'Signup successfully',
         })

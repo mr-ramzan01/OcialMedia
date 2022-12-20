@@ -36,12 +36,14 @@ export const Login = () => {
     fetch('/users/login', {
         method: 'POST',
         body: JSON.stringify(data),
+        credentials: 'same-origin',
         headers: {
           'Content-Type': 'application/json'
         }
       })
       .then((res) => res.json())
       .then((res) => {
+        console.log(res);
         if(res.success) {
           alert(res.message);
           navigate('/')
