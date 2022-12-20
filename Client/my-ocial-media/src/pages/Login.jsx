@@ -51,7 +51,8 @@ export const Login = () => {
           setPasswordError({...passwordError, error: true, text: 'Invalid password'})
         }
       }).catch((err) => {
-        console.log(err, 'res err');
+        console.log(err, 'response error');
+        alert('Something went wrong! Internal server error');
       })
   };
 
@@ -117,7 +118,7 @@ export const Login = () => {
             </Button>
             <Grid marginBottom={1} justifyContent='center' container>
               <Grid item>
-                <Link href="/accounts/forgotpassword" color='#000' underline='none' fontSize={13}>
+                <Link href="/accounts/forgot-password" color='#000' underline='none' fontSize={13}>
                   Forgot password?
                 </Link>
               </Grid>

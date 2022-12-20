@@ -1,4 +1,5 @@
 import { Routes, Route } from 'react-router-dom'
+import { CreateNewPassword } from '../pages/CreateNewPassword'
 import { ForgotPassword } from '../pages/ForgotPassword'
 import { Home } from '../pages/Home'
 import { Login } from '../pages/Login'
@@ -11,7 +12,8 @@ export const AllRoutes = () => {
         <Route path='/' element={<Home></Home>}></Route>
         <Route path='/accounts/login' element={<Login></Login>}></Route>
         <Route path='/accounts/signup' element={<Signup/>}></Route>
-        <Route path='/accounts/forgotpassword' element={<ForgotPassword/>}></Route>
+        <Route path='/accounts/forgot-password' element={<ForgotPassword/>}></Route>
+        <Route path='/accounts/forgot-password/create-new-password' element={<CreateNewPassword/>}></Route>
         <Route path='*' element={<NotFound></NotFound>}></Route>
     </Routes>
   )

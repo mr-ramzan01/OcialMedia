@@ -104,8 +104,8 @@ export const Signup = () => {
           setEmailError({...emailError, error: true, text: res.message});
         }
       }).catch((err) => {
-        console.log(err, 'res err');
-        alert("Someting went wrong!! Internal server error");
+        console.log(err, 'response error');
+        alert("Someting went wrong! Internal server error");
       })
     }
   };
