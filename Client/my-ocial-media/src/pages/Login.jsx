@@ -1,6 +1,7 @@
 import { Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,Link, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { AuthContext } from '../context/AuthContext';
 
 // Bottom copyright
 function Copyright(props) {
@@ -22,6 +23,7 @@ export const Login = () => {
   const [data, setData] = useState({emailorusername: '', password: ''});
   const [passwordError, setPasswordError] = useState({error: false, text: ''});
   const [emailOrUsername, setEmailOrUsername]  = useState({error: false, text: ''});
+  const {setIsAuth} = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Storing the data on input change
@@ -45,6 +47,7 @@ export const Login = () => {
       .then((res) => {
         console.log(res);
         if(res.success) {
+          setIsAuth(true);
           alert(res.message);
           navigate('/')
         }
@@ -113,6 +116,7 @@ export const Login = () => {
             <Button
               type="submit"
               fullWidth
+              size='large'
               variant="contained"
               sx={{ mt: 4, mb: 4 }}
             >

@@ -2,8 +2,9 @@ import {  Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,
 import {MdVisibilityOff} from 'react-icons/md';
 import {MdVisibility} from 'react-icons/md';
 import validator from 'validator'
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
+import { AuthContext } from '../context/AuthContext';
 
 // Bottom Copyright
 function Copyright(props) {
@@ -27,6 +28,7 @@ export const Signup = () => {
   const [usernameError, setUsernameError] = useState({error: false, text: ''});
   const [passwordError, setPasswordError] = useState({error: false, text: ''});
   const [passwordVisibility, setPasswordVisibility] = useState(false);
+  const {setIsAuth} = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Storing the data on every input change
@@ -50,6 +52,9 @@ export const Signup = () => {
         setEmailError({...emailError, error: false, text: ''})
       }
     }
+    else {
+      setEmailError({...emailError, error: false, text: ''})
+    }
     if(name === 'username' && value.length > 0) {
       if(!value.includes('-') && !value.includes('_') ) {
         setUsernameError({...usernameError, error: true, text: "username should contain '-' and '_' "})
@@ -58,6 +63,9 @@ export const Signup = () => {
       else {
         setUsernameError({...usernameError, error: false, text: ''})
       }
+    }
+    else {
+      setUsernameError({...usernameError, error: false, text: ''})
     }
     if(name === 'password' && value.length > 0) {
       if(validator.isStrongPassword(value, {
@@ -73,6 +81,9 @@ export const Signup = () => {
         setPasswordError({...passwordError, error: true, text: 'Password must includes at least one lowercase, uppercase, numbers and symbols.'})
         return false;
       }
+    }
+    else {
+      setPasswordError({...passwordError, error: false, text: ''})
     }
     return true;
   }
@@ -94,6 +105,7 @@ export const Signup = () => {
       .then((res) => res.json())
       .then((res) => {
         if(res.success) {
+          setIsAuth(true);
           alert(res.message);
           navigate('/')
         }
@@ -143,6 +155,7 @@ export const Signup = () => {
                   autoFocus
                   inputProps={{minLength: 2}}
                   onChange={handleChange}
+                  
                 />
               </Grid>
               <Grid item xs={12}>
@@ -205,6 +218,7 @@ export const Signup = () => {
             <Button
               type="submit"
               fullWidth
+              size='large'
               variant="contained"
               sx={{ mt: 4, mb: 4 }}
             >

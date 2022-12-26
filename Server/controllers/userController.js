@@ -8,6 +8,27 @@ dotenv.config();
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
 
 
+async function LoggedInUser(req, res, next) {
+    try {
+        console.log(req.user._id, 'req');
+        let user = await userModel.findOne({_id: req.user._id});
+        user = user.toJSON();
+        delete user.password;
+    
+        return res.status(200).send({
+            success: true,
+            message: 'User logged in',
+            data: user
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 async function LoginUser(req, res, next) {
     try {
         // Checking User email
@@ -25,6 +46,7 @@ async function LoginUser(req, res, next) {
             // Generating token
             const token = jwt.sign({
                 email: existingUser.email,
+                username: existingUser.username,
                 _id: existingUser._id,
             }, jwt_secret_key);
             
@@ -83,8 +105,8 @@ async function SignUPUser(req, res, next) {
         // Generating token
         const token = jwt.sign({
             email: newUser.email,
+            username: newUser.username,
             _id: newUser._id,
-            password: newUser.password
         }, jwt_secret_key);
 
         const options = {
@@ -115,7 +137,7 @@ async function forgotPassword(req, res, next) {
             const forgotpasswordAcces = uuidv4();
             await userModel.findByIdAndUpdate(user._id, {$set: { forgotpasswordAcces}}, {new: true})
             return res.cookie("forgot_password_access", forgotpasswordAcces, {
-                expires: new Date(Date.now() + 5*60*1000),
+                expires: new Date(Date.now() + 5*60*1000), // 5 minutes
                 httpOnly: true
             }).status(200).send({
                 success: true,
@@ -161,4 +183,4 @@ async function setForgotPassword(req, res, next) {
 
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser };
