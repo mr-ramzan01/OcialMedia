@@ -1,7 +1,8 @@
-import { Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,Link, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
+import { Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,Link, Divider, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { AuthContext } from '../context/AuthContext';
+import { FcGoogle } from "react-icons/fc";
 
 // Bottom copyright
 function Copyright(props) {
@@ -23,7 +24,7 @@ export const Login = () => {
   const [data, setData] = useState({emailorusername: '', password: ''});
   const [passwordError, setPasswordError] = useState({error: false, text: ''});
   const [emailOrUsername, setEmailOrUsername]  = useState({error: false, text: ''});
-  const {setIsAuth} = useContext(AuthContext);
+  const {setIsAuth, googleRequest} = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Storing the data on input change
@@ -109,19 +110,38 @@ export const Login = () => {
               error={passwordError.error}
               helperText={passwordError.text}
             />
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label={<Typography fontSize={15}>Remember me</Typography>}
-            />
             <Button
               type="submit"
               fullWidth
               size='large'
               variant="contained"
-              sx={{ mt: 4, mb: 4 }}
+              sx={{ mt: 4}}
             >
               Log In
             </Button>
+            <Divider sx={{ mt: 2, mb: 2}}>or</Divider>
+            <Box 
+              sx={{ 
+                mt: 2,
+                mb: 4, 
+                '&:hover': {
+                  boxShadow: 'rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px',
+                  cursor: 'pointer'
+                }
+                }}  
+                height='40px'
+                onClick={googleRequest} 
+                borderRadius={'3px'} 
+                display='flex' 
+                alignItems={'center'} 
+                justifyContent='center' 
+                border='1px solid gray'
+              >
+              <Box display='flex' alignItems={'center'}>
+                <FcGoogle fontSize={'20px'} />
+                <Typography ml='20px'>Continue with Google</Typography>
+              </Box>
+            </Box>
             <Grid marginBottom={1} justifyContent='center' container>
               <Grid item>
                 <Link href="/accounts/forgot-password" color='#000' underline='none' fontSize={13}>

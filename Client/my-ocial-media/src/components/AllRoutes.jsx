@@ -5,17 +5,19 @@ import { Home } from '../pages/Home'
 import { Login } from '../pages/Login'
 import { NotFound } from '../pages/NotFound'
 import { Signup } from '../pages/Signup'
+import { GoogleOauth } from './GoogleOauth'
 import { PrivateRoute } from './PrivateRoute'
 
 export const AllRoutes = () => {
   return (
     <Routes>
         <Route path='/' element={<PrivateRoute><Home/></PrivateRoute>}></Route>
-        <Route path='/accounts/login' element={<Login></Login>}></Route>
+        <Route path='/accounts/login' element={<Login/>}></Route>
         <Route path='/accounts/signup' element={<Signup/>}></Route>
         <Route path='/accounts/forgot-password' element={<ForgotPassword/>}></Route>
+        <Route path='/google_Oauth' element={<GoogleOauth/>}></Route>
         <Route path='/accounts/forgot-password/create-new-password' element={<CreateNewPassword/>}></Route>
-        <Route path='*' element={<NotFound></NotFound>}></Route>
+        <Route path='*' element={<NotFound/>}></Route>
     </Routes>
   )
 }

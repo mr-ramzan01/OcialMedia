@@ -4,13 +4,117 @@ const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
+const { google } = require('googleapis');
+const jwt_decode = require('jwt-decode');
 dotenv.config();
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
+const google_client_id = process.env.GOOGLE_CLIENT_ID;
+const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
+
+
+
+async function getGoogleOAuthTokens(code) {
+    const oauth2Client = new google.auth.OAuth2(
+        google_client_id,
+        google_client_secret,
+      "http://localhost:3000/google_Oauth"
+    );
+    const scopes = [
+      "https://www.googleapis.com/auth/userinfo.profile",
+      "https://www.googleapis.com/auth/userinfo.email",
+    ];
+  
+    oauth2Client.generateAuthUrl({
+      access_type: "offline",
+      scope: scopes,
+    });
+  
+    const { tokens } = await oauth2Client.getToken(code);
+    oauth2Client.setCredentials(tokens);
+    return [
+      oauth2Client.credentials.access_token,
+      oauth2Client.credentials.id_token,
+    ];
+  }
+  
+  async function googleOAuth(req, res){
+    try {
+        const { code } = req.query;
+        const [access_token, id_token] = await getGoogleOAuthTokens(code);
+        const user = jwt_decode(id_token);
+        const options = {
+            expires: new Date(Date.now() + 30*24*60*60*1000),
+            // maxAge: 500000000,
+            httpOnly: true,
+            // secure: true
+        };
+
+        // Checking User
+        let existingUser = await userModel.findOne({ $and: [{ email: user.email},{authType: 'email-password'}] });
+        if(existingUser) {
+            return res.status(403).send({
+                success: false,
+                message: 'User already exists with email and password'
+            })
+        }
+
+        // Checking if user has already signed up before
+        let existingUserWithGoogle = await userModel.findOne({email: user.email})
+        if(existingUserWithGoogle) {
+
+            const token = jwt.sign({
+                email: existingUserWithGoogle.email,
+                username: existingUserWithGoogle.username,
+                _id: existingUserWithGoogle._id,
+            }, jwt_secret_key);
+
+            return res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+                success: true,
+                message: 'Google account has already been signed up' 
+            })
+        }
+        // Creating User
+        const newUser = await userModel.create({
+            full_name: user.name,
+            email: user.email,
+            image: user.picture,
+            authType: 'google',
+            username: user.email.split('@')[0]
+        });
+
+        // Generating token
+        const token = jwt.sign({
+            email: newUser.email,
+            username: newUser.username,
+            _id: newUser._id,
+        }, jwt_secret_key);
+
+        
+        return res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+            success: true,
+            message: 'Google account signed up successfully' 
+        })
+
+    } catch (error) {
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        })
+    }
+  };
+
+
+
+
+
+
+
+
+
 
 
 async function LoggedInUser(req, res, next) {
     try {
-        console.log(req.user._id, 'req');
         let user = await userModel.findOne({_id: req.user._id});
         user = user.toJSON();
         delete user.password;
@@ -80,6 +184,15 @@ async function LoginUser(req, res, next) {
 
 async function SignUPUser(req, res, next) {
     try {
+
+        let existingUser = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'google'}] });
+        if(existingUser) {
+            return res.status(403).send({
+                success: false,
+                message: 'User has already signed up try to continue with google.'
+            })
+        }
+
         // Checking User
         let user = await userModel.findOne({ email: req.body.email });
         if(user) {
@@ -132,7 +245,7 @@ async function SignUPUser(req, res, next) {
 async function forgotPassword(req, res, next) {
     try {
         // Checking user, is it present with that email or not
-        let user = await userModel.findOne({ email: req.body.email });
+        let user = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'email-password'}] });
         if(user) {
             const forgotpasswordAcces = uuidv4();
             await userModel.findByIdAndUpdate(user._id, {$set: { forgotpasswordAcces}}, {new: true})
@@ -183,4 +296,4 @@ async function setForgotPassword(req, res, next) {
 
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth };
