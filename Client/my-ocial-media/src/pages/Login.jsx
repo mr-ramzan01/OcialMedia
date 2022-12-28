@@ -1,4 +1,4 @@
-import { Box, Button, Container, CssBaseline, Checkbox, FormControlLabel, Grid,Link, Divider, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
+import { Box, Button, Container, CssBaseline, Grid,Link, Divider, TextField, ThemeProvider, Typography, createTheme } from '@mui/material'
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { AuthContext } from '../context/AuthContext';
@@ -46,7 +46,6 @@ export const Login = () => {
       })
       .then((res) => res.json())
       .then((res) => {
-        console.log(res);
         if(res.success) {
           setIsAuth(true);
           alert(res.message);

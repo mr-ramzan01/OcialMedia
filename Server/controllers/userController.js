@@ -159,8 +159,9 @@ async function LoginUser(req, res, next) {
                 message: 'Invalid Credentials'
             })
         }
-
+        
         const passwordMatches = await bcrypt.compare(req.body.password, existingUser.password);
+
         if(passwordMatches) {
 
             // Generating token
@@ -309,7 +310,25 @@ async function setForgotPassword(req, res, next) {
         });
     }
 }
+async function searchUser(req, res, next) {
+    try {
+        const {q} = req.query;
+        let users = await userModel.find({$or: [{full_name: {$regex: new RegExp(q, 'i')}},{username: {$regex: new RegExp(q, 'i')}}]})
+        res.send({
+            success: true,
+            message: 'related users',
+            data: users
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser };

@@ -7,7 +7,7 @@ const userSchema = mongoose.Schema(
         image: {type: String, default: ''},
         authType: {type: String, required: true, enum: ['email-password', 'google'] },
         username: {type: String, required: true},
-        password: {type: String, select: false},
+        password: {type: String},
         forgotpasswordAcces: {type: String, required: false}
     },
     {
