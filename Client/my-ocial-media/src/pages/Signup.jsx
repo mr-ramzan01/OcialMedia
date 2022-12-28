@@ -167,6 +167,11 @@ return (
                 fullWidth
                 id="full_name"
                 label="Full Name"
+                InputProps={{
+                  style: {
+                    height: '50px',
+                  }
+                }}
                 autoFocus
                 inputProps={{minLength: 2}}
                 onChange={handleChange}
@@ -181,6 +186,11 @@ return (
                 label="Email Address"
                 name="email"
                 autoComplete="email"
+                InputProps={{
+                  style: {
+                    height: '50px',
+                  }
+                }}
                 onChange={handleChange}
                 error={emailError.error}
                 helperText={emailError.text}
@@ -194,6 +204,11 @@ return (
                 label="Username"
                 name="username"
                 autoComplete="family-name"
+                InputProps={{
+                  style: {
+                    height: '50px',
+                  }
+                }}
                 onChange={handleChange}
                 error={usernameError.error}
                 helperText={usernameError.text}
@@ -218,17 +233,20 @@ return (
                       </IconButton>
                     </InputAdornment>
                   ),
+                  style: {
+                    height: '50px'
+                  }
                 }}
                 error={passwordError.error}
                 helperText={passwordError.text}
               />
             </Grid>
-            <Grid item xs={12}>
+            {/* <Grid item xs={12}>
               <FormControlLabel
                 control={<Checkbox required color="primary" />}
                 label={<Typography fontSize={14} color='#8d929b'>I have read all the Terms & Conditions, Privacy Policy, and Cookie Settings.</Typography>}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
           <Button
             type="submit"
@@ -244,15 +262,19 @@ return (
             sx={{ 
               mt: 2, 
               mb: 4, 
-              '&:hover': {boxShadow: 'rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px',cursor: 'pointer'
-            }}}
-            height='40px'
+              '&:hover': {
+                boxShadow: 'rgba(0, 0, 0, 0.25) 0px 1px 3px',
+                cursor: 'pointer',
+                border: 'none'
+              }
+            }}
+            height='45px'
             onClick={googleRequest}
             borderRadius={'3px'}
             display='flex'
             alignItems={'center'}
             justifyContent='center'
-            border='1px solid gray'
+            border='1px solid #ccc3b7'
             >
             <Box 
               display='flex' 

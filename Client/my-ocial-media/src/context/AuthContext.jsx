@@ -5,24 +5,24 @@ export const AuthContext = createContext();
 export const AuthContextprovider = ({children}) => {
     const [isAuth, setIsAuth] = useState(false);
 
-    const isLoggedIn = () => {
-        fetch('/users/loggedInUser')
-        .then((res) => res.json()) 
-        .then((res) => {
-            if(res.success) {
-                setIsAuth(true);
-            }
-            else {
-                setIsAuth(false);
-            }
-            // console.log(res, 'res')
-        })
-        .catch((err) => {
-            // console.log(err, 'err');
-            setIsAuth(false);
-        })
-    }
-    isLoggedIn();
+    // const isLoggedIn = () => {
+    //     fetch('/users/loggedInUser')
+    //     .then((res) => res.json()) 
+    //     .then((res) => {
+    //         if(res.success) {
+    //             setIsAuth(true);
+    //         }
+    //         else {
+    //             setIsAuth(false);
+    //         }
+    //         console.log(res, 'res')
+    //     })
+    //     .catch((err) => {
+    //         // console.log(err, 'err');
+    //         setIsAuth(false);
+    //     })
+    // }
+    // isLoggedIn();
 
     const googleRequest = () => {
 

@@ -5,10 +5,10 @@ import { Login } from '../pages/Login';
 import { useNavigate } from 'react-router-dom';
 
 export const PrivateRoute = ({children}) => {
-    const {isAuth, setIsAuth} = useContext(AuthContext);
-    const navigate = useNavigate();
+    // const {isAuth, setIsAuth} = useContext(AuthContext);
+    // const navigate = useNavigate();
     // if(!isAuth) {
-    //     // console.log("before fetch")
+    //     console.log("before fetch")
     //     return <Navigate to='/accounts/login'/>
     // }
     return children;

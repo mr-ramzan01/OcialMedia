@@ -1,8 +1,6 @@
-import { CircularProgress } from '@mui/material';
-import { Box } from '@mui/system';
-import React, { useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { Loader } from './Loader';
 
 export const GoogleOauth = () => {
     const navigate = useNavigate();
@@ -14,7 +12,6 @@ export const GoogleOauth = () => {
         fetch(`/users/google_Oauth?code=${params.get('code')}`)
         .then((res) => res.json())
         .then((res) => {
-            console.log(res, 'google res')
             if(res.success) {
                 navigate('/');
             }
@@ -34,8 +31,6 @@ export const GoogleOauth = () => {
         })
     },[])
   return (
-    <Box height='100vh'  display={'flex'} alignItems='center' justifyContent={'center'} >
-      <CircularProgress sx={{color: '#000000'}} size={80}/>
-    </Box>
+    <Loader/>
   )
 }

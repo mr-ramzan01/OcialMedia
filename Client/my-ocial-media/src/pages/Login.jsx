@@ -92,6 +92,11 @@ export const Login = () => {
               label="Username or email"
               name="emailorusername"
               autoComplete="email"
+              InputProps={{
+                style: {
+                  height: '50px',
+                }
+              }}
               autoFocus
               onChange={handleChange}
               error={emailOrUsername.error}
@@ -106,6 +111,11 @@ export const Login = () => {
               type="password"
               id="password"
               autoComplete="current-password"
+              InputProps={{
+                style: {
+                  height: '50px',
+                }
+              }}
               onChange={handleChange}
               error={passwordError.error}
               helperText={passwordError.text}
@@ -125,18 +135,19 @@ export const Login = () => {
                 mt: 2,
                 mb: 4, 
                 '&:hover': {
-                  boxShadow: 'rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px',
-                  cursor: 'pointer'
+                  boxShadow: 'rgba(0, 0, 0, 0.25) 0px 1px 3px',
+                  cursor: 'pointer',
+                  border: 'none'
                 }
-                }}  
-                height='40px'
-                onClick={googleRequest} 
-                borderRadius={'3px'} 
-                display='flex' 
-                alignItems={'center'} 
-                justifyContent='center' 
-                border='1px solid gray'
-              >
+              }}  
+              height='45px'
+              onClick={googleRequest} 
+              borderRadius={'3px'} 
+              display='flex' 
+              alignItems={'center'} 
+              justifyContent='center' 
+              border='1px solid #ccc3b7'
+            >
               <Box display='flex' alignItems={'center'}>
                 <FcGoogle fontSize={'20px'} />
                 <Typography ml='20px'>Continue with Google</Typography>

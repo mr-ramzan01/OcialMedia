@@ -13,6 +13,50 @@ const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
 
 
 
+async function LoggedOutUser(req, res, next) {
+    try {
+        res.cookie('ocialMedia_token', null, {
+            expires: new Date(Date.now()),
+            httpOnly: true,
+        })
+        return res.status(200).send({
+            success: true,
+            message: 'user logged out successfully'
+        })
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+
+async function LoggedInUser(req, res, next) {
+    try {
+        let user = await userModel.findOne({_id: req.user._id});
+        user = user.toJSON();
+        delete user.password;
+    
+        return res.status(200).send({
+            success: true,
+            message: 'User logged in',
+            data: user
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+
 async function getGoogleOAuthTokens(code) {
     const oauth2Client = new google.auth.OAuth2(
         google_client_id,
@@ -105,34 +149,6 @@ async function getGoogleOAuthTokens(code) {
 
 
 
-
-
-
-
-
-
-
-
-async function LoggedInUser(req, res, next) {
-    try {
-        let user = await userModel.findOne({_id: req.user._id});
-        user = user.toJSON();
-        delete user.password;
-    
-        return res.status(200).send({
-            success: true,
-            message: 'User logged in',
-            data: user
-        })
-        
-    } catch (error) {
-        // return next(new ErrorHandler(error, 500));
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
-    }
-}
 async function LoginUser(req, res, next) {
     try {
         // Checking User email
@@ -296,4 +312,4 @@ async function setForgotPassword(req, res, next) {
 
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser };

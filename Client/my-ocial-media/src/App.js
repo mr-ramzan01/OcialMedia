@@ -1,11 +1,11 @@
-import { useContext, useEffect, useState } from 'react';
 import './App.css';
 import { AllRoutes } from './components/AllRoutes';
-import { AuthContext } from './context/AuthContext';
+import { LeftSideBar } from './components/LeftSideBar';
 
 function App() {
   return (
     <div className="App">
+      {/* <LeftSideBar/> */}
       <AllRoutes/>
     </div>
   );
