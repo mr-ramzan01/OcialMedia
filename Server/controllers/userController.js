@@ -37,8 +37,6 @@ async function LoggedOutUser(req, res, next) {
 async function LoggedInUser(req, res, next) {
     try {
         let user = await userModel.findOne({_id: req.user._id});
-        user = user.toJSON();
-        delete user.password;
     
         return res.status(200).send({
             success: true,
@@ -152,7 +150,7 @@ async function getGoogleOAuthTokens(code) {
 async function LoginUser(req, res, next) {
     try {
         // Checking User email
-        let existingUser = await userModel.findOne({ $or: [{email: req.body.emailorusername}, {username: req.body.emailorusername} ] });
+        let existingUser = await userModel.findOne({ $or: [{email: req.body.emailorusername}, {username: req.body.emailorusername} ] }).select("+password");
         if(!existingUser) {
             return res.status(401).send({
                 success: false,
@@ -313,7 +311,7 @@ async function setForgotPassword(req, res, next) {
 async function searchUser(req, res, next) {
     try {
         const {q} = req.query;
-        let users = await userModel.find({$or: [{full_name: {$regex: new RegExp(q, 'i')}},{username: {$regex: new RegExp(q, 'i')}}]})
+        let users = await userModel.find({$or: [{full_name: {$regex: new RegExp(q, 'i')}},{username: {$regex: new RegExp(q, 'i')}}]}).limit(50);
         res.send({
             success: true,
             message: 'related users',
@@ -328,7 +326,31 @@ async function searchUser(req, res, next) {
         });
     }
 }
+async function getUser(req, res, next) {
+    try {
+        let {username} = req.params;
+
+        let  user = await userModel.findOne({ username: username });
+        if(!user) {
+            return res.status(404).send({
+                success: false,
+                message: 'User not found'
+            })
+        }
+        return res.send({
+            success: true,
+            message: 'User data',
+            data: user
+        })
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser };

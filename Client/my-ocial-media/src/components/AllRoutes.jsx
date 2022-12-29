@@ -11,6 +11,7 @@ import { Profile } from '../pages/Profile'
 import { Search } from '../pages/Search'
 import { Settings } from '../pages/Settings'
 import { Signup } from '../pages/Signup'
+import { User } from '../pages/User'
 import { GoogleOauth } from './GoogleOauth'
 import { PrivateRoute } from './PrivateRoute'
 
@@ -29,6 +30,7 @@ export const AllRoutes = () => {
         <Route path='/notifications' element={<PrivateRoute><Notifications/></PrivateRoute>}></Route>
         <Route path='/profile' element={<PrivateRoute><Profile/></PrivateRoute>}></Route>
         <Route path='/settings' element={<PrivateRoute><Settings/></PrivateRoute>}></Route>
+        <Route path='/:username' element={<PrivateRoute><User/></PrivateRoute>}></Route>
         <Route path='*' element={<NotFound/>}></Route>
     </Routes>
   )

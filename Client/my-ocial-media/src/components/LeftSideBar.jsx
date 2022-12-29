@@ -1,5 +1,5 @@
 import { Avatar, Badge, Box, Button, Dialog, DialogActions, DialogTitle, Link, Stack, Typography } from '@mui/material'
-import React from 'react'
+import { useEffect, useState } from 'react'
 import { AiFillHome, AiOutlineMessage } from "react-icons/ai";
 import { BsSearch, BsSuitHeart } from "react-icons/bs";
 import { MdOutlineExplore } from "react-icons/md";
@@ -8,7 +8,8 @@ import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
 
 
 export const LeftSideBar = () => {
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = useState(false);
+    const [userData, setUserData] = useState({});
 
     const logout = () => {
         setOpen(false);
@@ -26,6 +27,19 @@ export const LeftSideBar = () => {
     const handleClose = () => {
         setOpen(false);
     };
+
+    useEffect(() => {
+        fetch('/users/loggedInUser')
+        .then((res) => res.json()) 
+        .then((res) => {
+            if(res.success) {
+                setUserData(res.data);
+            }
+        })
+        .catch((err) => {
+            console.log(err, 'err');
+        })
+    },[]);
 
   return (
     <>
@@ -172,7 +186,7 @@ export const LeftSideBar = () => {
                 alignItems={'center'}
                 // border='1px solid red'
             >
-                <Avatar src='' sx={{width:'25px', height:'25px'}}/>
+                <Avatar src={userData.image} sx={{width:'25px', height:'25px'}}/>
                 <Typography ml='15px'>Profile</Typography>
             </Link>
             <Link 

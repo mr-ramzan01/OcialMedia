@@ -3,6 +3,7 @@ import {
   Divider,
   IconButton,
   InputBase,
+  Link,
   Paper,
   Stack,
   Typography,
@@ -91,19 +92,20 @@ export const Search = () => {
               >
                 <Box sx={{ p: "5px 10px"}}>
                   {users.map((el) => (
-                    <Stack
-                      padding="5px 10px"
-                      sx={{cursor: 'pointer'}}
-                      key={el._id}
-                      alignItems="center"
-                      direction={"row"}
-                    >
-                      <Avatar sx={{ mr: "30px" }} src={el.image} />
-                      <Box>
-                        <Typography fontSize='20px' fontWeight={600} fontFamily={"'Dancing Script', cursive"}>{el.username}</Typography>
-                        <Typography color='#8d929b'>{el.full_name}</Typography>
-                      </Box>
-                    </Stack>
+                    <Link href={`/${el.username}`} key={el._id} underline='none' color='#000'>
+                      <Stack
+                        padding="5px 10px"
+                        sx={{cursor: 'pointer'}}
+                        alignItems="center"
+                        direction={"row"}
+                      >
+                        <Avatar sx={{ mr: "30px" }} src={el.image} />
+                        <Box>
+                          <Typography fontSize='20px' fontWeight={600} fontFamily={"'Dancing Script', cursive"}>{el.username}</Typography>
+                          <Typography color='#8d929b'>{el.full_name}</Typography>
+                        </Box>
+                      </Stack>
+                    </Link>
                   ))}
                 </Box>
               </Paper>
