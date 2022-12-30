@@ -95,11 +95,26 @@ export const ForgotPassword = () => {
                   margin="normal"
                   required
                   fullWidth
+                  sx={{
+                    '& .MuiOutlinedInput-root': { 
+                      '&:hover fieldset': {
+                          borderColor: '#0066ff', 
+                      },
+                      '&.Mui-focused fieldset': {
+                          borderColor: '#129ffd',
+                      },
+                    },
+                  }}
                   id="email"
                   label="Enter email address"
                   name="email"
                   autoComplete="email"
                   autoFocus
+                  InputProps={{
+                    style: {
+                      height: '50px',
+                    }
+                  }}
                   onChange={handleChange}
                   error={emailError.error}
                   helperText={emailError.text}
@@ -107,8 +122,16 @@ export const ForgotPassword = () => {
                 <Button
                   type="submit"
                   fullWidth
+                  size='large'
                   variant="contained"
-                  sx={{ mt: 4, mb: 4 }}
+                  sx={{ 
+                    mt: 4, 
+                    mb: 4,
+                    background: '#129ffd',
+                    '&:hover': {
+                      background: '#0066ff'
+                    }
+                  }}
                 >
                   Confirm
                 </Button>

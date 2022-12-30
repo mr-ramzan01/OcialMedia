@@ -111,7 +111,7 @@ export const Search = () => {
               </Paper>
             ) : (
               <Box height={'85vh'}  display='flex' justifyContent={'center'} alignItems='center'>
-                <img src="/Images/paint.gif" alt="" />
+                <img src="/Images/paint.gif" alt="search gif" />
               </Box>
             )}
           </Box>

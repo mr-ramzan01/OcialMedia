@@ -116,6 +116,16 @@ export const CreateNewPassword = () => {
               margin="normal"
               required
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': { 
+                  '&:hover fieldset': {
+                      borderColor: '#0066ff', 
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#129ffd',
+                  },
+                },
+              }}
               name="password1"
               label="Set Password"
               type={passwordVisibility1?"text":"password"}
@@ -133,6 +143,9 @@ export const CreateNewPassword = () => {
                     </IconButton>
                   </InputAdornment>
                 ),
+                style: {
+                  height: '50px'
+                }
               }}
               error={passwordError1.error}
               helperText={passwordError1.text}
@@ -141,6 +154,16 @@ export const CreateNewPassword = () => {
               margin="normal"
               required
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': { 
+                  '&:hover fieldset': {
+                      borderColor: '#0066ff', 
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#129ffd',
+                  },
+                },
+              }}
               name="password2"
               label="Confirm Password"
               type={passwordVisibility2?"text":"password"}
@@ -155,6 +178,9 @@ export const CreateNewPassword = () => {
                     </IconButton>
                   </InputAdornment>
                 ),
+                style: {
+                  height: '50px'
+                }
               }}
               inputProps={{
                 minLength: 8
@@ -165,25 +191,19 @@ export const CreateNewPassword = () => {
             <Button
               type="submit"
               fullWidth
+              size='large'
               variant="contained"
-              sx={{ mt: 4, mb: 4 }}
+              sx={{ 
+                mt: 4, 
+                mb: 4,
+                background: '#129ffd',
+                '&:hover': {
+                  background: '#0066ff'
+                }
+              }}
             >
               Change password
             </Button>
-            {/* <Grid marginBottom={1} justifyContent='center' container>
-              <Grid item>
-                <Link href="/accounts/signup" color='#000' underline='none' fontSize={13}>
-                  create new account
-                </Link>
-              </Grid>
-            </Grid>
-            <Grid justifyContent='center' container>
-              <Grid item>
-                <Link href="/accounts/login" underline='hover' fontSize={13}>
-                  {"Back to Login"}
-                </Link>
-              </Grid>
-            </Grid> */}
           </Box>
         </Box>
         {/* <Copyright sx={{ mt: 4, mb: 2 }} /> */}

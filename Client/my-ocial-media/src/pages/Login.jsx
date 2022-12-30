@@ -87,6 +87,16 @@ export const Login = () => {
               margin="normal"
               required
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': { 
+                  '&:hover fieldset': {
+                      borderColor: '#0066ff', 
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#129ffd',
+                  },
+                },
+              }}
               id="email"
               label="Username or email"
               name="emailorusername"
@@ -105,6 +115,16 @@ export const Login = () => {
               margin="normal"
               required
               fullWidth
+              sx={{
+                '& .MuiOutlinedInput-root': { 
+                  '&:hover fieldset': {
+                      borderColor: '#0066ff', 
+                  },
+                  '&.Mui-focused fieldset': {
+                      borderColor: '#129ffd',
+                  },
+                },
+              }}
               name="password"
               label="Password"
               type="password"
@@ -124,7 +144,13 @@ export const Login = () => {
               fullWidth
               size='large'
               variant="contained"
-              sx={{ mt: 4}}
+              sx={{
+                mt: 4,
+                background: '#129ffd',
+                '&:hover': {
+                  background: '#0066ff'
+                }
+              }}
             >
               Log In
             </Button>

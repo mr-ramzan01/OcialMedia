@@ -5,6 +5,7 @@ export const AuthContext = createContext();
 export const AuthContextprovider = ({children}) => {
     const [isAuth, setIsAuth] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [userData, setUserData] = useState({});
 
     const isLoggedIn = () => {
         setIsLoading(true);
@@ -30,6 +31,19 @@ export const AuthContextprovider = ({children}) => {
         isLoggedIn();
     },[]);
 
+    const getUser = () => {
+        fetch('/users/loggedInUser')
+        .then((res) => res.json()) 
+        .then((res) => {
+            if(res.success) {
+                setUserData(res.data);
+            }
+        })
+        .catch((err) => {
+            console.log(err, 'err');
+        })
+    }
+
     const googleRequest = () => {
 
         const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -45,5 +59,5 @@ export const AuthContextprovider = ({children}) => {
 
         window.location = `${rootUrl}?redirect_uri=${redirect_uri}&client_id=${client_id}&access_type=${access_type}&response_type=${response_type}&prompt=${prompt}&scope=${scope}`
     }
-    return <AuthContext.Provider value={{isAuth, isLoading, setIsAuth, googleRequest, isLoggedIn}}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={{isAuth, isLoading, userData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
 }

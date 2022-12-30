@@ -4,6 +4,7 @@ const morgan = require('morgan');
 const handleError = require('./middlewares/Error.js');
 const cookieParser = require('cookie-parser');
 const userRouter = require('./routers/userRouter.js');
+const followRouter = require('./routers/followRouter.js');
 
 
 const app = express();
@@ -20,7 +21,7 @@ app.get('/', (req, res) => {
   }
 })
 app.use('/users', userRouter);
-
+app.use('/follows', followRouter);
 
 
 app.use(handleError);

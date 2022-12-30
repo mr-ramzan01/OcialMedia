@@ -5,16 +5,16 @@ import { useEffect } from 'react'
 export const Home = () => {
 
   useEffect(() => {
-    fetch('/users/loggedInUser')
-    .then((res) => res.json()) 
-    .then((res) => {
-        if(res.success) {
-          console.log('ers',res)
-        }
-    })
-    .catch((err) => {
-        console.log(err, 'err');
-    })
+    // fetch('/users/loggedInUser')
+    // .then((res) => res.json()) 
+    // .then((res) => {
+    //     if(res.success) {
+    //       console.log('ers',res)
+    //     }
+    // })
+    // .catch((err) => {
+    //     console.log(err, 'err');
+    // })
   },[]);
 
   

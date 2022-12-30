@@ -1,15 +1,16 @@
 import { Avatar, Badge, Box, Button, Dialog, DialogActions, DialogTitle, Link, Stack, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { AiFillHome, AiOutlineMessage } from "react-icons/ai";
 import { BsSearch, BsSuitHeart } from "react-icons/bs";
 import { MdOutlineExplore } from "react-icons/md";
 import { IoSettingsOutline, IoLogOutOutline } from "react-icons/io5";
+import { AuthContext } from '../context/AuthContext';
 
 
 
 export const LeftSideBar = () => {
     const [open, setOpen] = useState(false);
-    const [userData, setUserData] = useState({});
+    const { userData, getUser } = useContext(AuthContext);
 
     const logout = () => {
         setOpen(false);
@@ -29,16 +30,7 @@ export const LeftSideBar = () => {
     };
 
     useEffect(() => {
-        fetch('/users/loggedInUser')
-        .then((res) => res.json()) 
-        .then((res) => {
-            if(res.success) {
-                setUserData(res.data);
-            }
-        })
-        .catch((err) => {
-            console.log(err, 'err');
-        })
+        getUser();
     },[]);
 
   return (
@@ -242,9 +234,9 @@ export const LeftSideBar = () => {
         <DialogTitle fontSize={'15px'} id="alert-dialog-title">
           {"Are you sure you want to logout?"}
         </DialogTitle>
-        <DialogActions>
-          <Button sx={{fontSize: '12px'}} size='small' onClick={handleClose}>Cancel</Button>
-          <Button sx={{fontSize: '12px'}} size='small' color='error' onClick={logout}>
+        <DialogActions sx={{padding: '10px 20px'}}>
+          <Button sx={{fontSize: '12px', color: 'gray', '&:hover': {background: 'none'}}} size='small' onClick={handleClose}>Cancel</Button>
+          <Button sx={{fontSize: '12px', color: '#000', '&:hover': {background: 'none'}}} size='small' color='error' onClick={logout}>
             Logout
           </Button>
         </DialogActions>

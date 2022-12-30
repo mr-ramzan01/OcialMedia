@@ -165,6 +165,16 @@ return (
                 name="full_name"
                 required
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': { 
+                    '&:hover fieldset': {
+                        borderColor: '#0066ff', 
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#129ffd',
+                    },
+                  },
+                }}
                 id="full_name"
                 label="Full Name"
                 InputProps={{
@@ -182,6 +192,16 @@ return (
               <TextField
                 required
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': { 
+                    '&:hover fieldset': {
+                        borderColor: '#0066ff', 
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#129ffd',
+                    },
+                  },
+                }}
                 id="email"
                 label="Email Address"
                 name="email"
@@ -200,6 +220,16 @@ return (
               <TextField
                 required
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': { 
+                    '&:hover fieldset': {
+                        borderColor: '#0066ff', 
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#129ffd',
+                    },
+                  },
+                }}
                 id="username"
                 label="Username"
                 name="username"
@@ -218,6 +248,16 @@ return (
               <TextField
                 required
                 fullWidth
+                sx={{
+                  '& .MuiOutlinedInput-root': { 
+                    '&:hover fieldset': {
+                        borderColor: '#0066ff', 
+                    },
+                    '&.Mui-focused fieldset': {
+                        borderColor: '#129ffd',
+                    },
+                  },
+                }}
                 name="password"
                 label="Password"
                 type={passwordVisibility?"text":"password"}
@@ -241,19 +281,19 @@ return (
                 helperText={passwordError.text}
               />
             </Grid>
-            {/* <Grid item xs={12}>
-              <FormControlLabel
-                control={<Checkbox required color="primary" />}
-                label={<Typography fontSize={14} color='#8d929b'>I have read all the Terms & Conditions, Privacy Policy, and Cookie Settings.</Typography>}
-              />
-            </Grid> */}
           </Grid>
           <Button
             type="submit"
             fullWidth
             size='large'
             variant="contained"
-            sx={{ mt: 4 }}
+            sx={{ 
+              mt: 4,
+              background: '#129ffd',
+              '&:hover': {
+                background: '#0066ff'
+              }
+            }}
           >
             Sign Up
           </Button>
