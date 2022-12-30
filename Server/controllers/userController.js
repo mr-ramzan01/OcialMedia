@@ -33,7 +33,6 @@ async function LoggedOutUser(req, res, next) {
 }
 
 
-
 async function LoggedInUser(req, res, next) {
     try {
         let user = await userModel.findOne({_id: req.user._id});
@@ -52,7 +51,6 @@ async function LoggedInUser(req, res, next) {
         });
     }
 }
-
 
 
 async function getGoogleOAuthTokens(code) {
@@ -77,9 +75,9 @@ async function getGoogleOAuthTokens(code) {
       oauth2Client.credentials.access_token,
       oauth2Client.credentials.id_token,
     ];
-  }
+}
   
-  async function googleOAuth(req, res){
+async function googleOAuth(req, res){
     try {
         const { code } = req.query;
         const [access_token, id_token] = await getGoogleOAuthTokens(code);
@@ -143,8 +141,7 @@ async function getGoogleOAuthTokens(code) {
             message: error.message
         })
     }
-  };
-
+};
 
 
 async function LoginUser(req, res, next) {
@@ -194,7 +191,6 @@ async function LoginUser(req, res, next) {
         });
     }
 }
-
 
 
 async function SignUPUser(req, res, next) {
@@ -308,6 +304,44 @@ async function setForgotPassword(req, res, next) {
         });
     }
 }
+
+
+async function resetPassword(req, res, next) {
+    try {
+        const { email, old_password, new_password } = req.body;
+
+        const user = await userModel.findOne({ email: email}).select("+password");
+
+        const passwordMatches = await bcrypt.compare(old_password, user.password);
+
+        if(passwordMatches) {
+            // Hashing Password
+            const hashPassword = await bcrypt.hash(new_password, 10);
+
+            // updating password 
+            await userModel.findOneAndUpdate({email: email}, {$set: {password: hashPassword }}, {new: true})
+            return res.status(200).send({
+                success: true,
+                message: 'Password updated successfully'
+            })
+        }
+        else {
+            return res.status(401).send({
+                success: false,
+                message: 'Old password does not match'
+            })
+        }
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
 async function searchUser(req, res, next) {
     try {
         const {q} = req.query;
@@ -326,6 +360,8 @@ async function searchUser(req, res, next) {
         });
     }
 }
+
+
 async function getUser(req, res, next) {
     try {
         let {username} = req.params;
@@ -352,5 +388,24 @@ async function getUser(req, res, next) {
 }
 
 
+async function removeProfile(req, res, next) {
+    try {
+        const {_id} = req.user;
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser };
+        await userModel.findByIdAndUpdate(_id, {image: ''});
+        return res.send({
+            success: true,
+            message: 'User Profile successfully removed'
+        })
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser, resetPassword, removeProfile };
