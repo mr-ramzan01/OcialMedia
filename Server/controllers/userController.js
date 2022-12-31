@@ -10,6 +10,8 @@ dotenv.config();
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
+const cloudinary = require('cloudinary');
+const streamifier = require('streamifier')
 
 
 
@@ -391,11 +393,13 @@ async function getUser(req, res, next) {
 async function removeProfile(req, res, next) {
     try {
         const {_id} = req.user;
+        const user = await userModel.findOne({_id: _id});
+        await cloudinary.v2.uploader.destroy(user.image_public_id);
 
         await userModel.findByIdAndUpdate(_id, {image: ''});
         return res.send({
             success: true,
-            message: 'User Profile successfully removed'
+            message: 'Profile photo successfully removed'
         })
     } catch (error) {
         // return next(new ErrorHandler(error, 500));
@@ -407,5 +411,53 @@ async function removeProfile(req, res, next) {
 }
 
 
+async function uploadProfile(req, res, next) {
+    try {
+        const { _id } = req.user;
+        let streamUpload = (req) => {
+            return new Promise((resolve, reject) => {
+                let stream = cloudinary.v2.uploader.upload_stream(
+                  (error, result) => {
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(error);
+                    }
+                  }
+                );
+    
+              streamifier.createReadStream(req.file.buffer).pipe(stream);
+            });
+        };
+    
+        async function upload(req) {
+            let result = await streamUpload(req);
+            if(result) {
+                await userModel.findOneAndUpdate(_id, {image: result.secure_url, $set: { image_public_id: result.public_id}});
+                return res.send({
+                    success: true,
+                    message: 'Profile updated successfully'
+                });
+            }
+            else {
+                res.send({
+                    success: false,
+                    message: 'Could not upload'
+                })
+            }
+            
+        }
+        upload(req);
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser, resetPassword, removeProfile };
+
+
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser, resetPassword, removeProfile, uploadProfile };

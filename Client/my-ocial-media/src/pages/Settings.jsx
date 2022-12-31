@@ -1,9 +1,10 @@
-import { Alert, Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Paper, Slide, Snackbar, Stack, TextField, Typography } from '@mui/material'
+import { Alert, Avatar, Box, Button, Dialog, DialogContent, DialogTitle, Divider, InputLabel, Paper, Slide, Snackbar, Stack, TextField, Typography } from '@mui/material'
 import { useContext, useEffect } from 'react';
 import { useState } from 'react'
 import { LeftSideBar } from '../components/LeftSideBar'
 import { AuthContext } from '../context/AuthContext';
 import validator from 'validator';
+import { Loader } from '../components/Loader'
 
 export const Settings = () => {
   const [data, setData] = useState({old_password: '', new_password: '', confirm_new_password: ''});
@@ -12,6 +13,7 @@ export const Settings = () => {
   const [message, setMessage] = useState('');
   const [severity, setSeverity] = useState('error');
   const [profileOpen, setProfileOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [state, setState] = useState({
     open: false,
     vertical: 'top',
@@ -100,6 +102,11 @@ export const Settings = () => {
   }
 
   const handleRemoveProfile = () => {
+    if(userData.image === '') {
+      setProfileOpen(false);
+      return;
+    }
+    setLoading(true);
     fetch('/users/remove-profile-photo', {
       method: 'PATCH',
       headers: {
@@ -109,7 +116,9 @@ export const Settings = () => {
     .then(res => res.json())
     .then(res => {
       getUser();
-      setProfileOpen(false);
+      setMessage("Profile removed successfully");
+      setSeverity('success');
+      setState({ ...state, open: true });
     })
     .catch((err) => {
       console.log(err, 'error');
@@ -117,6 +126,47 @@ export const Settings = () => {
       setSeverity('error');
       setState({ ...state, open: true });
     })
+    .finally(() => {
+      setLoading(false);
+      setProfileOpen(false);
+    })
+  }
+
+
+  
+  const handleUploadProfile = (e) => {
+    const file = e.target.files[0];
+
+    var data = new FormData();
+    data.append("profile", file);
+    setLoading(true);
+    fetch(`/users/upload-profile-photo/`, {
+      method: 'PATCH', 
+      body: data,
+    })
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setMessage(res.message);
+        setSeverity('success');
+        setState({ ...state, open: true });
+        getUser();
+      }
+    })
+    .catch((err) => {
+      console.log(err, 'error');
+      setMessage("Something went wrong please try later");
+      setSeverity('error');
+      setState({ ...state, open: true });
+    })
+    .finally(() => {
+      setLoading(false);
+      setProfileOpen(false);
+    })
+  }
+
+  if(loading) {
+    return <Loader />
   }
 
   return (
@@ -161,7 +211,8 @@ export const Settings = () => {
               <Dialog onClose={handleClose} open={profileOpen}>
                 <DialogTitle sx={{ color: '#000', fontSize: '15px'}}>Change Profile Photo</DialogTitle>
                 <Divider/>
-                <DialogContent sx={{ color: '#0066ff',padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Upload Photo</DialogContent>
+                <InputLabel htmlFor="filePicker" sx={{ color: '#0066ff',padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Upload Profile</InputLabel>
+                <TextField onChange={handleUploadProfile}  id='filePicker' type='file'sx={{display: 'none'}} inputProps={{accept: 'image/*'}} ></TextField>
                 <Divider/>
                 <DialogContent onClick={handleRemoveProfile} sx={{ color: 'tomato', padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Remove Photo</DialogContent>
                 <Divider/>
