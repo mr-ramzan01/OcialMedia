@@ -236,7 +236,7 @@ export const LeftSideBar = () => {
         </DialogTitle>
         <DialogActions sx={{padding: '10px 20px'}}>
           <Button sx={{fontSize: '12px', color: 'gray', '&:hover': {background: 'none'}}} size='small' onClick={handleClose}>Cancel</Button>
-          <Button sx={{fontSize: '12px', color: '#000', '&:hover': {background: 'none'}}} size='small' color='error' onClick={logout}>
+          <Button sx={{fontSize: '12px', color: '#000', fontWeight: '600', '&:hover': {background: 'none'}}} size='small' onClick={logout}>
             Logout
           </Button>
         </DialogActions>

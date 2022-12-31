@@ -6,6 +6,7 @@ export const AuthContextprovider = ({children}) => {
     const [isAuth, setIsAuth] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState({});
+    const [editData, setEditData] = useState({full_name: 'dfa', bio: '', username:'', email: '', mobile_no: '' });
 
     const isLoggedIn = () => {
         setIsLoading(true);
@@ -37,6 +38,7 @@ export const AuthContextprovider = ({children}) => {
         .then((res) => {
             if(res.success) {
                 setUserData(res.data);
+                setEditData(res.data);
             }
         })
         .catch((err) => {
@@ -59,5 +61,5 @@ export const AuthContextprovider = ({children}) => {
 
         window.location = `${rootUrl}?redirect_uri=${redirect_uri}&client_id=${client_id}&access_type=${access_type}&response_type=${response_type}&prompt=${prompt}&scope=${scope}`
     }
-    return <AuthContext.Provider value={{isAuth, isLoading, userData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={{isAuth, isLoading, userData, editData, setEditData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
 }

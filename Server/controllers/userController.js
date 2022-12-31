@@ -224,9 +224,10 @@ async function SignUPUser(req, res, next) {
         }
         // Hashing Password
         const hashPassword = await bcrypt.hash(req.body.password, 10);
-
+        
         // Creating User
         const newUser = await userModel.create({...req.body, password: hashPassword});
+        console.log('hee')
 
         // Generating token
         const token = jwt.sign({
@@ -310,9 +311,10 @@ async function setForgotPassword(req, res, next) {
 
 async function resetPassword(req, res, next) {
     try {
-        const { email, old_password, new_password } = req.body;
+        const { _id, email } = req.user;
+        const { old_password, new_password } = req.body;
 
-        const user = await userModel.findOne({ email: email}).select("+password");
+        const user = await userModel.findOne({ _id: _id }).select("+password");
 
         const passwordMatches = await bcrypt.compare(old_password, user.password);
 
@@ -414,6 +416,11 @@ async function removeProfile(req, res, next) {
 async function uploadProfile(req, res, next) {
     try {
         const { _id } = req.user;
+        const user = await userModel.findOne({_id: _id});
+        if(user.image_public_id !== '') {
+            await cloudinary.v2.uploader.destroy(user.image_public_id);
+        }
+
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
                 let stream = cloudinary.v2.uploader.upload_stream(
@@ -433,7 +440,7 @@ async function uploadProfile(req, res, next) {
         async function upload(req) {
             let result = await streamUpload(req);
             if(result) {
-                await userModel.findOneAndUpdate(_id, {image: result.secure_url, $set: { image_public_id: result.public_id}});
+                await userModel.findByIdAndUpdate(_id, {image: result.secure_url, $set: { image_public_id: result.public_id}});
                 return res.send({
                     success: true,
                     message: 'Profile updated successfully'
@@ -458,6 +465,38 @@ async function uploadProfile(req, res, next) {
     }
 }
 
+async function editUserProfile(req, res, next) {
+    try {
+        // let { _id } = req.user;
+        // let user = await userModel.findById(_id);
+        // // console.log(user);
+        // console.log(req.body);
+        // if(user.username !== req.body.username) {
+        //     let existingUsername = await userModel.findOne({username: req.body.username});
+        //     if(existingUsername) {
+        //         return res.status(400).send({
+        //             success: false,
+        //             message: 'Username already taken'
+        //         })
+        //     }
+        //     else {
+        //         await userModel.findByIdAndUpdate(_id, req.body);
+        //     }
+        // }
+
+        return res.status(201).send({
+            success: true,
+            message: "Profile updated successfully"
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 
-module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser, resetPassword, removeProfile, uploadProfile };
+module.exports = { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, googleOAuth, LoggedOutUser, searchUser, getUser, resetPassword, removeProfile, uploadProfile, editUserProfile };
