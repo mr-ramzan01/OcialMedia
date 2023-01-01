@@ -46,7 +46,6 @@ export const Settings = () => {
     })
     .then(res => res.json())
     .then((res) => {
-      console.log(res);
       if(res.success) {
         setMessage(res.message);
         setSeverity('success');
@@ -213,7 +212,6 @@ export const Settings = () => {
     event.preventDefault();
     const validation = editDataValidation();
     if(validation) {
-      console.log('dine')
       setLoading(true);
       fetch(`/users/udpate-user-profile`, {
         method: 'PATCH',
@@ -225,11 +223,18 @@ export const Settings = () => {
       .then(res => res.json())
       .then(res => {
         if(res.success) {
-          console.log(res);
+          setMessage(res.message);
+          setSeverity('success');
+          setState({ ...state, open: true });
+        }
+        else {
+          setMessage(res.message);
+          setSeverity('error');
+          setState({ ...state, open: true });
         }
       })
       .catch(err => {
-        console.log(err);
+        console.log(err, 'error');
         setMessage("Something went wrong please try later");
         setSeverity('error');
         setState({ ...state, open: true });
@@ -395,6 +400,7 @@ export const Settings = () => {
                    <Typography width='20%' >Email</Typography>
                     <TextField
                       autoComplete="given-email"
+                      disabled={userData.authType=='google'}
                       name="email"
                       required
                       type='email'
@@ -454,7 +460,15 @@ export const Settings = () => {
                       InputProps={{
                         startAdornment: <InputAdornment sx={{color: 'black'}} position="start">+91 </InputAdornment>,
                         style: {
-                          height: '50px'
+                          height: '50px',
+                          '& ::WebkitOuterSpinButton': {
+                            '-webkitAppearance': 'none',
+                            margin: 0
+                          },
+                          '& ::WebkitInnerSpinButton': {
+                            '-webkitAppearance': 'none',
+                            margin: 0
+                          },
                         },
                       }}
                       onChange={handleEditChange}

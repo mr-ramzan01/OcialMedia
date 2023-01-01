@@ -13,9 +13,9 @@ const userSchema = mongoose.Schema(
         followerCount: {type: Number, default: 0},
         isPrivate: {type: Boolean, default: false},
         forgotpasswordAcces: {type: String, required: false}, 
-        image_public_id: {type: String, required: false},
+        image_public_id: {type: String, default: ''},
         bio: {type: String, default: ""},
-        mobile_no: {type: String, default: "", minLength: [10, "Mobile no. should be 10 digits only"], maxLength: [10, "Mobile no. should be 10 digits only"]}
+        mobile_no: {type: String, default: ""}
     },
     {
         versionKey: false,

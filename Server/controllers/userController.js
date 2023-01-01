@@ -227,7 +227,6 @@ async function SignUPUser(req, res, next) {
         
         // Creating User
         const newUser = await userModel.create({...req.body, password: hashPassword});
-        console.log('hee')
 
         // Generating token
         const token = jwt.sign({
@@ -467,24 +466,25 @@ async function uploadProfile(req, res, next) {
 
 async function editUserProfile(req, res, next) {
     try {
-        // let { _id } = req.user;
-        // let user = await userModel.findById(_id);
-        // // console.log(user);
-        // console.log(req.body);
-        // if(user.username !== req.body.username) {
-        //     let existingUsername = await userModel.findOne({username: req.body.username});
-        //     if(existingUsername) {
-        //         return res.status(400).send({
-        //             success: false,
-        //             message: 'Username already taken'
-        //         })
-        //     }
-        //     else {
-        //         await userModel.findByIdAndUpdate(_id, req.body);
-        //     }
-        // }
+        let { _id } = req.user;
+        let user = await userModel.findById(_id);
 
-        return res.status(201).send({
+        if(user.username !== req.body.username) {
+            let existingUsername = await userModel.findOne({username: req.body.username});
+            if(existingUsername) {
+                return res.status(400).send({
+                    success: false,
+                    message: 'Username already taken'
+                })
+            }
+            else {
+                await userModel.findByIdAndUpdate(_id, req.body);
+            }
+        }
+        else {
+            await userModel.findByIdAndUpdate(_id, req.body);
+        }
+        return res.status(200).send({
             success: true,
             message: "Profile updated successfully"
         })
