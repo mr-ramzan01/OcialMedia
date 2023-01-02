@@ -23,7 +23,7 @@ export const Home = () => {
     <>
     <Stack direction={'row'} border='1px solid red'>
       <LeftSideBar/>
-      <Box border='1px solid green' marginLeft='240px' width='100%'  height='200vh'>
+      <Box border='1px solid green' marginLeft='240px' width='100%'>
         home
       </Box>
     </Stack>

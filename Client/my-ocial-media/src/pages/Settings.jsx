@@ -292,7 +292,7 @@ export const Settings = () => {
                 <DialogTitle sx={{ color: '#000', fontSize: '15px'}}>Change Profile Photo</DialogTitle>
                 <Divider/>
                 <InputLabel htmlFor="filePicker" sx={{ color: '#0066ff',padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Upload Photo</InputLabel>
-                <TextField onChange={handleUploadProfile}  id='filePicker' type='file'sx={{display: 'none'}} inputProps={{accept: 'image/*'}} ></TextField>
+                <TextField onChange={handleUploadProfile}  id='filePicker' type='file'sx={{display: 'none'}} inputProps={{accept: 'image/png, image/jpg, image/jpeg'}} ></TextField>
                 <Divider/>
                 <DialogContent onClick={handleRemoveProfile} sx={{ color: 'tomato', padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Remove Photo</DialogContent>
                 <Divider/>
@@ -300,211 +300,198 @@ export const Settings = () => {
               </Dialog>
 
               <Box component='form' onSubmit={handleEditProfileSubmit}>
-              <Grid container>
-                <Stack m={'40px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
-                  <Typography width='20%' >Full Name</Typography>
-                  <TextField
-                    autoComplete="given-name"
-                    name="full_name"
-                    type='text'
-                    value={editData.full_name}
-                    required
-                    sx={{
-                      width: '80%',
-                      '& .MuiOutlinedInput-root': { 
-                        '& fieldset': {
-                          borderColor: 'transparent'
-                        },
-                        '&:hover fieldset': {
-                            border: '#f1f1f1'
-                        },
-                        '&.Mui-focused fieldset': {
+                <Grid container>
+                  <Stack m={'40px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
+                    <Typography width='20%' >Full Name</Typography>
+                    <TextField
+                      autoComplete="given-name"
+                      name="full_name"
+                      type='text'
+                      value={editData.full_name}
+                      required
+                      sx={{
+                        width: '80%',
+                        '& .MuiOutlinedInput-root': { 
+                          '& fieldset': {
                             borderColor: 'transparent'
+                          },
+                          '&:hover fieldset': {
+                              border: '#f1f1f1'
+                          },
+                          '&.Mui-focused fieldset': {
+                              borderColor: 'transparent'
+                          },
                         },
-                      },
-                      bgcolor: '#f1f1f1',
-                      borderRadius: '5px'
-                    }}
-                    id="full_name"
-                    InputProps={{
-                      style: {
-                        height: '50px',
-                      }
-                    }}
-                    onChange={handleEditChange}
-                  />
+                        bgcolor: '#f1f1f1',
+                        borderRadius: '5px'
+                      }}
+                      id="full_name"
+                      InputProps={{
+                        style: {
+                          height: '50px',
+                        }
+                      }}
+                      onChange={handleEditChange}
+                    />
+                  </Stack>
+                  <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
+                    <Typography width='20%' >Username</Typography>
+                      <TextField
+                        autoComplete="given-username"
+                        name="username"
+                        type='text'
+                        value={editData.username}
+                        required
+                        sx={{
+                          width: '80%',
+                          '& .MuiOutlinedInput-root': { 
+                            '& fieldset': {
+                              borderColor: 'transparent'
+                            },
+                            '&:hover fieldset': {
+                                border: '#f1f1f1'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'transparent'
+                            },
+                          },
+                          bgcolor: '#f1f1f1',
+                          borderRadius: '5px'
+                        }}
+                        id="username"
+                        InputProps={{
+                          style: {
+                            height: '50px',
+                          }
+                        }}
+                        onChange={handleEditChange}
+                      />
+                    </Stack>
+                    <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
+                    <Typography width='20%' >Bio</Typography>
+                      <TextField
+                        autoComplete="given-bio"
+                        name="bio"
+                        type='text'
+                        value={editData.bio}
+                        multiline
+                        rows={4}
+                        sx={{
+                          width: '80%',
+                          '& .MuiOutlinedInput-root': { 
+                            '& fieldset': {
+                              borderColor: 'transparent'
+                            },
+                            '&:hover fieldset': {
+                                border: '#f1f1f1'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'transparent'
+                            },
+                          },
+                          bgcolor: '#f1f1f1',
+                          borderRadius: '5px'
+                        }}
+                        id="bio"
+                        onChange={handleEditChange}
+                      />
+                    </Stack>
+                    <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
+                    <Typography width='20%' >Email</Typography>
+                      <TextField
+                        autoComplete="given-email"
+                        disabled={userData.authType==='google'}
+                        name="email"
+                        required
+                        type='email'
+                        value={editData.email}
+                        sx={{
+                          width: '80%',
+                          '& .MuiOutlinedInput-root': { 
+                            '& fieldset': {
+                              borderColor: 'transparent'
+                            },
+                            '&:hover fieldset': {
+                                border: '#f1f1f1'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'transparent'
+                            },
+                          },
+                          bgcolor: '#f1f1f1',
+                          borderRadius: '5px'
+                        }}
+                        id="email"
+                        InputProps={{
+                          style: {
+                            height: '50px',
+                          }
+                        }}
+                        onChange={handleEditChange}
+                      />
+                    </Stack>
+                    <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
+                    <Typography width='20%' >Mobile No.</Typography>
+                      <TextField
+                        autoComplete="given-number"
+                        name="mobile_no"
+                        type='number'
+                        value={editData.mobile_no}
+                        sx={{
+                          width: '80%',
+                          '& .MuiOutlinedInput-root': { 
+                            '& fieldset': {
+                              borderColor: 'transparent'
+                            },
+                            '&:hover fieldset': {
+                                border: '#f1f1f1'
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: 'transparent'
+                            },
+                          },
+                          bgcolor: '#f1f1f1',
+                          borderRadius: '5px',
+                          "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                            display: "none",
+                          }
+                        }}
+                        id="mobile_no"
+                        inputProps={{
+                          maxLength: 10
+                        }}
+                        InputProps={{
+                          startAdornment: <InputAdornment sx={{color: 'black'}} position="start">+91 </InputAdornment>,
+                          style: {
+                            height: '50px'
+                          },
+                        }}
+                        onChange={handleEditChange}
+                      />
+                    </Stack>
+                </Grid>
+                <Stack gap="20px" direction='row'>
+                  <Box width='20%'></Box>
+                  <Box width='80%'>
+                    <Button
+                      type="submit"
+                      disabled={userData === editData}
+                      size='large'
+                      variant="contained"
+                      sx={{ 
+                        mt: 3,
+                        boxShadow: 'none',
+                        background: '#129ffd',
+                        '&:hover': {
+                          background: '#0066ff',
+                          boxShadow: 'none'
+                        }
+                      }}
+                    >
+                      Update
+                    </Button>
+                  </Box>
                 </Stack>
-                <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
-                   <Typography width='20%' >Username</Typography>
-                    <TextField
-                      autoComplete="given-username"
-                      name="username"
-                      type='text'
-                      value={editData.username}
-                      required
-                      sx={{
-                        width: '80%',
-                        '& .MuiOutlinedInput-root': { 
-                          '& fieldset': {
-                            borderColor: 'transparent'
-                          },
-                          '&:hover fieldset': {
-                              border: '#f1f1f1'
-                          },
-                          '&.Mui-focused fieldset': {
-                              borderColor: 'transparent'
-                          },
-                        },
-                        bgcolor: '#f1f1f1',
-                        borderRadius: '5px'
-                      }}
-                      id="username"
-                      InputProps={{
-                        style: {
-                          height: '50px',
-                        }
-                      }}
-                      onChange={handleEditChange}
-                    />
-                  </Stack>
-                  <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
-                   <Typography width='20%' >Bio</Typography>
-                    <TextField
-                      autoComplete="given-bio"
-                      name="bio"
-                      type='text'
-                      value={editData.bio}
-                      multiline
-                      rows={4}
-                      sx={{
-                        width: '80%',
-                        '& .MuiOutlinedInput-root': { 
-                          '& fieldset': {
-                            borderColor: 'transparent'
-                          },
-                          '&:hover fieldset': {
-                              border: '#f1f1f1'
-                          },
-                          '&.Mui-focused fieldset': {
-                              borderColor: 'transparent'
-                          },
-                        },
-                        bgcolor: '#f1f1f1',
-                        borderRadius: '5px'
-                      }}
-                      id="bio"
-                      onChange={handleEditChange}
-                    />
-                  </Stack>
-                  <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
-                   <Typography width='20%' >Email</Typography>
-                    <TextField
-                      autoComplete="given-email"
-                      disabled={userData.authType=='google'}
-                      name="email"
-                      required
-                      type='email'
-                      value={editData.email}
-                      sx={{
-                        width: '80%',
-                        '& .MuiOutlinedInput-root': { 
-                          '& fieldset': {
-                            borderColor: 'transparent'
-                          },
-                          '&:hover fieldset': {
-                              border: '#f1f1f1'
-                          },
-                          '&.Mui-focused fieldset': {
-                              borderColor: 'transparent'
-                          },
-                        },
-                        bgcolor: '#f1f1f1',
-                        borderRadius: '5px'
-                      }}
-                      id="email"
-                      InputProps={{
-                        style: {
-                          height: '50px',
-                        }
-                      }}
-                      onChange={handleEditChange}
-                    />
-                  </Stack>
-                  <Stack m={'20px 0'} gap='20px' alignItems='center' width='100%' direction={'row'}>
-                   <Typography width='20%' >Mobile No.</Typography>
-                    <TextField
-                      autoComplete="given-number"
-                      name="mobile_no"
-                      type='number'
-                      value={editData.mobile_no}
-                      sx={{
-                        width: '80%',
-                        '& .MuiOutlinedInput-root': { 
-                          '& fieldset': {
-                            borderColor: 'transparent'
-                          },
-                          '&:hover fieldset': {
-                              border: '#f1f1f1'
-                          },
-                          '&.Mui-focused fieldset': {
-                              borderColor: 'transparent'
-                          },
-                        },
-                        bgcolor: '#f1f1f1',
-                        borderRadius: '5px'
-                      }}
-                      id="mobile_no"
-                      inputProps={{
-                        maxLength: 10
-                      }}
-                      InputProps={{
-                        startAdornment: <InputAdornment sx={{color: 'black'}} position="start">+91 </InputAdornment>,
-                        style: {
-                          height: '50px',
-                          '& ::WebkitOuterSpinButton': {
-                            '-webkitAppearance': 'none',
-                            margin: 0
-                          },
-                          '& ::WebkitInnerSpinButton': {
-                            '-webkitAppearance': 'none',
-                            margin: 0
-                          },
-                        },
-                      }}
-                      onChange={handleEditChange}
-                    />
-                  </Stack>
-              </Grid>
-              <Stack gap="20px" direction='row'>
-                <Box width='20%'></Box>
-                <Box width='80%'>
-                  <Button
-                    type="submit"
-                    disabled={userData === editData}
-                    size='large'
-                    variant="contained"
-                    sx={{ 
-                      mt: 3,
-                      boxShadow: 'none',
-                      background: '#129ffd',
-                      '&:hover': {
-                        background: '#0066ff',
-                        boxShadow: 'none'
-                      }
-                    }}
-                  >
-                    Update
-                  </Button>
-                </Box>
-              </Stack>
-
-
-
-
-
-
-
-
               </Box>
             </Box>:
             <Box mt='20px'>

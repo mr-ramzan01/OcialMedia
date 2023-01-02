@@ -5,6 +5,7 @@ const handleError = require('./middlewares/Error.js');
 const cookieParser = require('cookie-parser');
 const userRouter = require('./routers/userRouter.js');
 const followRouter = require('./routers/followRouter.js');
+const postsRouter = require('./routers/postsRouter.js');
 
 
 const app = express();
@@ -22,12 +23,14 @@ app.get('/', (req, res) => {
 })
 app.use('/users', userRouter);
 app.use('/follows', followRouter);
+app.use('/posts', postsRouter);
+
 
 
 app.use(handleError);
 
 app.get('*', (req, res) => {
-  res.send("Invalid request");
+  res.status(400).send("Invalid request");
 })
 
 module.exports = app;

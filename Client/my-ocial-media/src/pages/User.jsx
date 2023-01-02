@@ -202,38 +202,62 @@ export const User = () => {
                 >
                   {oneUserData.username}
                 </Typography>
-                <Button 
-                  variant='contained'
-                  onClick={handleFollow}
-                  sx={{
-                    backgroundColor: '#129ffd',
-                    letterSpacing: '0px',
-                    padding: '5px 10px',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      backgroundColor: '#0066ff',
-                      boxShadow: 'none'
-                    }
-                  }}
-                >
-                    { isFollowing ? 'Following' : 'Follow'}
-                </Button>
-                <Button 
-                  variant='contained'
-                  sx={{
-                    backgroundColor: '#eee',
-                    color: '#000',
-                    letterSpacing: '0px',
-                    padding: '5px 10px',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      backgroundColor: '#d3d3d3',
-                      boxShadow: 'none'
-                    }
-                  }}
-                >
-                    Message
-                </Button>
+                {
+                  loginUserData.username === oneUserData.username ?
+                  <Link underline='none' href='/settings'>
+                    <Button 
+                      variant='contained'
+                      sx={{
+                        backgroundColor: '#d3d3d3',
+                        color: '#000',
+                        letterSpacing: '0px',
+                        padding: '5px 10px',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          backgroundColor: '#bbbbbb',
+                          boxShadow: 'none'
+                        }
+                      }}
+                    >
+                      Edit Profile
+                    </Button>
+                  </Link>:
+                  <>
+                    <Button 
+                      variant='contained'
+                      onClick={handleFollow}
+                      sx={{
+                        backgroundColor: '#129ffd',
+                        letterSpacing: '0px',
+                        padding: '5px 10px',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          backgroundColor: '#0066ff',
+                          boxShadow: 'none'
+                        },
+                        width: '100px'
+                      }}
+                    >
+                      { isFollowing ? 'Following' : 'Follow'}
+                    </Button>
+                    <Button 
+                      variant='contained'
+                      sx={{
+                        backgroundColor: '#eee',
+                        color: '#000',
+                        letterSpacing: '0px',
+                        padding: '5px 10px',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          backgroundColor: '#d3d3d3',
+                          boxShadow: 'none'
+                        }
+                      }}
+                    >
+                      Message
+                    </Button>
+                  </>
+                }
               </Stack>
               <Stack direction='row' gap='30px' alignItems='center'>
                 <Stack direction='row' alignItems='center'>
@@ -249,7 +273,7 @@ export const User = () => {
                   <Typography color='#363638' fontSize='15px'>following</Typography>
                 </Stack>
               </Stack>
-              <Box width='50%'>This is the bio of the users here user can add the bio if he has not added here, it is possible to keep their bio something like noone has read it before absolutly very different from others.</Box>
+              <Box width='50%'>{oneUserData.bio}</Box>
             </Grid>
           </Stack>
           <Stack mt='30px' border='1px solid gray'>
