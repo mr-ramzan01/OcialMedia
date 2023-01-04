@@ -38,7 +38,7 @@ export const Settings = () => {
 
   const resetPassword = () => {
     fetch(`/users/reset-password`, {
-      method: 'POST',
+      method: 'PATCH',
       body: JSON.stringify(data),
       headers: {
         'Content-Type': 'application/json'
@@ -144,6 +144,7 @@ export const Settings = () => {
     })
     .then(res => res.json())
     .then(res => {
+      console.log(res);
       if(res.success) {
         setMessage(res.message);
         setSeverity('success');

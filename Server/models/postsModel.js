@@ -21,6 +21,14 @@ const postSchema = new mongoose.Schema({
     caption: {
         type: String,
         required: true
+    },
+    tags: {
+        type: [String],
+        default: []
+    },
+    location: {
+        type: String,
+        default: ''
     }
 
 },{

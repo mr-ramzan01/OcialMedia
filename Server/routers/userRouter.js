@@ -3,7 +3,7 @@ const { SignUPUser, LoginUser, forgotPassword, setForgotPassword, LoggedInUser, 
 const isAuthenticated = require('../middlewares/auth.js');
 const passwordTokenCheck = require('../middlewares/passwordTokenChecker.js');
 var multer = require('multer')
-var uploader = multer({}).single('profile')
+var uploader = multer().single('profile')
 
 const userRouter = express.Router();
 
@@ -16,7 +16,7 @@ userRouter.post('/signup', SignUPUser);
 userRouter.post('/login', LoginUser);
 userRouter.post('/forgot-password', forgotPassword);
 userRouter.post('/forgot-password/set-new-password', passwordTokenCheck, setForgotPassword);
-userRouter.post('/reset-password', isAuthenticated, resetPassword);
+userRouter.patch('/reset-password', isAuthenticated, resetPassword);
 userRouter.patch('/remove-profile-photo/', isAuthenticated, removeProfile);
 userRouter.patch('/upload-profile-photo', isAuthenticated, uploader, uploadProfile);
 userRouter.patch('/udpate-user-profile', isAuthenticated, editUserProfile);
