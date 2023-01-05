@@ -174,6 +174,7 @@ export const LeftSideBar = () => {
         setSeverity("success");
         setState({ ...state, statusOpen: true });
         getUser();
+        window.location.reload();
       }
       else {
         setMessage("Something went wrong");

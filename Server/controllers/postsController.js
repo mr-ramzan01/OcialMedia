@@ -72,6 +72,27 @@ async function createPosts(req, res, next) {
 }
 
 
+async function getExploreData(req, res, next) {
+    try {
+
+        let explore = await PostsModel.find();
+
+        return res.status(201).send({
+            success: true,
+            message: 'Explore Data',
+            data: explore
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
 async function getPosts(req, res, next) {
     try {
         const {_id} = req.user;
@@ -100,4 +121,4 @@ async function getPosts(req, res, next) {
 
 
 
-module.exports = { createPosts, postOnCloudinary, getPosts };
+module.exports = { createPosts, postOnCloudinary, getPosts, getExploreData };

@@ -5,8 +5,6 @@ import {
   Dialog,
   DialogTitle,
   Grid,
-  ImageList,
-  ImageListItem,
   Link,
   Stack,
   Typography,
@@ -66,7 +64,6 @@ export const User = () => {
       })
       .then((res) => {
         setLoginUserData(res[0].data);
-        console.log(res[2], "post data");
         setUserPosts(res[2].data);
         if (res[1].success) {
           setOneUserData(res[1].data);
@@ -342,14 +339,16 @@ export const User = () => {
                   </Box>
                 </Grid>
               </Stack>
-              <Stack row="column" mt="30px" border="2px solid red">
-                <Box height="50px">Post</Box>
-                <Box border="1px solid blue" padding="0 30px 30px">
+              <Stack row="column" mt="30px">
+                <Box borderTop='1px solid gray'>
+                  <Typography m='10px 0' textAlign='center' fontSize={'30px'}>Post</Typography>
+                </Box>
+                <Box padding="0 30px 30px">
                   {userPosts.length > 0 ? (
                     <Grid
                       display="grid"
                       gridTemplateColumns={"repeat(3,1fr)"}
-                      gap="20px"
+                      gap="10px"
                     >
                       {userPosts.map((el) => (
                         <Box
@@ -359,7 +358,6 @@ export const User = () => {
                             cursor: "pointer",
                             position: "relative",
                             "&:hover": {
-                              bgcolor: "red",
                               opacity: '0.5'
                             },
                           }}
@@ -380,6 +378,7 @@ export const User = () => {
                             height="100%"
                             width="100%"
                             src={el.post_images[0].url}
+                            loading='lazy'
                             alt=""
                           />
                         </Box>
@@ -406,7 +405,7 @@ export const User = () => {
                           fontSize={"30px"}
                           color="#a1a1a1"
                         >
-                          No Post Yet
+                          No Posts Yet
                         </Typography>
                       </Box>
                     </Box>
