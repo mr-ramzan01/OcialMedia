@@ -624,6 +624,9 @@ export const LeftSideBar = () => {
                         borderRadius: "5px",
                         border: "1px solid gray",
                       }}
+                      inputProps={{
+                        maxLength: 70,
+                      }}
                       name="caption"
                       id="caption"
                       InputProps={{
@@ -656,6 +659,9 @@ export const LeftSideBar = () => {
                         bgcolor: "#fff",
                         borderRadius: "5px",
                         border: "1px solid gray",
+                      }}
+                      inputProps={{
+                        maxLength: 50,
                       }}
                       name="tags"
                       id="tags"

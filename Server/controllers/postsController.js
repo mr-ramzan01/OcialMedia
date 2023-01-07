@@ -74,13 +74,15 @@ async function createPosts(req, res, next) {
 
 async function getExploreData(req, res, next) {
     try {
-
-        let explore = await PostsModel.find();
+        const {page} = req.query;
+        let totalData = await PostsModel.find().count();
+        let explore = await PostsModel.find().sort({ createdAt: -1}).skip((page-1)*9).limit(9);
 
         return res.status(201).send({
             success: true,
             message: 'Explore Data',
-            data: explore
+            data: explore,
+            totalData: totalData
         })
         
     } catch (error) {

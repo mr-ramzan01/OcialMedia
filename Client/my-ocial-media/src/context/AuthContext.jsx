@@ -6,7 +6,7 @@ export const AuthContextprovider = ({children}) => {
     const [isAuth, setIsAuth] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState({});
-    const [editData, setEditData] = useState({full_name: 'dfa', bio: '', username:'', email: '', mobile_no: '' });
+    const [editData, setEditData] = useState({full_name: 'dfa', bio: ``, username:'', email: '', mobile_no: '' });
 
     const isLoggedIn = () => {
         setIsLoading(true);
