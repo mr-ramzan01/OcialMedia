@@ -97,7 +97,6 @@ async function getExploreData(req, res, next) {
 
 async function getPosts(req, res, next) {
     try {
-        const {_id} = req.user;
         const { username } = req.params;
 
         let user = await userModel.findOne({ username: username });
@@ -120,7 +119,29 @@ async function getPosts(req, res, next) {
 }
 
 
+async function getSinglePost(req, res, next) {
+    try {
+        const {id} = req.params;
+
+        const data = await PostsModel.findOne({_id: id}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
+
+        return res.status(201).send({
+            success: true,
+            message: 'Post data',
+            data: data
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 
 
-module.exports = { createPosts, postOnCloudinary, getPosts, getExploreData };
+
+
+module.exports = { createPosts, postOnCloudinary, getPosts, getExploreData, getSinglePost };

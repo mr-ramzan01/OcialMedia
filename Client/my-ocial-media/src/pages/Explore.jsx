@@ -1,23 +1,30 @@
 import {
   Box,
   CircularProgress,
+  Dialog,
+  DialogTitle,
   Grid,
   Stack,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useContext } from "react";
 import { useEffect } from "react";
 import { useState } from "react";
 import { LeftSideBar } from "../components/LeftSideBar";
 import { HiRectangleStack } from "react-icons/hi2";
 import { Loader } from "../components/Loader";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { SinglePost } from "../components/SinglePost";
+import { AuthContext } from "../context/AuthContext";
 
 export const Explore = () => {
   const [exploreData, setExploreData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalLength, setTotalLength] = useState(0);
+  const [postData, setPostData] = useState([]);
+  // const [showSinglePost, setShowSinglePost] = useState(false);
+  const {showSinglePost, setShowSinglePost} = useContext(AuthContext);
 
   useEffect(() => {
     setIsLoading(true);
@@ -31,7 +38,6 @@ export const Explore = () => {
     fetch(`/posts/explore/data?page=${page}`)
     .then((res) => res.json())
     .then((res) => {
-      console.log(res, "res");
       setExploreData(() => [...exploreData, ...res.data]);
       setTotalLength(res.totalData);
     })
@@ -44,12 +50,28 @@ export const Explore = () => {
   };
 
 
-
-  if(isLoading) {
-    return <Loader/>
+  const handleClick = async (id) => {
+    setIsLoading(true);
+    await fetch(`/posts/single/${id}`)
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setPostData(res.data);
+      }
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
+    .finally(() => {
+      setIsLoading(false);
+    })
+    setShowSinglePost(true);
   }
+
   return (
     <>
+      {isLoading && <Loader />}
+      {showSinglePost && <SinglePost data={postData}/>}
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
@@ -62,7 +84,7 @@ export const Explore = () => {
             {exploreData.length > 0 ? (
               <InfiniteScroll
                 dataLength={exploreData.length}
-                className={'scroll'}
+                className={'scrollDiv'}
                 next={fetchExploreData}
                 hasMore={totalLength !== exploreData.length}
                 loader={<div style={{display: 'grid', placeContent: 'center', padding: '30px 0'}}>
@@ -78,6 +100,7 @@ export const Explore = () => {
                     <Box
                       key={el._id}
                       height="280px"
+                      onClick={() => handleClick(el._id)}
                       sx={{
                         cursor: "pointer",
                         position: "relative",

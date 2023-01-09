@@ -9,11 +9,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router";
 import { LeftSideBar } from "../components/LeftSideBar";
 import { Loader } from "../components/Loader";
 import { HiRectangleStack } from "react-icons/hi2";
+import { AuthContext } from "../context/AuthContext";
+import { SinglePost } from "../components/SinglePost";
 
 export const User = () => {
   const { username } = useParams();
@@ -28,6 +30,8 @@ export const User = () => {
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
+  const [postData, setPostData] = useState([]);
+  const {showSinglePost, setShowSinglePost} = useContext(AuthContext);
 
   const followRequest = () => {
     fetch(`/follows/followRequest`, {
@@ -153,7 +157,6 @@ export const User = () => {
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          console.log(res, "following");
           setFollowingData(res.data);
           setFollowingOpen(true);
         } else {
@@ -165,6 +168,24 @@ export const User = () => {
         console.log(err, "error");
       });
   };
+
+  const handleClick = async (id) => {
+    setIsLoading(true);
+    await fetch(`/posts/single/${id}`)
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setPostData(res.data);
+      }
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
+    .finally(() => {
+      setIsLoading(false);
+    })
+    setShowSinglePost(true);
+  }
 
   if (isLoading) {
     return <Loader />;
@@ -194,6 +215,7 @@ export const User = () => {
 
   return (
     <>
+      {showSinglePost && <SinglePost data={postData}/>}
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
@@ -354,6 +376,7 @@ export const User = () => {
                         <Box
                           key={el._id}
                           height="280px"
+                          onClick={() => handleClick(el._id)}
                           sx={{
                             cursor: "pointer",
                             position: "relative",
