@@ -29,6 +29,10 @@ const postSchema = new mongoose.Schema({
     location: {
         type: String,
         default: ''
+    },
+    likeCount: {
+        type: Number,
+        default: 0
     }
 
 },{

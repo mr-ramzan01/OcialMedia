@@ -145,6 +145,7 @@ export const LeftSideBar = () => {
       })
       .then(res => res.json())
       .then(res => {
+        console.log(res, 'result');
         const data = {
           public_id: res.data.public_id,
           url: res.data.secure_url

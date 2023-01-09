@@ -6,6 +6,7 @@ const cookieParser = require('cookie-parser');
 const userRouter = require('./routers/userRouter.js');
 const followRouter = require('./routers/followRouter.js');
 const postsRouter = require('./routers/postsRouter.js');
+const likesRouter = require('./routers/likesRouter.js');
 
 
 const app = express();
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 app.use('/users', userRouter);
 app.use('/follows', followRouter);
 app.use('/posts', postsRouter);
+app.use('/likes', likesRouter);
 
 
 
