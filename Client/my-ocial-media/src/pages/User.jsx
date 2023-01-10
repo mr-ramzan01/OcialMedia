@@ -30,8 +30,7 @@ export const User = () => {
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
-  const [postData, setPostData] = useState([]);
-  const {showSinglePost, setShowSinglePost} = useContext(AuthContext);
+  const {showSinglePost, postData, handleClick} = useContext(AuthContext);
 
   const followRequest = () => {
     fetch(`/follows/followRequest`, {
@@ -168,24 +167,6 @@ export const User = () => {
         console.log(err, "error");
       });
   };
-
-  const handleClick = async (id) => {
-    setIsLoading(true);
-    await fetch(`/posts/single/${id}`)
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        setPostData(res.data);
-      }
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
-    .finally(() => {
-      setIsLoading(false);
-    })
-    setShowSinglePost(true);
-  }
 
   if (isLoading) {
     return <Loader />;

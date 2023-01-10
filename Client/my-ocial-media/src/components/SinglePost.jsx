@@ -19,11 +19,12 @@ import { GrShareOption } from "react-icons/gr";
 
 export const SinglePost = ({ data }) => {
   const [postOpen, setPostOpen] = useState(true);
-  const { setShowSinglePost, userData } = useContext(AuthContext);
+  const { setShowSinglePost, userData, handleClick } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const commentRef = useRef(null);
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: '' });
 
   const handleClose = () => {
     setPostOpen(false);
@@ -73,6 +74,7 @@ export const SinglePost = ({ data }) => {
   };
   useEffect(() => {
     setIsLoading(true);
+    hasLikedByUser();
     isFollowingUser();
   }, []);
 
@@ -102,8 +104,8 @@ export const SinglePost = ({ data }) => {
   };
 
   const handleLikes = (val) => {
-    console.log('val', val);
     setActionsOpen(false);
+    setIsLoading(true);
     fetch('/likes/createlike', {
       method: 'POST',
       body: JSON.stringify({post_Id: data._id, like_type: val, like_by: userData._id}),
@@ -113,15 +115,57 @@ export const SinglePost = ({ data }) => {
     })
     .then(res => res.json())
     .then(res => {
-      console.log('res', res);
       if(res.success) {
-        
+        handleClick(data._id);
+        hasLikedByUser();
       }
     })
     .catch(err => {
       console.log(err, "error");
     })
+    .finally(() => {
+      setIsLoading(false);
+    })
+  };
+
+
+  const handleRemoveLikes = () => {
+    setIsLoading(true);
+    fetch(`/likes/removelike/${hasLiked.id}`, {
+      method: 'DELETE'
+    })
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        handleClick(data._id);
+        hasLikedByUser();
+      }
+    })
+    .catch(err => {
+      console.log(err, "error");
+    })
+    .finally(() => {
+      setIsLoading(false);
+    })
   }
+
+
+  const hasLikedByUser = () => {
+    fetch(`/likes/hasliked/${data._id}`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setHasLiked({ ...hasLiked, liked: true, type: res.like_type, id: res.id });
+        }
+        else {
+          setHasLiked({ liked: false, type: "", id: '' })
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+        setHasLiked({liked: false, type: '', id: '' });
+      });
+  };
 
   if (isLoading) {
     return <Loader />;
@@ -201,7 +245,7 @@ export const SinglePost = ({ data }) => {
                       </Stack>
                       <Typography fontSize="13px" fontWeight="400">
                         {data.location}
-                        {data.location == "" ? "" : ", "}
+                        {data.location === "" ? "" : ", "}
                         {new Date(data.createdAt).getDate()}{" "}
                         {new Date(data.createdAt).toLocaleString("default", {
                           month: "long",
@@ -214,10 +258,11 @@ export const SinglePost = ({ data }) => {
                     <Stack mt="10px" direction="column">
                       <Typography>{data.caption}</Typography>
                       <Typography color="#0066ff">
-                        {data.tags.map((el) => (
+                        {data.tags.map((el, ind) => (
                           <Typography
                             sx={{ cursor: "pointer" }}
                             component="span"
+                            key={ind}
                           >
                             #{el}{" "}
                           </Typography>
@@ -278,25 +323,25 @@ export const SinglePost = ({ data }) => {
                         >
                           <BsSuitHeartFill
                             fontSize="25px"
-                            onClick={() => handleLikes('love')}
+                            onClick={() => handleLikes("love")}
                             color="red"
                             style={{ cursor: "pointer" }}
                           />
                           <FaLaughSquint
                             fontSize="25px"
-                            onClick={() => handleLikes('funny')}
+                            onClick={() => handleLikes("funny")}
                             color="#eb9800"
                             style={{ cursor: "pointer" }}
                           />
                           <FaAngry
                             fontSize="25px"
-                            onClick={() => handleLikes('angry')}
+                            onClick={() => handleLikes("angry")}
                             color="#c30909"
                             style={{ cursor: "pointer" }}
                           />
                           <FaSadCry
                             fontSize="25px"
-                            onClick={() => handleLikes('cry')}
+                            onClick={() => handleLikes("cry")}
                             color="#00baff"
                             style={{ cursor: "pointer" }}
                           />
@@ -306,13 +351,50 @@ export const SinglePost = ({ data }) => {
                     <Box position="absolute" width="100%" bottom="0">
                       <Box>
                         <Stack direction="row" gap="15px">
-                          {/* <BsSuitHeartFill fontSize='25px' color='red' style={{cursor: 'pointer'}}/> */}
-                          <BsSuitHeart
-                            fontSize="25px"
-                            onMouseOver={() => setActionsOpen(true)}
-                            onMouseOut={() => setActionsOpen(false)}
-                            style={{ cursor: "pointer" }}
-                          />
+                          {hasLiked.liked ? (
+                            <Box>
+                              {hasLiked.type === "love" && (
+                                <BsSuitHeartFill
+                                  onClick={handleRemoveLikes}
+                                  fontSize="25px"
+                                  color="red"
+                                  style={{ cursor: "pointer" }}
+                                />
+                              )}
+                              {hasLiked.type === "funny" && (
+                                <FaLaughSquint
+                                  onClick={handleRemoveLikes}
+                                  fontSize="25px"
+                                  color="#eb9800"
+                                  style={{ cursor: "pointer" }}
+                                />
+                              )}
+                              {hasLiked.type === "cry" && (
+                                <FaSadCry
+                                  onClick={handleRemoveLikes}
+                                  fontSize="25px"
+                                  color="#00baff"
+                                  style={{ cursor: "pointer" }}
+                                />
+                              )}
+                              {hasLiked.type === "angry" && (
+                                <FaAngry
+                                  onClick={handleRemoveLikes}
+                                  fontSize="25px"
+                                  color="#c30909"
+                                  style={{ cursor: "pointer" }}
+                                />
+                              )}
+                            </Box>
+                          ) : (
+                            <BsSuitHeart
+                              fontSize="25px"
+                              onMouseOver={() => setActionsOpen(true)}
+                              onMouseOut={() => setActionsOpen(false)}
+                              style={{ cursor: "pointer" }}
+                            />
+                          )}
+
                           <FaRegComment
                             fontSize="25px"
                             onClick={handleComment}
@@ -324,7 +406,7 @@ export const SinglePost = ({ data }) => {
                           />
                         </Stack>
                         <Box marginTop="10px">
-                          <Typography>{data.likeCount} Likes</Typography>
+                          <Typography>{data.likeCount} Reactions</Typography>
                         </Box>
                       </Box>
                       <TextField

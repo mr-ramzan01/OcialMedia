@@ -7,6 +7,7 @@ export const AuthContextprovider = ({children}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [userData, setUserData] = useState({});
     const [showSinglePost, setShowSinglePost] = useState(false);
+    const [postData, setPostData] = useState([]);
     const [editData, setEditData] = useState({full_name: 'dfa', bio: ``, username:'', email: '', mobile_no: '' });
 
     const isLoggedIn = () => {
@@ -47,6 +48,20 @@ export const AuthContextprovider = ({children}) => {
         })
     }
 
+    const handleClick = async (id) => {
+        await fetch(`/posts/single/${id}`)
+        .then(res => res.json())
+        .then(res => {
+          if(res.success) {
+            setPostData(res.data);
+          }
+        })
+        .catch(err => {
+          console.log(err, 'error');
+        })
+        setShowSinglePost(true);
+      }
+
     const googleRequest = () => {
 
         const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
@@ -62,5 +77,5 @@ export const AuthContextprovider = ({children}) => {
 
         window.location = `${rootUrl}?redirect_uri=${redirect_uri}&client_id=${client_id}&access_type=${access_type}&response_type=${response_type}&prompt=${prompt}&scope=${scope}`
     }
-    return <AuthContext.Provider value={{isAuth, isLoading, userData, editData, showSinglePost, setShowSinglePost, setEditData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={{isAuth, isLoading, userData, editData, showSinglePost, postData, handleClick, setShowSinglePost, setEditData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
 }

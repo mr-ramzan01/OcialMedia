@@ -22,9 +22,7 @@ export const Explore = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalLength, setTotalLength] = useState(0);
-  const [postData, setPostData] = useState([]);
-  // const [showSinglePost, setShowSinglePost] = useState(false);
-  const {showSinglePost, setShowSinglePost} = useContext(AuthContext);
+  const {showSinglePost, postData, handleClick} = useContext(AuthContext);
 
   useEffect(() => {
     setIsLoading(true);
@@ -50,23 +48,7 @@ export const Explore = () => {
   };
 
 
-  const handleClick = async (id) => {
-    setIsLoading(true);
-    await fetch(`/posts/single/${id}`)
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        setPostData(res.data);
-      }
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
-    .finally(() => {
-      setIsLoading(false);
-    })
-    setShowSinglePost(true);
-  }
+  
 
   return (
     <>
