@@ -17,7 +17,7 @@ import { Loader } from "./Loader";
 import { BsSuitHeartFill, BsSuitHeart } from "react-icons/bs";
 import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { GrShareOption } from "react-icons/gr";
-import moment from 'moment';
+import moment from "moment";
 
 export const SinglePost = ({ data }) => {
   const [postOpen, setPostOpen] = useState(true);
@@ -29,6 +29,8 @@ export const SinglePost = ({ data }) => {
   const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: "" });
   const [comment, setComment] = useState("");
   const [commentsData, setCommentsData] = useState([]);
+  const [showReactions, setShowReactions] = useState(false);
+  const [reactionsData, setReactionsData] = useState([]);
 
   const handleClose = () => {
     setPostOpen(false);
@@ -185,7 +187,6 @@ export const SinglePost = ({ data }) => {
     fetch(`/comments/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
-        console.log(res, "comments");
         if (res.success) {
           setCommentsData(res.data);
         }
@@ -206,7 +207,7 @@ export const SinglePost = ({ data }) => {
     })
       .then((res) => res.json())
       .then((res) => {
-        if(res.success) {
+        if (res.success) {
           getComments();
         }
       })
@@ -217,6 +218,25 @@ export const SinglePost = ({ data }) => {
         setComment("");
         setIsLoading(false);
       });
+  };
+
+  const getLikesOnpost = () => {
+    fetch(`/likes/get/${data._id}`)
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res, "res");
+        if (res.success) {
+          setReactionsData(res.data);
+          setShowReactions(true);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+  };
+
+  const handleSClosehowReactions = () => {
+    setShowReactions(false);
   };
 
   if (isLoading) {
@@ -331,9 +351,9 @@ export const SinglePost = ({ data }) => {
                       overflow={"scroll"}
                       height="220px"
                       mt="10px"
-                      p='0 10px'
-                      border='1px solid gray'
-                      borderRadius='10px'
+                      p="0 10px"
+                      border="1px solid gray"
+                      borderRadius="10px"
                       sx={{ "&::-webkit-scrollbar": { width: "0" } }}
                     >
                       <Box height="100%">
@@ -378,7 +398,10 @@ export const SinglePost = ({ data }) => {
                         ) : (
                           <Box>
                             <Stack direction="column">
-                              <Box display='grid' sx={{placeContent: 'center'}}>
+                              <Box
+                                display="grid"
+                                sx={{ placeContent: "center" }}
+                              >
                                 <img
                                   style={{ objectFit: "contain" }}
                                   height="180px"
@@ -392,7 +415,7 @@ export const SinglePost = ({ data }) => {
                                 color="#a1a1a1"
                                 mt="-20px"
                               >
-                                Not Comments Yet
+                                No Comments Yet
                               </Typography>
                             </Stack>
                           </Box>
@@ -499,7 +522,12 @@ export const SinglePost = ({ data }) => {
                           />
                         </Stack>
                         <Box marginTop="10px">
-                          <Typography>{data.likeCount} Reactions</Typography>
+                          <Typography
+                            sx={{ cursor: "pointer" }}
+                            onClick={getLikesOnpost}
+                          >
+                            {data.likeCount} Reactions
+                          </Typography>
                         </Box>
                       </Box>
                       <TextField
@@ -551,6 +579,85 @@ export const SinglePost = ({ data }) => {
               </Box>
             </Stack>
           </DialogContent>
+        </Box>
+      </Dialog>
+      <Dialog open={showReactions} onClose={handleSClosehowReactions}>
+        <Box maxHeight="200px" overflow="scroll" sx={{'&::-webkit-scrollbar': {width: '0'}}}>
+          {reactionsData.length > 0 ? (
+            <Stack
+              direction="column"
+              gap="10px"
+              padding="15px"
+            >
+              {reactionsData.map((el) => (
+                <Stack
+                  key={el._id}
+                  direction="row"
+                  alignItems="center"
+                  gap="15px"
+                >
+                  <Avatar src={el.like_by.image} />
+                  <Link
+                    href={`/${el.like_by.username}`}
+                    underline="none"
+                    color="#000"
+                  >
+                    <Typography
+                      fontFamily={"Dancing Script"}
+                      fontSize="22px"
+                      fontWeight="600"
+                    >
+                      {el.like_by.username}
+                    </Typography>
+                  </Link>
+                  <Box>
+                    {el.like_type === "love" && (
+                      <BsSuitHeartFill
+                        onClick={handleRemoveLikes}
+                        fontSize="25px"
+                        color="red"
+                        style={{ cursor: "pointer" }}
+                      />
+                    )}
+                    {el.like_type === "funny" && (
+                      <FaLaughSquint
+                        onClick={handleRemoveLikes}
+                        fontSize="25px"
+                        color="#eb9800"
+                        style={{ cursor: "pointer" }}
+                      />
+                    )}
+                    {el.like_type === "cry" && (
+                      <FaSadCry
+                        onClick={handleRemoveLikes}
+                        fontSize="25px"
+                        color="#00baff"
+                        style={{ cursor: "pointer" }}
+                      />
+                    )}
+                    {el.like_type === "angry" && (
+                      <FaAngry
+                        onClick={handleRemoveLikes}
+                        fontSize="25px"
+                        color="#c30909"
+                        style={{ cursor: "pointer" }}
+                      />
+                    )}
+                  </Box>
+                </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Box
+              height="100%"
+              display="flex"
+              p="20px 0"
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Typography>No Reactions to Show</Typography>
+            </Box>
+          )}
         </Box>
       </Dialog>
     </>

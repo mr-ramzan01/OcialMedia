@@ -1,6 +1,28 @@
 const LikesModel = require("../models/LikesModel");
 const PostsModel = require("../models/postsModel");
 
+async function getLikesOnPost(req, res, next) {
+    try {
+
+        let {id} = req.params;
+
+        let users = await LikesModel.find({post_Id: id}).populate({path: 'like_by', select: ['_id', 'image', 'username', 'full_name']})
+        
+        return res.status(200).send({
+            success: true,
+            message: "Liked data on post",
+            data: users
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
 async function likeRequest(req, res, next) {
     try {
 
@@ -73,4 +95,4 @@ async function hasLiked(req, res, next) {
     }
 }
 
-module.exports =  { likeRequest, hasLiked, removeLikeRequest };
+module.exports =  { likeRequest, hasLiked, removeLikeRequest, getLikesOnPost };
