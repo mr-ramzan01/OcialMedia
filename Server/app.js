@@ -7,6 +7,7 @@ const userRouter = require('./routers/userRouter.js');
 const followRouter = require('./routers/followRouter.js');
 const postsRouter = require('./routers/postsRouter.js');
 const likesRouter = require('./routers/likesRouter.js');
+const commentsRouter = require('./routers/commentsRouter.js');
 
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/users', userRouter);
 app.use('/follows', followRouter);
 app.use('/posts', postsRouter);
 app.use('/likes', likesRouter);
+app.use('/comments', commentsRouter);
 
 
 

@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const likesSchema = new mongoose.Schema({
+const commentsSchema = new mongoose.Schema({
     post_Id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'posts',
@@ -20,6 +20,6 @@ const likesSchema = new mongoose.Schema({
     versionKey: false
 });
 
-const LikesModel = mongoose.model('likes', likesSchema);
+const CommentsModel = mongoose.model('comments', commentsSchema);
 
-module.exports = LikesModel;
+module.exports = CommentsModel;

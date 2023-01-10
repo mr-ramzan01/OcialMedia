@@ -4,6 +4,7 @@ import {
   Dialog,
   DialogContent,
   InputAdornment,
+  Link,
   Stack,
   TextField,
   Typography,
@@ -16,6 +17,7 @@ import { Loader } from "./Loader";
 import { BsSuitHeartFill, BsSuitHeart } from "react-icons/bs";
 import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { GrShareOption } from "react-icons/gr";
+import moment from 'moment';
 
 export const SinglePost = ({ data }) => {
   const [postOpen, setPostOpen] = useState(true);
@@ -24,11 +26,17 @@ export const SinglePost = ({ data }) => {
   const [isLoading, setIsLoading] = useState(false);
   const commentRef = useRef(null);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: '' });
+  const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: "" });
+  const [comment, setComment] = useState("");
+  const [commentsData, setCommentsData] = useState([]);
 
   const handleClose = () => {
     setPostOpen(false);
     setShowSinglePost(false);
+  };
+
+  const handleChange = (e) => {
+    setComment(e.target.value);
   };
 
   const followRequest = () => {
@@ -74,6 +82,7 @@ export const SinglePost = ({ data }) => {
   };
   useEffect(() => {
     setIsLoading(true);
+    getComments();
     hasLikedByUser();
     isFollowingUser();
   }, []);
@@ -99,71 +108,114 @@ export const SinglePost = ({ data }) => {
   };
 
   const handleComment = () => {
-    console.log("here");
     commentRef.current.focus();
   };
 
   const handleLikes = (val) => {
     setActionsOpen(false);
     setIsLoading(true);
-    fetch('/likes/createlike', {
-      method: 'POST',
-      body: JSON.stringify({post_Id: data._id, like_type: val, like_by: userData._id}),
+    fetch("/likes/createlike", {
+      method: "POST",
+      body: JSON.stringify({
+        post_Id: data._id,
+        like_type: val,
+        like_by: userData._id,
+      }),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     })
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        handleClick(data._id);
-        hasLikedByUser();
-      }
-    })
-    .catch(err => {
-      console.log(err, "error");
-    })
-    .finally(() => {
-      setIsLoading(false);
-    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          handleClick(data._id);
+          hasLikedByUser();
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
-
 
   const handleRemoveLikes = () => {
     setIsLoading(true);
     fetch(`/likes/removelike/${hasLiked.id}`, {
-      method: 'DELETE'
+      method: "DELETE",
     })
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        handleClick(data._id);
-        hasLikedByUser();
-      }
-    })
-    .catch(err => {
-      console.log(err, "error");
-    })
-    .finally(() => {
-      setIsLoading(false);
-    })
-  }
-
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          handleClick(data._id);
+          hasLikedByUser();
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   const hasLikedByUser = () => {
     fetch(`/likes/hasliked/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          setHasLiked({ ...hasLiked, liked: true, type: res.like_type, id: res.id });
-        }
-        else {
-          setHasLiked({ liked: false, type: "", id: '' })
+          setHasLiked({
+            ...hasLiked,
+            liked: true,
+            type: res.like_type,
+            id: res.id,
+          });
+        } else {
+          setHasLiked({ liked: false, type: "", id: "" });
         }
       })
       .catch((err) => {
         console.log(err, "error");
-        setHasLiked({liked: false, type: '', id: '' });
+        setHasLiked({ liked: false, type: "", id: "" });
+      });
+  };
+
+  const getComments = () => {
+    fetch(`/comments/get/${data._id}`)
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res, "comments");
+        if (res.success) {
+          setCommentsData(res.data);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+  };
+
+  const AddComments = () => {
+    setIsLoading(true);
+    fetch(`/comments/create`, {
+      method: "POST",
+      body: JSON.stringify({ post_Id: data._id, title: comment }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        if(res.success) {
+          getComments();
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        setComment("");
+        setIsLoading(false);
       });
   };
 
@@ -212,13 +264,19 @@ export const SinglePost = ({ data }) => {
                     />
                     <Stack direction="column">
                       <Stack direction="row" alignItems="center">
-                        <Typography
-                          fontFamily={"Dancing Script"}
-                          fontSize="22px"
-                          fontWeight="600"
+                        <Link
+                          href={`/${data.user_id.username}`}
+                          underline="none"
+                          color="#000"
                         >
-                          {data.user_id.username}
-                        </Typography>
+                          <Typography
+                            fontFamily={"Dancing Script"}
+                            fontSize="22px"
+                            fontWeight="600"
+                          >
+                            {data.user_id.username}
+                          </Typography>
+                        </Link>
                         {userData._id !== data.user_id._id && (
                           <Box>
                             {isFollowing ? (
@@ -271,39 +329,74 @@ export const SinglePost = ({ data }) => {
                     </Stack>
                     <Box
                       overflow={"scroll"}
-                      height="240px"
+                      height="220px"
+                      mt="10px"
+                      p='0 10px'
+                      border='1px solid gray'
+                      borderRadius='10px'
                       sx={{ "&::-webkit-scrollbar": { width: "0" } }}
                     >
-                      <Box border="1px solid red">
-                        comments Lorem, ipsum dolor sit amet consectetur
-                        adipisicing elit. Illum assumenda quam amet aperiam
-                        optio, voluptates repellendus culpa temporibus
-                        consectetur esse aspernatur, dolorum dignissimos sunt
-                        officiis minima numquam quidem necessitatibus
-                        reiciendis? Voluptas quisquam provident, fuga atque quod
-                        beatae inventore laborum quibusdam facilis
-                        exercitationem obcaecati voluptate repellat distinctio
-                        perspiciatis illum odit fugiat similique, ipsum quasi
-                        nam. Minima possimus similique magni sapiente quas!
-                        Similique, debitis! Repellat ducimus quibusdam
-                        consequundfa afsadfasdf sdfad Lorem ipsum dolor sit amet
-                        consectetur adipisicing elit. Quo, id? Nulla delectus
-                        molestiae animi quidem nemo ullam dignissimos quae! Quas
-                        voluptas tempore nobis. Temporibus dolor, repellendus
-                        doloribus odio doloremque labore beatae nihil
-                        repudiandae provident ipsum similique inventore
-                        dignissimos ratione, ipsa quod vel nesciunt nostrum
-                        asperiores, eos esse nulla possimus architecto
-                        aspernatur. Tenetur obcaecati quo, voluptatem quam
-                        voluptas enim minima rem? Vero animi impedit quas et
-                        officiis ratione, quae modi ipsum blanditiis illum, in
-                        molestiae at sequi dolore repudiandae? Ipsum saepe
-                        consequatur accusamus. dfa fdfa afads fa dadfad
-                        fsdfadadfa d dfa dfadfdf dfasdfa sdfasdtur esse cum nisi
-                        quis et minima eum libero. Sint dolorem est in eaque
-                        labore autem officia aperiam molestiae velit, officiis
-                        voluptates enim cum vel.dfasdfdfadfadfadfadfsd g
-                        gfdsgdfgdgs hshs hfhfgs fsfh{" "}
+                      <Box height="100%">
+                        {commentsData.length > 0 ? (
+                          <Box>
+                            <Stack direction="column" gap="10px">
+                              {commentsData.map((el) => (
+                                <Stack
+                                  direction="row"
+                                  key={el._id}
+                                  alignItems="center"
+                                >
+                                  <Avatar
+                                    sx={{ marginRight: "20px" }}
+                                    src={el.comment_by.image}
+                                  />
+                                  <Stack direction="column">
+                                    <Link
+                                      href={`/${el.comment_by.username}`}
+                                      underline="none"
+                                      color="#000"
+                                    >
+                                      <Typography
+                                        fontFamily={"Dancing Script"}
+                                        fontSize="22px"
+                                        fontWeight="600"
+                                      >
+                                        {el.comment_by.username}
+                                      </Typography>
+                                    </Link>
+                                    <Typography fontSize="15px">
+                                      {el.title}
+                                    </Typography>
+                                    <Typography fontSize="10px">
+                                      {moment(el.createdAt).fromNow()}
+                                    </Typography>
+                                  </Stack>
+                                </Stack>
+                              ))}
+                            </Stack>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Stack direction="column">
+                              <Box display='grid' sx={{placeContent: 'center'}}>
+                                <img
+                                  style={{ objectFit: "contain" }}
+                                  height="180px"
+                                  src="/Images/comments.png"
+                                  alt="gd"
+                                />
+                              </Box>
+                              <Typography
+                                textAlign="center"
+                                fontSize={"25px"}
+                                color="#a1a1a1"
+                                mt="-20px"
+                              >
+                                Not Comments Yet
+                              </Typography>
+                            </Stack>
+                          </Box>
+                        )}
                       </Box>
                     </Box>
                     {actionsOpen && (
@@ -413,6 +506,8 @@ export const SinglePost = ({ data }) => {
                         margin="normal"
                         required
                         fullWidth
+                        onChange={handleChange}
+                        value={comment}
                         inputRef={commentRef}
                         placeholder="Add a comment"
                         sx={{
@@ -439,6 +534,7 @@ export const SinglePost = ({ data }) => {
                             <InputAdornment position="end">
                               <Typography
                                 sx={{ cursor: "pointer", color: "#000" }}
+                                onClick={AddComments}
                               >
                                 Post
                               </Typography>

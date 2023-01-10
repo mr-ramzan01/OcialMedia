@@ -48,8 +48,6 @@ async function hasLiked(req, res, next) {
         let { _id } = req.user;
         let {postId} = req.params;
 
-        console.log(_id, postId, "here");
-
         let post = await LikesModel.findOne({ $and: [{post_Id: postId},{like_by: _id}]})
         if(post) {
             return res.status(200).send({
