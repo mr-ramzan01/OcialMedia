@@ -200,6 +200,7 @@ export const SinglePost = ({ data }) => {
   };
 
   const AddComments = () => {
+    if(comment === '') return;
     setIsLoading(true);
     fetch(`/comments/create`, {
       method: "POST",
@@ -570,7 +571,7 @@ export const SinglePost = ({ data }) => {
                           endAdornment: (
                             <InputAdornment position="end">
                               <Typography
-                                sx={{ cursor: "pointer", color: "#000" }}
+                                sx={{ cursor: "pointer", color: "#676767" }}
                                 onClick={AddComments}
                               >
                                 Post

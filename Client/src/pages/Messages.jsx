@@ -394,16 +394,16 @@ export const Messages = () => {
                       <Box
                         onClick={handleSendMessage}
                         sx={{
-                          width: "80px",
+                          width: "100px",
                           height: "100%",
                           display: "grid",
                           placeContent: "center",
                           borderRadius: "20px",
                           cursor: "pointer",
-                          bgcolor: "#d1d1d1",
+                          bgcolor: "#d2d2d2",
                         }}
                       >
-                        <AiOutlineSend fontSize="25px" />
+                        <AiOutlineSend fontSize="25px" color='#676767' />
                       </Box>
                     </Stack>
                   </Box>
