@@ -153,19 +153,19 @@ export const User = () => {
 
   const getFollowing = () => {
     fetch(`/follows/getFollowing?userID=${oneUserData._id}`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setFollowingData(res.data);
-          setFollowingOpen(true);
-        } else {
-          alert("Something went wrong");
-        }
-      })
-      .catch((err) => {
+    .then((res) => res.json())
+    .then((res) => {
+      if (res.success) {
+        setFollowingData(res.data);
+        setFollowingOpen(true);
+      } else {
         alert("Something went wrong");
-        console.log(err, "error");
-      });
+      }
+    })
+    .catch((err) => {
+      alert("Something went wrong");
+      console.log(err, "error");
+    });
   };
 
   if (isLoading) {

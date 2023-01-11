@@ -104,7 +104,7 @@ async function getFollowers(req, res, next) {
                 message: 'Invalid query parameters'
             })
         }
-        let followers = await FollowModel.find({follower_Id: userID}).populate({path: 'following_Id', select: ['_id', 'image', 'username', 'full_name']});
+        let followers = await FollowModel.find({follower_Id: userID}).populate({path: 'following_Id', select: ['_id', 'image', 'username', 'full_name']}).limit(50);
 
         return res.status(200).send({
             success: true,
@@ -133,7 +133,7 @@ async function getFollowing(req, res, next) {
                 message: 'Invalid query parameters'
             })
         }
-        let followers = await FollowModel.find({following_Id: userID}).populate({path: 'follower_Id', select: ['_id', 'image', 'username', 'full_name']});
+        let followers = await FollowModel.find({following_Id: userID}).populate({path: 'follower_Id', select: ['_id', 'image', 'username', 'full_name']}).limit(50);
 
         return res.status(200).send({
             success: true,

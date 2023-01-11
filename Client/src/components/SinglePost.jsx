@@ -18,6 +18,8 @@ import { BsSuitHeartFill, BsSuitHeart } from "react-icons/bs";
 import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { GrShareOption } from "react-icons/gr";
 import moment from "moment";
+import { MdOutlineEmojiEmotions } from "react-icons/md";
+import EmojiPicker from "emoji-picker-react";
 
 export const SinglePost = ({ data }) => {
   const [postOpen, setPostOpen] = useState(true);
@@ -31,6 +33,7 @@ export const SinglePost = ({ data }) => {
   const [commentsData, setCommentsData] = useState([]);
   const [showReactions, setShowReactions] = useState(false);
   const [reactionsData, setReactionsData] = useState([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const handleClose = () => {
     setPostOpen(false);
@@ -239,6 +242,10 @@ export const SinglePost = ({ data }) => {
     setShowReactions(false);
   };
 
+  const handleSelectEmoji = (e) => {
+    setComment((prev) => prev+e.emoji);
+  }
+
   if (isLoading) {
     return <Loader />;
   }
@@ -248,8 +255,8 @@ export const SinglePost = ({ data }) => {
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
         <Box sx={{ width: "880px" }}>
           <DialogContent>
-            <Stack direction="row" gap="20px" height="100%">
-              <Box overflow="hidden" borderRadius="10px" width="50%">
+            <Stack direction="row" height="100%">
+              <Box overflow="hidden"  borderRadius="10px" width="50%">
                 <Carousel
                   showStatus={false}
                   showIndicators={data.post_images.length > 1}
@@ -269,13 +276,12 @@ export const SinglePost = ({ data }) => {
               <Box width="50%" height="485px">
                 <Stack
                   height="100%"
-                  borderLeft="1px solid gray"
                   padding="0 20px"
                   direction="column"
+                  position='relative'
                 >
                   <Stack
                     direction="row"
-                    bordesr="1px solid blue"
                     alignItems="center"
                   >
                     <Avatar
@@ -352,7 +358,7 @@ export const SinglePost = ({ data }) => {
                       height="220px"
                       mt="10px"
                       p="0 10px"
-                      border="1px solid gray"
+                      border="1px solid #d2d2d2"
                       borderRadius="10px"
                       sx={{ "&::-webkit-scrollbar": { width: "0" } }}
                     >
@@ -522,11 +528,14 @@ export const SinglePost = ({ data }) => {
                           />
                         </Stack>
                         <Box marginTop="10px">
-                          <Typography
-                            sx={{ cursor: "pointer" }}
-                            onClick={getLikesOnpost}
-                          >
-                            {data.likeCount} Reactions
+                          <Typography>
+                            <Typography
+                              component="span"
+                              sx={{ cursor: "pointer" }}
+                              onClick={getLikesOnpost}
+                            >
+                              {data.likeCount} Reactions
+                            </Typography>
                           </Typography>
                         </Box>
                       </Box>
@@ -552,11 +561,11 @@ export const SinglePost = ({ data }) => {
                           },
                           bgcolor: "transparent",
                           borderRadius: "5px",
-                          border: "1px solid gray",
+                          border: "1px solid #d2d2d2",
                         }}
-                        type="type"
+                        type="text"
                         id="comment"
-                        autoComplete=""
+                        autoComplete="off"
                         InputProps={{
                           endAdornment: (
                             <InputAdornment position="end">
@@ -568,12 +577,28 @@ export const SinglePost = ({ data }) => {
                               </Typography>
                             </InputAdornment>
                           ),
+                          startAdornment: (
+                            <InputAdornment position="end">
+                              <MdOutlineEmojiEmotions onClick={() => setShowEmojiPicker(!showEmojiPicker)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} />
+                            </InputAdornment>
+                          ),
                           style: {
                             height: "40px",
                           },
                         }}
                       />
                     </Box>
+                    <Box position="absolute" bottom="60px">
+                        {showEmojiPicker && (
+                          <EmojiPicker
+                            onEmojiClick={(e) => handleSelectEmoji(e)}
+                            theme="light"
+                            width={250}
+                            height={300}
+                            emojiStyle="google"
+                          />
+                        )}
+                      </Box>
                   </Box>
                 </Stack>
               </Box>
@@ -582,13 +607,13 @@ export const SinglePost = ({ data }) => {
         </Box>
       </Dialog>
       <Dialog open={showReactions} onClose={handleSClosehowReactions}>
-        <Box maxHeight="200px" overflow="scroll" sx={{'&::-webkit-scrollbar': {width: '0'}}}>
+        <Box
+          maxHeight="200px"
+          overflow="scroll"
+          sx={{ "&::-webkit-scrollbar": { width: "0" } }}
+        >
           {reactionsData.length > 0 ? (
-            <Stack
-              direction="column"
-              gap="10px"
-              padding="15px"
-            >
+            <Stack direction="column" gap="10px" padding="15px">
               {reactionsData.map((el) => (
                 <Stack
                   key={el._id}

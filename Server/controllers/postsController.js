@@ -76,7 +76,7 @@ async function getExploreData(req, res, next) {
     try {
         const {page} = req.query;
         let totalData = await PostsModel.find().count();
-        let explore = await PostsModel.find().sort({ createdAt: -1}).skip((page-1)*9).limit(9);
+        let explore = await PostsModel.find().sort({ createdAt: -1}).skip((page-1)*24).limit(24);
 
         return res.status(201).send({
             success: true,

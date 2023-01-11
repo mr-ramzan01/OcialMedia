@@ -6,7 +6,7 @@ async function getLikesOnPost(req, res, next) {
 
         let {id} = req.params;
 
-        let users = await LikesModel.find({post_Id: id}).populate({path: 'like_by', select: ['_id', 'image', 'username', 'full_name']})
+        let users = await LikesModel.find({post_Id: id}).populate({path: 'like_by', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: -1})
         
         return res.status(200).send({
             success: true,
