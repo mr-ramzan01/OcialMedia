@@ -22,6 +22,7 @@ import { BiVideo } from "react-icons/bi";
 import { BsInfoCircle } from "react-icons/bs";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { AiOutlineSend } from "react-icons/ai";
+import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 
 export const Messages = () => {
@@ -235,7 +236,6 @@ export const Messages = () => {
                 <Box
                   height="100%"
                   position="relative"
-                  border="1px solid yellow"
                 >
                   <Stack
                     direction="row"
@@ -339,25 +339,33 @@ export const Messages = () => {
                     <Stack
                       direction="row"
                       height="40px"
-                      border="1px solid #d2d2d2"
+                      border="1px solid gray"
                       width="100%"
                       m="0 20px"
                       pl="15px"
                       alignItems="center"
                       borderRadius="20px"
                     >
-                      <MdOutlineEmojiEmotions
+                      {
+                        showEmojiPicker ? <RxCross2
+                        onClick={() => setShowEmojiPicker(false)}
+                        style={{ cursor: "pointer" }}
+                        color="gray"
                         fontSize="30px"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        /> :
+                        <MdOutlineEmojiEmotions
+                        fontSize="30px"
+                        onClick={() => setShowEmojiPicker(true)}
                         style={{ cursor: "pointer" }}
                         color="gray"
                       />
-                      <Box position="absolute" bottom="80px">
+                      }
+                      <Box position="absolute" bottom="80px" left='20px'>
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
-                            width={350}
+                            width={495}
                             height={350}
                             emojiStyle="google"
                           />

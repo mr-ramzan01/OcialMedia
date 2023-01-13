@@ -20,6 +20,7 @@ import { GrShareOption } from "react-icons/gr";
 import moment from "moment";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import EmojiPicker from "emoji-picker-react";
+import { RxCross2 } from "react-icons/rx";
 
 export const SinglePost = ({ data }) => {
   const [postOpen, setPostOpen] = useState(true);
@@ -580,7 +581,10 @@ export const SinglePost = ({ data }) => {
                           ),
                           startAdornment: (
                             <InputAdornment position="end">
-                              <MdOutlineEmojiEmotions onClick={() => setShowEmojiPicker(!showEmojiPicker)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} />
+                              {
+                                showEmojiPicker ? <RxCross2 onClick={() => setShowEmojiPicker(false)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} /> :
+                                <MdOutlineEmojiEmotions onClick={() => setShowEmojiPicker(true)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} />
+                              }
                             </InputAdornment>
                           ),
                           style: {
@@ -594,8 +598,8 @@ export const SinglePost = ({ data }) => {
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
-                            width={250}
-                            height={300}
+                            width={373}
+                            height={310}
                             emojiStyle="google"
                           />
                         )}
