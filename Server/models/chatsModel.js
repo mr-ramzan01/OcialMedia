@@ -30,14 +30,6 @@ const chatsSchema = new mongoose.Schema({
 });
 
 
-chatsSchema.path('users').validate((val) => {
-    console.log(val.length);
-    if(val.length < 2) {
-        console.log('herer')
-        throw new Error('Provide atleast two users');
-    }
-})
-
 const ChatsModel = mongoose.model('chats', chatsSchema);
 
 module.exports = ChatsModel;

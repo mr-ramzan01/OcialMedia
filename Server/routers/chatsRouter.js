@@ -1,9 +1,10 @@
 const express = require('express');
-const { accessChat } = require('../controllers/chatsController');
+const { accessChat, getAllChats } = require('../controllers/chatsController');
 const isAuthenticated = require('../middlewares/auth');
 
 const chatsRouter = express.Router();
 
-chatsRouter.post('/create', accessChat);
+chatsRouter.post('/create', isAuthenticated, accessChat);
+chatsRouter.get('/allchats', isAuthenticated, getAllChats);
 
 module.exports = chatsRouter;

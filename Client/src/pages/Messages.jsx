@@ -10,7 +10,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useEffect } from "react";
 import { useContext } from "react";
 import { LeftSideBar } from "../components/LeftSideBar";
@@ -24,29 +24,38 @@ import { MdOutlineEmojiEmotions } from "react-icons/md";
 import { AiOutlineSend } from "react-icons/ai";
 import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
+import moment from "moment";
 
 export const Messages = () => {
   const { userData } = useContext(AuthContext);
-  const [usersForMessage, setUsersForMessage] = useState([]);
+  const [chatsData, setChatsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentSelectedUser, setCurrentSelectedUser] = useState(undefined);
+  const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [msg, setMsg] = useState("");
+  const [showSearchData, setShowSearchData] = useState(false);
+  const [searchData, setSearchData] = useState([]);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     setIsLoading(true);
     if (Object.keys(userData).length > 0) {
-      getFollowing();
+      getChats();
     }
   }, [userData]);
 
-  const getFollowing = () => {
-    fetch(`/follows/getFollowing?userID=${userData._id}`)
+  const getChats = () => {
+    fetch(`/chats/allchats`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          setUsersForMessage(res.data);
+          setChatsData(res.data);
+          if(res.data.length > 0) {
+            setCurrentSelectedChat(res.data[0]);
+          }
+          console.log(res, "result");
         } else {
+          console.log(res, "re");
           alert("Something went wrong");
         }
       })
@@ -65,11 +74,115 @@ export const Messages = () => {
 
   const handleSendMessage = () => {
     console.log(msg, "msg");
+    if (msg === "") {
+      return;
+    }
+    fetch(`/messages/send`, {
+      method: "POST",
+      body: JSON.stringify({ message: msg, chat_id: currentSelectedChat._id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
     setMsg("");
   };
 
+  const searchUsers = debounce(() => {
+    console.log(searchRef.current.value);
+    fetch(`/users/search?q=${searchRef.current.value}`)
+      .then((res) => res.json())
+      .then((res) => {
+        setSearchData(res.data);
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+  }, 500);
+
+  function debounce(fn, delay) {
+    let id;
+    return () => {
+      clearTimeout(id);
+      id = setTimeout(() => {
+        fn();
+      }, delay);
+    };
+  }
+
+  const handleSelectSearchChat = (id) => {
+    searchRef.current.value = '';
+    setSearchData([]);
+    handleAccessChat(id);
+  }
+
   const handleChatClick = (val) => {
-    setCurrentSelectedUser(val);
+    console.log(val);
+    setCurrentSelectedChat(val);
+  };
+
+  const handleAccessChat = (user_id) => {
+    fetch(`/chats/create`, {
+      method: 'POST',
+      body: JSON.stringify({userId: user_id}),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(res => res.json())
+    .then(res => {
+      console.log(res);
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
+    .finally(() => {
+      getChats();
+    })
+  };
+
+  const DateConvert = ({ date }) => {
+    let newDate = moment(date).fromNow();
+    const all = newDate.split(" ");
+    all.splice(all.length - 1, 1);
+    if (all[0] === "a" || all[0] === "an") {
+      all[0] = 1;
+    }
+    if (all[1] === "few") {
+      all[0] = "now";
+      all.splice(1, 2);
+    }
+    if (all[1] === "second" || all[1] === "seconds") {
+      all[1] = "s";
+    }
+    if (all[1] === "minute" || all[1] === "minutes") {
+      all[1] = "m";
+    }
+    if (all[1] === "hour" || all[1] === "hours") {
+      all[1] = "h";
+    }
+    if (all[1] === "day" || all[1] === "days") {
+      all[1] = "d";
+    }
+    if (all[1] === "month" || all[1] === "months") {
+      all[1] = "m";
+    }
+    if (all[1] === "year" || all[1] === "years") {
+      all[1] = "y";
+    }
+
+    const updatedDate = all.join("");
+    return <Typography fontSize="13px"> {updatedDate}</Typography>;
+  };
+
+  const styles = {
+    border: "1px solid red",
   };
 
   return (
@@ -97,7 +210,7 @@ export const Messages = () => {
                 maxHeight: "90vh",
               }}
             >
-              <Box height="100%">
+              <Box height="100%" position="relative" zIndex="2">
                 <Box>
                   <Stack
                     borderBottom="1px solid #d2d2d2"
@@ -124,6 +237,8 @@ export const Messages = () => {
                   </Stack>
                   <TextField
                     fullWidth
+                    onInput={searchUsers}
+                    inputRef={searchRef}
                     placeholder="Search Users..."
                     sx={{
                       "& .MuiOutlinedInput-root": {
@@ -149,6 +264,7 @@ export const Messages = () => {
                           <CiSearch
                             fontSize="20px"
                             style={{ cursor: "pointer" }}
+                            onClick={searchUsers}
                           />
                         </InputAdornment>
                       ),
@@ -157,6 +273,69 @@ export const Messages = () => {
                       },
                     }}
                   />
+                  {searchData.length > 0 &&
+                    searchRef.current.value.length > 0 && (
+                      <Box
+                        bgcolor="#fff"
+                        zIndex="5"
+                        position="absolute"
+                        width="100%"
+                        maxHeight="400px"
+                      >
+                        <Paper
+                          sx={{
+                            maxHeight: "200px",
+                            overflowY: "scroll",
+                            borderRadius: "5px",
+                            mt: "10px",
+                            "::-webkit-scrollbar": {
+                              width: "5px",
+                            },
+                            "::-webkit-scrollbar-thumb": {
+                              background: "#d1d1d1",
+                              borderRadius: "10px",
+                            },
+                          }}
+                          mt="10px"
+                        >
+                          <Box sx={{ p: "5px 10px" }}>
+                            {searchData.map((el) => (
+                              <Box
+                                key={el._id}
+                                onClick={() => handleSelectSearchChat(el._id)}
+                                sx={{
+                                  borderRadius: "10px",
+                                  border:'1px solid #fff',
+                                  '&:hover': {
+                                  border: '1px solid #d2d2d2'
+                                }}}
+                              >
+                                <Stack
+                                  padding="5px 10px"
+                                  sx={{ cursor: "pointer" }}
+                                  alignItems="center"
+                                  direction={"row"}
+                                >
+                                  <Avatar sx={{ mr: "30px" }} src={el.image} />
+                                  <Box>
+                                    <Typography
+                                      fontSize="20px"
+                                      fontWeight={600}
+                                      fontFamily={"'Dancing Script', cursive"}
+                                    >
+                                      {el.username}
+                                    </Typography>
+                                    <Typography color="#8d929b">
+                                      {el.full_name}
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+                              </Box>
+                            ))}
+                          </Box>
+                        </Paper>
+                      </Box>
+                    )}
                 </Box>
                 <Box
                   height="calc(100% - 135px)"
@@ -173,33 +352,69 @@ export const Messages = () => {
                   }}
                 >
                   <Stack>
-                    {usersForMessage.length > 0 ? (
+                    {chatsData.length > 0 ? (
                       <Stack gap="10px">
-                        {usersForMessage.map((el) => (
+                        {chatsData.map((el) => (
                           <Stack
-                            // border="1px solid gray"
+                            className={`${
+                              currentSelectedChat &&
+                              el._id === currentSelectedChat._id
+                                ? "selected"
+                                : "non"
+                            }`}
                             key={el._id}
                             p="10px"
                             bgcolor="#f3f3f3"
                             direction="row"
                             borderRadius="10px"
+                            boxSizing="border-box"
                             gap="20px"
                             alignItems="center"
                             sx={{ cursor: "pointer" }}
-                            onClick={() => handleChatClick(el.follower_Id)}
+                            onClick={() => handleChatClick(el)}
                           >
                             <Avatar
-                              src={el.follower_Id.image}
+                              src={el.users[1].image}
                               alt="userImage"
                               sx={{ height: "60px", width: "60px" }}
                             />
-                            <Typography
-                              fontFamily={"Dancing Script"}
-                              fontSize="18px"
-                              fontWeight="600"
-                            >
-                              {el.follower_Id.full_name}
-                            </Typography>
+                            <Stack row="column" gap="5px" width="100%">
+                              <Typography
+                                fontFamily={"Dancing Script"}
+                                fontSize="18px"
+                                fontWeight="600"
+                              >
+                                {el.users[1].full_name}
+                              </Typography>
+                              {el.latestMessage && (
+                                <Stack
+                                  fontSize="13px"
+                                  alignItems="center"
+                                  width="100%"
+                                  justifyContent="space-between"
+                                  direction="row"
+                                >
+                                  <Typography
+                                    height="20px"
+                                    width="100px"
+                                    sx={{
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                      WebkitLineClamp: 1,
+                                      fontSize: "13px",
+                                      display: "-webkit-box",
+                                      width: "100px",
+                                      WebkitBoxOrient: "vertical",
+                                    }}
+                                  >
+                                    {el.latestMessage.message}
+                                  </Typography>
+                                  <DateConvert
+                                    date={el.latestMessage.createdAt}
+                                  />
+                                </Stack>
+                              )}
+                            </Stack>
                           </Stack>
                         ))}
                       </Stack>
@@ -232,11 +447,8 @@ export const Messages = () => {
               </Box>
             </Paper>
             <Paper sx={{ border: "1px solid #d2d2d2", maxHeight: "90vh" }}>
-              {currentSelectedUser ? (
-                <Box
-                  height="100%"
-                  position="relative"
-                >
+              {currentSelectedChat ? (
+                <Box height="100%" position="relative">
                   <Stack
                     direction="row"
                     justifyContent="space-between"
@@ -251,16 +463,16 @@ export const Messages = () => {
                     >
                       <Avatar
                         sx={{ h: "40px", w: "40px" }}
-                        src={currentSelectedUser.image}
+                        src={currentSelectedChat.users[1].image}
                         alt="userImage"
                       />
                       <Link
-                        href={currentSelectedUser.username}
+                        href={currentSelectedChat.users[1].username}
                         underline="none"
                         color="#000"
                       >
                         <Typography fontSize="20px" fontWeight="500">
-                          {currentSelectedUser.full_name}
+                          {currentSelectedChat.users[1].full_name}
                         </Typography>
                       </Link>
                     </Stack>
@@ -291,7 +503,7 @@ export const Messages = () => {
                         background: "#d1d1d1",
                         borderRadius: "10px",
                       },
-                      p: '0 10px'
+                      p: "0 10px",
                     }}
                     height="calc(100% - 150px)"
                   >
@@ -346,21 +558,22 @@ export const Messages = () => {
                       alignItems="center"
                       borderRadius="20px"
                     >
-                      {
-                        showEmojiPicker ? <RxCross2
-                        onClick={() => setShowEmojiPicker(false)}
-                        style={{ cursor: "pointer" }}
-                        color="gray"
-                        fontSize="30px"
-                        /> :
+                      {showEmojiPicker ? (
+                        <RxCross2
+                          onClick={() => setShowEmojiPicker(false)}
+                          style={{ cursor: "pointer" }}
+                          color="gray"
+                          fontSize="30px"
+                        />
+                      ) : (
                         <MdOutlineEmojiEmotions
-                        fontSize="30px"
-                        onClick={() => setShowEmojiPicker(true)}
-                        style={{ cursor: "pointer" }}
-                        color="gray"
-                      />
-                      }
-                      <Box position="absolute" bottom="80px" left='20px'>
+                          fontSize="30px"
+                          onClick={() => setShowEmojiPicker(true)}
+                          style={{ cursor: "pointer" }}
+                          color="gray"
+                        />
+                      )}
+                      <Box position="absolute" bottom="80px" left="20px">
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
@@ -411,7 +624,7 @@ export const Messages = () => {
                           bgcolor: "#d2d2d2",
                         }}
                       >
-                        <AiOutlineSend fontSize="25px" color='#676767' />
+                        <AiOutlineSend fontSize="25px" color="#676767" />
                       </Box>
                     </Stack>
                   </Box>

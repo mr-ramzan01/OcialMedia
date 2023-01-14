@@ -1,3 +1,11 @@
 .scrollDiv::-webkit-scrollbar {
     width: 0px;
 }
+
+.selected {
+    border: 1px solid gray;
+}
+
+.non {
+    border: 1px solid #fff;
+}

@@ -26,7 +26,6 @@ export const Search = () => {
     fetch(`/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
-        console.log(res, "search data");
         setUsers(res.data);
       });
   }, 500);
