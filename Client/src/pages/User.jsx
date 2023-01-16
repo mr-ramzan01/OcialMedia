@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { LeftSideBar } from "../components/LeftSideBar";
 import { Loader } from "../components/Loader";
 import { HiRectangleStack } from "react-icons/hi2";
@@ -31,6 +31,7 @@ export const User = () => {
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
   const {showSinglePost, postData, handleClick} = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const followRequest = () => {
     fetch(`/follows/followRequest`, {
@@ -168,6 +169,26 @@ export const User = () => {
     });
   };
 
+  const handleMessageClick = (user_id) => {
+    fetch(`/chats/create`, {
+      method: "POST",
+      body: JSON.stringify({ userId: user_id }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((res) => {
+        
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        navigate('/messages')
+      });
+  }
+
   if (isLoading) {
     return <Loader />;
   }
@@ -290,6 +311,7 @@ export const User = () => {
                               boxShadow: "none",
                             },
                           }}
+                          onClick={() => handleMessageClick(oneUserData._id)}
                         >
                           Message
                         </Button>

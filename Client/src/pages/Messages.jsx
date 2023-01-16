@@ -36,6 +36,8 @@ export const Messages = () => {
   const [showSearchData, setShowSearchData] = useState(false);
   const [searchData, setSearchData] = useState([]);
   const searchRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -50,8 +52,9 @@ export const Messages = () => {
       .then((res) => {
         if (res.success) {
           setChatsData(res.data);
-          if(res.data.length > 0) {
+          if (res.data.length > 0) {
             setCurrentSelectedChat(res.data[0]);
+            getAllMessages(res.data[0]);
           }
           console.log(res, "result");
         } else {
@@ -90,6 +93,9 @@ export const Messages = () => {
       })
       .catch((err) => {
         console.log(err, "error");
+      })
+      .finally(() => {
+        showEmojiPicker(false);
       });
     setMsg("");
   };
@@ -117,34 +123,50 @@ export const Messages = () => {
   }
 
   const handleSelectSearchChat = (id) => {
-    searchRef.current.value = '';
+    searchRef.current.value = "";
     setSearchData([]);
     handleAccessChat(id);
-  }
+  };
 
-  const handleChatClick = (val) => {
-    console.log(val);
-    setCurrentSelectedChat(val);
+  const handleChatClick = (chat) => {
+    setCurrentSelectedChat(chat);
+    getAllMessages(chat);
+  };
+
+  const getAllMessages = (chat) => {
+    fetch(`/messages/get/${chat._id}`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setMessages(res.data);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        handleScroll();
+      })
   };
 
   const handleAccessChat = (user_id) => {
     fetch(`/chats/create`, {
-      method: 'POST',
-      body: JSON.stringify({userId: user_id}),
+      method: "POST",
+      body: JSON.stringify({ userId: user_id }),
       headers: {
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     })
-    .then(res => res.json())
-    .then(res => {
-      console.log(res);
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
-    .finally(() => {
-      getChats();
-    })
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        getChats();
+      });
   };
 
   const DateConvert = ({ date }) => {
@@ -181,9 +203,11 @@ export const Messages = () => {
     return <Typography fontSize="13px"> {updatedDate}</Typography>;
   };
 
-  const styles = {
-    border: "1px solid red",
-  };
+  const handleScroll = () => {
+    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }
+
+  // handleScroll();
 
   return (
     <>
@@ -305,10 +329,11 @@ export const Messages = () => {
                                 onClick={() => handleSelectSearchChat(el._id)}
                                 sx={{
                                   borderRadius: "10px",
-                                  border:'1px solid #fff',
-                                  '&:hover': {
-                                  border: '1px solid #d2d2d2'
-                                }}}
+                                  border: "1px solid #fff",
+                                  "&:hover": {
+                                    border: "1px solid #d2d2d2",
+                                  },
+                                }}
                               >
                                 <Stack
                                   padding="5px 10px"
@@ -494,6 +519,7 @@ export const Messages = () => {
                     </Stack>
                   </Stack>
                   <Box
+                    ref={scrollRef}
                     sx={{
                       overflowY: "scroll",
                       "::-webkit-scrollbar": {
@@ -503,49 +529,53 @@ export const Messages = () => {
                         background: "#d1d1d1",
                         borderRadius: "10px",
                       },
-                      p: "0 10px",
+                      p: "10px 10px 0 10px",
                     }}
                     height="calc(100% - 150px)"
                   >
-                    Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                    Harum dolores autem adipisci at corporis impedit, minus
-                    officiis, facere blanditiis nemo cumque ullam suscipit
-                    nihil. Corporis ratione nisi velit placeat. Sequi. Quidem ut
-                    esse et debitis quos hic alias! Obcaecati quaerat architecto
-                    enim, provident maiores corporis alias? Voluptates, vitae
-                    voluptatibus quos quibusdam consectetur adipisci similique
-                    reprehenderit vero assumenda exercitationem repellendus
-                    nesciunt. Saepe recusandae nostrum natus aperiam earum ad
-                    nihil iusto quaerat quia soluta, veniam reprehenderit porro
-                    impedit dicta officia perspiciatis placeat vel, maiores nam
-                    dolores voluptatibus et harum. Aut, omnis ab? Doloribus
-                    itaque tempore ex vero dolorum, repellendus blanditiis quis
-                    praesentium eum necessitatibus, porro veritatis fugiat
-                    maxime, unde temporibus alias autem a libero! Doloribus
-                    accusantium veniam commodi at repudiandae fugit sed. Eum
-                    quos delectus ipsum vel velit quibusdam aliquam nesciunt
-                    accusamus, quo, nulla laboriosam. Rem unde repellat, nostrum
-                    in quia saepe earum maiores quisquam ipsam sequi!
-                    Repellendus provident sequi ipsa fugiat! Nesciunt ipsa eius
-                    dicta aspernatur suscipit? Unde deserunt, sequi molestias
-                    fugit blanditiis autem quibusdam omnis. Libero sed aperiam
-                    eaque consequatur omnis eius, blanditiis maiores veniam quos
-                    illum molestiae numquam totam! Quaerat rem delectus ab
-                    pariatur molestias nesciunt sint? Minus, iusto placeat.
-                    Harum est, vel culpa veniam facere dolore ut ipsam soluta
-                    nisi, illum ad nihil illo repellat tenetur magnam veritatis.
-                    Architecto vel dolore earum sequi fugiat totam id dolorem
-                    quasi culpa at quisquam autem maxime cum atque cumque
-                    officiis dolores animi sed neque minima aliquid quod,
-                    voluptatibus magni. Nesciunt, qui! Harum, alias. Repudiandae
-                    possimus, minima soluta quos modi suscipit debitis odio,
-                    sequi distinctio mollitia maxime inventore asperiores autem
-                    id quidem cum architecto dignissimos? Sint porro numquam cum
-                    exercitationem perspiciatis assumenda! Cumque, iusto! Totam
-                    at, non possimus, dignissimos corrupti laborum officiis
-                    natus aliquam reiciendis eaque autem deleniti modi odio
-                    consequatur alias minima dicta atque quis veniam commodi
-                    eveniet, sit rerum? Voluptas?
+                    {messages.length > 0 ? (
+                      <Stack gap='10px'>
+                        {messages.map((el) => (
+                          <Box
+                            marginLeft={userData._id === el.sender._id && "30%"}
+                            width="70%"
+                            key={el._id}
+                          >
+                            <Stack
+                              direction={
+                                userData._id === el.sender._id
+                                  ? "row-reverse"
+                                  : "row"
+                              }
+                              gap="10px"
+                            >
+                              <Avatar
+                                sx={{ h: "40px", w: "40px" }}
+                                src={el.sender.image}
+                                alt="userImage"
+                              />
+                              <Box
+                                sx={{
+                                  p: "5px 8px",
+                                  borderRadius: "10px",
+                                  bgcolor: "#f1f1f1",
+                                }}
+                              >
+                                <Typography>{el.message}</Typography>
+                                <Typography fontSize="12px" textAlign="right">
+                                  {el.createdAt.substring(11, 16)}
+                                </Typography>
+                              </Box>
+                            </Stack>
+                          </Box>
+                        ))}
+                      </Stack>
+                    ) : (
+                      <Stack justifyContent='center' alignItems='center' height='100%'>
+                        <img src="/Images/sendMessage.png" style={{height: '100px', width: '100px'}} alt="" />
+                        <Typography>Type message to start the chat</Typography>
+                      </Stack>
+                    )}
                   </Box>
                   <Box height="80px" display="flex" alignItems="center">
                     <Stack

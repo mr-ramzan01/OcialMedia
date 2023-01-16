@@ -357,7 +357,7 @@ export const SinglePost = ({ data }) => {
                     </Stack>
                     <Box
                       overflow={"scroll"}
-                      height="220px"
+                      height="210px"
                       mt="10px"
                       p="0 10px"
                       border="1px solid #d2d2d2"
