@@ -4,6 +4,7 @@ const cloudinary = require('cloudinary')
 const PORT = process.env.PORT || 8080;
 
 
+
 // Uncaught Error Handler
 process.on('uncaughtException', (err) => {
   console.log({ error: err.message, message: "Server Shutdown due to Uncaught error" });
@@ -28,6 +29,39 @@ const server = app.listen(PORT, () => {
   } catch (error) {
     console.log('not listening');
   }  
+})
+
+
+const io = require('socket.io')(server, {
+  pingTimeout: 30000,
+  cors: {
+    origin: 'http://localhost:3000'
+  }
+})
+
+io.on('connection', (socket) => {
+  console.log('connected to socket.io');
+
+  socket.on('setup', (userData) => {
+    socket.join(userData._id);
+    socket.emit('connected')
+  })
+
+  socket.on('join chat', (room) => {
+    socket.join(room);
+    console.log('user joined room: ' + room);
+  })
+
+  socket.on('new message', (newMessageReceived) => {
+    let chat = newMessageReceived.chat_id;
+    if(!chat.users) return console.log('chat.users is not defined');
+
+    chat.users.forEach(user => {
+      if(user === newMessageReceived.sender._id) return;
+      socket.in(user).emit('message received', newMessageReceived);
+    })
+  })
+
 })
 
 

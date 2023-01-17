@@ -26,6 +26,11 @@ import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 import moment from "moment";
 import ScrollableFeed from "react-scrollable-feed";
+// import io from 'socket.io-client'
+const { io } = require("socket.io-client");
+const ENDPOINT = 'http://localhost:3000';
+const socket = io(ENDPOINT);
+var selectedChatCompare;
 
 export const Messages = () => {
   const { userData } = useContext(AuthContext);
@@ -37,6 +42,8 @@ export const Messages = () => {
   const [searchData, setSearchData] = useState([]);
   const searchRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  const [socketConnected, setSocketConnected] = useState(false);
+  // const socket = useRef();
 
   useEffect(() => {
     setIsLoading(true);
@@ -44,6 +51,38 @@ export const Messages = () => {
       getChats();
     }
   }, [userData]);
+
+  useEffect(() => {
+    if (Object.keys(userData).length > 0) {
+      // socket = io(ENDPOINT);
+      socket.emit('setup', userData);
+      socket.on('connection', () => setSocketConnected(true));
+    }
+  },[]);
+
+
+  useEffect(() => {
+    if (Object.keys(userData).length > 0) {
+      selectedChatCompare = currentSelectedChat;
+    }
+  },[currentSelectedChat]);
+
+  useEffect(() => {
+    if (Object.keys(userData).length > 0) {
+      console.log('roaming');
+      socket.on('message received', (newMessageReceived) => {
+        console.log(newMessageReceived, selectedChatCompare);
+        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat._id) {
+          //give Notification
+          console.log('notification');
+        }
+        else {
+          console.log('good job')
+          setMessages([...messages, newMessageReceived]);
+        }
+      })
+    }
+  })
 
   const getChats = () => {
     fetch(`/chats/allchats`)
@@ -87,6 +126,8 @@ export const Messages = () => {
       .then((res) => res.json())
       .then((res) => {
         console.log(res);
+        socket.emit('new message', res.data);
+        setMessages([...messages, res.data]);
       })
       .catch((err) => {
         console.log(err, "error");
@@ -137,6 +178,8 @@ export const Messages = () => {
       .then((res) => {
         if (res.success) {
           setMessages(res.data);
+          console.log('here')
+          socket.emit('join chat', chat._id);
         }
       })
       .catch((err) => {

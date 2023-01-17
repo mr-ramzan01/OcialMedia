@@ -14,12 +14,14 @@ async function sendMessage(req, res, next) {
         }
 
         let message = await MessagesModel.create(req.body);
+        let messages = await MessagesModel.findOne({_id: message._id}).populate({path: 'sender', select: ['_id', 'image', 'username', 'full_name']}).populate('chat_id');
 
         await ChatsModel.findByIdAndUpdate(req.body.chat_id, {latestMessage : message._id});
 
         return res.status(200).send({
             success: true,
-            message: "Message sent successfully"
+            message: "Message sent successfully",
+            data: messages
         })
         
     } catch (error) {
