@@ -25,6 +25,7 @@ import { AiOutlineSend } from "react-icons/ai";
 import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 import moment from "moment";
+import ScrollableFeed from "react-scrollable-feed";
 
 export const Messages = () => {
   const { userData } = useContext(AuthContext);
@@ -33,11 +34,9 @@ export const Messages = () => {
   const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [msg, setMsg] = useState("");
-  const [showSearchData, setShowSearchData] = useState(false);
   const [searchData, setSearchData] = useState([]);
   const searchRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const scrollRef = useRef(null);
 
   useEffect(() => {
     setIsLoading(true);
@@ -56,7 +55,6 @@ export const Messages = () => {
             setCurrentSelectedChat(res.data[0]);
             getAllMessages(res.data[0]);
           }
-          console.log(res, "result");
         } else {
           console.log(res, "re");
           alert("Something went wrong");
@@ -76,7 +74,6 @@ export const Messages = () => {
   };
 
   const handleSendMessage = () => {
-    console.log(msg, "msg");
     if (msg === "") {
       return;
     }
@@ -95,7 +92,8 @@ export const Messages = () => {
         console.log(err, "error");
       })
       .finally(() => {
-        showEmojiPicker(false);
+        console.log('here');
+        setShowEmojiPicker(false);
       });
     setMsg("");
   };
@@ -143,9 +141,6 @@ export const Messages = () => {
       })
       .catch((err) => {
         console.log(err, "error");
-      })
-      .finally(() => {
-        handleScroll();
       })
   };
 
@@ -203,9 +198,6 @@ export const Messages = () => {
     return <Typography fontSize="13px"> {updatedDate}</Typography>;
   };
 
-  const handleScroll = () => {
-    scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }
 
   // handleScroll();
 
@@ -399,7 +391,11 @@ export const Messages = () => {
                             onClick={() => handleChatClick(el)}
                           >
                             <Avatar
-                              src={el.users[1].image}
+                              src={
+                                el.users[0]._id === userData._id
+                                  ? el.users[1].image
+                                  : el.users[0].image
+                              }
                               alt="userImage"
                               sx={{ height: "60px", width: "60px" }}
                             />
@@ -409,7 +405,9 @@ export const Messages = () => {
                                 fontSize="18px"
                                 fontWeight="600"
                               >
-                                {el.users[1].full_name}
+                                {el.users[0]._id === userData._id
+                                  ? el.users[1].full_name
+                                  : el.users[0].full_name}
                               </Typography>
                               {el.latestMessage && (
                                 <Stack
@@ -488,16 +486,26 @@ export const Messages = () => {
                     >
                       <Avatar
                         sx={{ h: "40px", w: "40px" }}
-                        src={currentSelectedChat.users[1].image}
+                        src={
+                          currentSelectedChat.users[0]._id === userData._id
+                            ? currentSelectedChat.users[1].image
+                            : currentSelectedChat.users[0].image
+                        }
                         alt="userImage"
                       />
                       <Link
-                        href={currentSelectedChat.users[1].username}
+                        href={
+                          currentSelectedChat.users[0]._id === userData._id
+                            ? currentSelectedChat.users[1].username
+                            : currentSelectedChat.users[0].username
+                        }
                         underline="none"
                         color="#000"
                       >
                         <Typography fontSize="20px" fontWeight="500">
-                          {currentSelectedChat.users[1].full_name}
+                          {currentSelectedChat.users[0]._id === userData._id
+                            ? currentSelectedChat.users[1].full_name
+                            : currentSelectedChat.users[0].full_name}
                         </Typography>
                       </Link>
                     </Stack>
@@ -518,64 +526,67 @@ export const Messages = () => {
                       />
                     </Stack>
                   </Stack>
-                  <Box
-                    ref={scrollRef}
-                    sx={{
-                      overflowY: "scroll",
-                      "::-webkit-scrollbar": {
-                        width: "5px",
-                      },
-                      "::-webkit-scrollbar-thumb": {
-                        background: "#d1d1d1",
-                        borderRadius: "10px",
-                      },
-                      p: "10px 10px 0 10px",
-                    }}
-                    height="calc(100% - 150px)"
+                  <Box height="calc(90vh - 150px)"
                   >
-                    {messages.length > 0 ? (
-                      <Stack gap='10px'>
-                        {messages.map((el) => (
-                          <Box
-                            marginLeft={userData._id === el.sender._id && "30%"}
-                            width="70%"
-                            key={el._id}
-                          >
-                            <Stack
-                              direction={
-                                userData._id === el.sender._id
-                                  ? "row-reverse"
-                                  : "row"
+                    <ScrollableFeed className="messageDiv">
+                      {messages.length > 0 ? (
+                        <Stack
+                          gap="10px"
+                        >
+                          {messages.map((el) => (
+                            <Box
+                              marginLeft={
+                                userData._id === el.sender._id && "30%"
                               }
-                              gap="10px"
+                              width="70%"
+                              key={el._id}
                             >
-                              <Avatar
-                                sx={{ h: "40px", w: "40px" }}
-                                src={el.sender.image}
-                                alt="userImage"
-                              />
-                              <Box
-                                sx={{
-                                  p: "5px 8px",
-                                  borderRadius: "10px",
-                                  bgcolor: "#f1f1f1",
-                                }}
+                              <Stack
+                                direction={
+                                  userData._id === el.sender._id
+                                    ? "row-reverse"
+                                    : "row"
+                                }
+                                gap="10px"
                               >
-                                <Typography>{el.message}</Typography>
-                                <Typography fontSize="12px" textAlign="right">
-                                  {el.createdAt.substring(11, 16)}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                          </Box>
-                        ))}
-                      </Stack>
-                    ) : (
-                      <Stack justifyContent='center' alignItems='center' height='100%'>
-                        <img src="/Images/sendMessage.png" style={{height: '100px', width: '100px'}} alt="" />
-                        <Typography>Type message to start the chat</Typography>
-                      </Stack>
-                    )}
+                                <Avatar
+                                  sx={{ h: "40px", w: "40px" }}
+                                  src={el.sender.image}
+                                  alt="userImage"
+                                />
+                                <Box
+                                  sx={{
+                                    p: "5px 8px",
+                                    borderRadius: "10px",
+                                    bgcolor: "#f1f1f1",
+                                  }}
+                                >
+                                  <Typography>{el.message}</Typography>
+                                  <Typography fontSize="12px" textAlign="right">
+                                    {moment(el.createdAt).format().substring(11, 16)}
+                                  </Typography>
+                                </Box>
+                              </Stack>
+                            </Box>
+                          ))}
+                        </Stack>
+                      ) : (
+                        <Stack
+                          justifyContent="center"
+                          alignItems="center"
+                          height="100%"
+                        >
+                          <img
+                            src="/Images/sendMessage.png"
+                            style={{ height: "100px", width: "100px" }}
+                            alt=""
+                          />
+                          <Typography>
+                            Type message to start the chat
+                          </Typography>
+                        </Stack>
+                      )}
+                    </ScrollableFeed>
                   </Box>
                   <Box height="80px" display="flex" alignItems="center">
                     <Stack

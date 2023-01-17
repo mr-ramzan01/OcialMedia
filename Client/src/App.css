@@ -1,11 +1,25 @@
 .scrollDiv::-webkit-scrollbar {
-    width: 0px;
+  width: 0px;
 }
 
 .selected {
-    border: 1px solid gray;
+  border: 1px solid gray;
 }
 
 .non {
-    border: 1px solid #fff;
+  border: 1px solid #fff;
+}
+
+.messageDiv {
+  padding: 10px 10px 0 10px;
+  /* background: url('https://digwallpapers.com/wallpapers/full/5/7/5/79925-1920x1360-text-message-background-photo-desktop-hd.jpg');
+  object-fit: cover; */
+}
+.messageDiv::-webkit-scrollbar {
+  width: 5px;
+}
+
+.messageDiv::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #d1d1d1;
 }
