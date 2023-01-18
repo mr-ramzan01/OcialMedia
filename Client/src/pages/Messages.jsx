@@ -71,8 +71,8 @@ export const Messages = () => {
     if (Object.keys(userData).length > 0) {
       console.log('roaming');
       socket.on('message received', (newMessageReceived) => {
-        console.log(newMessageReceived, selectedChatCompare);
-        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat._id) {
+        console.log(selectedChatCompare, 'selected');
+        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat_id) {
           //give Notification
           console.log('notification');
         }
