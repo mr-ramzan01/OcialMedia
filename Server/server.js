@@ -2,6 +2,7 @@ const app = require('./app');
 const connection = require('./config/database');
 const cloudinary = require('cloudinary')
 const PORT = process.env.PORT || 8080;
+const http = require('http');
 
 
 
@@ -22,8 +23,53 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 })
 
+const { Server } = require("socket.io");
 
-const server = app.listen(PORT, () => {
+const httpServer = http.createServer(app);
+const io = new Server(httpServer);
+
+let totalUsers = 0;
+io.on("connection", (socket) => {
+  totalUsers+= 1;
+  console.log('A new user connected', totalUsers);
+
+  socket.on('setup', (userData) => {
+    socket.join(userData._id);
+    console.log('user joined')
+    socket.emit('connected')
+  })
+
+  socket.on('join chat', (room) => {
+    console.log('joined room')
+    socket.join(room);
+  })
+
+  socket.on("typing", (room) => socket.in(room).emit("typing"));
+  socket.on("stop typing", (room) => socket.in(room).emit("stop typing"));
+   
+  socket.on("new message", (newMessageReceived) => {
+    let chat = newMessageReceived.chat_id;
+    if(!chat.users) return console.log('chat.users is not defined');
+
+    chat.users.forEach(user => {
+      if(user === newMessageReceived.sender._id) return;
+      socket.in(user).emit('message received', newMessageReceived);
+    })
+  })
+
+  socket.on("disconnect", () => {
+    totalUsers-= 1;
+    console.log('User disconnected', totalUsers);
+  })
+
+  socket.off("setup", () => {
+    console.log("USER DISCONNECTED");
+    socket.leave(userData._id);
+  });
+
+})
+
+const server = httpServer.listen(PORT, () => {
   try {
     console.log('listening on port 8080');
   } catch (error) {
@@ -31,40 +77,6 @@ const server = app.listen(PORT, () => {
   }  
 })
 
-
-const io = require('socket.io')(server, {
-  pingTimeout: 30000,
-  cors: {
-    origin: 'http://localhost:3000'
-  }
-})
-
-io.on('connection', (socket) => {
-  console.log('connected to socket.io');
-
-  socket.on('setup', (userData) => {
-    socket.join(userData._id);
-    socket.emit('connected')
-  })
-
-  socket.on('join chat', (room) => {
-    socket.join(room);
-    console.log('user joined room: ' + room);
-  })
-
-  socket.on('new message', (newMessageReceived) => {
-    console.log('new message received: ' + newMessageReceived);
-    let chat = newMessageReceived.chat_id;
-    if(!chat.users) return console.log('chat.users is not defined');
-
-    chat.users.forEach(user => {
-      console.log(newMessageReceived.sender._id);
-      if(user === newMessageReceived.sender._id) return;
-      socket.in(user).emit('message received', newMessageReceived);
-    })
-  })
-
-})
 
 
 // Unhandled Promise Rejection

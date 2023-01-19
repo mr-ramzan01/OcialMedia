@@ -26,8 +26,7 @@ import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 import moment from "moment";
 import ScrollableFeed from "react-scrollable-feed";
-// import io from 'socket.io-client'
-const { io } = require("socket.io-client");
+import {io} from 'socket.io-client'
 const ENDPOINT = 'http://localhost:3000';
 const socket = io(ENDPOINT);
 var selectedChatCompare;
@@ -43,7 +42,8 @@ export const Messages = () => {
   const searchRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
-  // const socket = useRef();
+  const [typing, setTyping] = useState(false);
+  const [istyping, setIsTyping] = useState(false);
 
   useEffect(() => {
     setIsLoading(true);
@@ -54,11 +54,12 @@ export const Messages = () => {
 
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
-      // socket = io(ENDPOINT);
       socket.emit('setup', userData);
-      socket.on('connection', () => setSocketConnected(true));
+      socket.on('connected', () => setSocketConnected(true));
+      socket.on("typing", () => setIsTyping(true));
+      socket.on("stop typing", () => setIsTyping(false));
     }
-  },[]);
+  },[userData]);
 
 
   useEffect(() => {
@@ -69,20 +70,39 @@ export const Messages = () => {
 
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
-      console.log('roaming');
       socket.on('message received', (newMessageReceived) => {
-        console.log(selectedChatCompare, 'selected');
-        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat_id) {
+        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat_id._id) {
           //give Notification
           console.log('notification');
         }
         else {
-          console.log('good job')
           setMessages([...messages, newMessageReceived]);
         }
       })
     }
   })
+
+  const typingHandler = (e) => {
+    setMsg(e.target.value);
+
+    if (!socketConnected) return;
+
+    if (!typing) {
+      setTyping(true);
+      socket.emit("typing", currentSelectedChat._id);
+    }
+    let lastTypingTime = new Date().getTime();
+    var timerLength = 2000;
+    
+    setTimeout(() => {
+      var timeNow = new Date().getTime();
+      var timeDiff = timeNow - lastTypingTime;
+      if (timeDiff >= timerLength && typing) {
+        socket.emit("stop typing", currentSelectedChat._id);
+        setTyping(false);
+      }
+    }, timerLength);
+  };
 
   const getChats = () => {
     fetch(`/chats/allchats`)
@@ -113,6 +133,7 @@ export const Messages = () => {
   };
 
   const handleSendMessage = () => {
+    socket.emit("stop typing", currentSelectedChat._id);
     if (msg === "") {
       return;
     }
@@ -125,7 +146,6 @@ export const Messages = () => {
     })
       .then((res) => res.json())
       .then((res) => {
-        console.log(res);
         socket.emit('new message', res.data);
         setMessages([...messages, res.data]);
       })
@@ -133,7 +153,6 @@ export const Messages = () => {
         console.log(err, "error");
       })
       .finally(() => {
-        console.log('here');
         setShowEmojiPicker(false);
       });
     setMsg("");
@@ -178,7 +197,6 @@ export const Messages = () => {
       .then((res) => {
         if (res.success) {
           setMessages(res.data);
-          console.log('here')
           socket.emit('join chat', chat._id);
         }
       })
@@ -525,7 +543,6 @@ export const Messages = () => {
                       p="20px 10px"
                       height="30px"
                       gap="20px"
-                      alignItems="center"
                     >
                       <Avatar
                         sx={{ h: "40px", w: "40px" }}
@@ -535,7 +552,8 @@ export const Messages = () => {
                             : currentSelectedChat.users[0].image
                         }
                         alt="userImage"
-                      />
+                      /> 
+                      <Stack direction='column'>
                       <Link
                         href={
                           currentSelectedChat.users[0]._id === userData._id
@@ -551,6 +569,10 @@ export const Messages = () => {
                             : currentSelectedChat.users[0].full_name}
                         </Typography>
                       </Link>
+                      <Typography height='25px' mt='-5px'>
+                        {istyping && 'typing...'}
+                      </Typography>
+                      </Stack>
                     </Stack>
                     <Stack
                       direction="row"
@@ -671,7 +693,7 @@ export const Messages = () => {
                       <TextField
                         fullWidth
                         value={msg}
-                        onChange={(e) => setMsg(e.target.value)}
+                        onChange={typingHandler}
                         placeholder="Message"
                         sx={{
                           "& .MuiOutlinedInput-root": {
