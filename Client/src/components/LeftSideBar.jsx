@@ -36,7 +36,7 @@ export const LeftSideBar = () => {
   const [postsOption, setPostsOption] = useState(false);
   const [previewOption, setPreviewOption] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
-  const { userData, getUser } = useContext(AuthContext);
+  const { userData, getUser, messagesNotification } = useContext(AuthContext);
   const [tagsInput, setTagsInput] = useState("");
   const [postData, setPostData] = useState({ caption: "", location: "" });
   const [postFiles, setPostFiles] = useState([]);
@@ -314,7 +314,7 @@ export const LeftSideBar = () => {
                     backgroundColor: "red",
                   },
                 }}
-                badgeContent={1}
+                badgeContent={messagesNotification.length}
                 overlap="circular"
               >
                 <AiOutlineMessage fontSize={"25px"} />

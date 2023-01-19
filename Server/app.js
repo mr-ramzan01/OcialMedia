@@ -10,6 +10,7 @@ const likesRouter = require('./routers/likesRouter.js');
 const commentsRouter = require('./routers/commentsRouter.js');
 const chatsRouter = require('./routers/chatsRouter.js');
 const messagesRouter = require('./routers/messagesRouter.js');
+const messagesNotificationRouter = require('./routers/messageNotificationRouter.js');
 
 
 const app = express();
@@ -32,6 +33,7 @@ app.use('/likes', likesRouter);
 app.use('/comments', commentsRouter);
 app.use('/chats', chatsRouter);
 app.use('/messages', messagesRouter);
+app.use('/messages/notifications', messagesNotificationRouter);
 
 
 

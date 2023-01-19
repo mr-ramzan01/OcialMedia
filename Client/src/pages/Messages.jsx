@@ -27,12 +27,13 @@ import EmojiPicker from "emoji-picker-react";
 import moment from "moment";
 import ScrollableFeed from "react-scrollable-feed";
 import {io} from 'socket.io-client'
+import { UserMessages } from "../components/UserMessages";
 const ENDPOINT = 'http://localhost:3000';
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
 export const Messages = () => {
-  const { userData } = useContext(AuthContext);
+  const { userData, sendMessageNotification } = useContext(AuthContext);
   const [chatsData, setChatsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
@@ -44,6 +45,7 @@ export const Messages = () => {
   const [socketConnected, setSocketConnected] = useState(false);
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
+  const [notify, setNotify] = useState([]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -69,11 +71,19 @@ export const Messages = () => {
   },[currentSelectedChat]);
 
   useEffect(() => {
+    if(notify.length > 0) {
+      sendMessageNotification(notify[notify.length-1]._id, notify[notify.length-1].sender._id);
+    }
+  },[notify])
+  
+  useEffect(() => {
     if (Object.keys(userData).length > 0) {
       socket.on('message received', (newMessageReceived) => {
         if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat_id._id) {
           //give Notification
-          console.log('notification');
+          if (!notify.includes(newMessageReceived)) {
+            setNotify([...notify, newMessageReceived]);
+          }
         }
         else {
           setMessages([...messages, newMessageReceived]);
@@ -93,7 +103,7 @@ export const Messages = () => {
     }
     let lastTypingTime = new Date().getTime();
     var timerLength = 2000;
-    
+
     setTimeout(() => {
       var timeNow = new Date().getTime();
       var timeDiff = timeNow - lastTypingTime;
@@ -594,63 +604,7 @@ export const Messages = () => {
                   <Box height="calc(90vh - 150px)"
                   >
                     <ScrollableFeed className="messageDiv">
-                      {messages.length > 0 ? (
-                        <Stack
-                          gap="10px"
-                        >
-                          {messages.map((el) => (
-                            <Box
-                              marginLeft={
-                                userData._id === el.sender._id && "30%"
-                              }
-                              width="70%"
-                              key={el._id}
-                            >
-                              <Stack
-                                direction={
-                                  userData._id === el.sender._id
-                                    ? "row-reverse"
-                                    : "row"
-                                }
-                                gap="10px"
-                              >
-                                <Avatar
-                                  sx={{ h: "40px", w: "40px" }}
-                                  src={el.sender.image}
-                                  alt="userImage"
-                                />
-                                <Box
-                                  sx={{
-                                    p: "5px 8px",
-                                    borderRadius: "10px",
-                                    bgcolor: "#f1f1f1",
-                                  }}
-                                >
-                                  <Typography>{el.message}</Typography>
-                                  <Typography fontSize="12px" textAlign="right">
-                                    {moment(el.createdAt).format().substring(11, 16)}
-                                  </Typography>
-                                </Box>
-                              </Stack>
-                            </Box>
-                          ))}
-                        </Stack>
-                      ) : (
-                        <Stack
-                          justifyContent="center"
-                          alignItems="center"
-                          height="100%"
-                        >
-                          <img
-                            src="/Images/sendMessage.png"
-                            style={{ height: "100px", width: "100px" }}
-                            alt=""
-                          />
-                          <Typography>
-                            Type message to start the chat
-                          </Typography>
-                        </Stack>
-                      )}
+                      <UserMessages messages={messages} currentSelectedChat={currentSelectedChat} />
                     </ScrollableFeed>
                   </Box>
                   <Box height="80px" display="flex" alignItems="center">

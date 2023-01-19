@@ -6,8 +6,8 @@ const messagesSchema = new mongoose.Schema({
         trim: true
     },
     sender: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "users",
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "users",
     },
     chat_id: { 
         type: mongoose.Schema.Types.ObjectId,
