@@ -33,7 +33,7 @@ const socket = io(ENDPOINT);
 var selectedChatCompare;
 
 export const Messages = () => {
-  const { userData, sendMessageNotification } = useContext(AuthContext);
+  const { userData, sendMessageNotification, messagesNotification, deleteNotifications } = useContext(AuthContext);
   const [chatsData, setChatsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
@@ -67,8 +67,25 @@ export const Messages = () => {
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
       selectedChatCompare = currentSelectedChat;
+      if(messagesNotification) {
+        let haveNotifications = false;
+        for(let i=0; i<messagesNotification.length; i++) {
+          if(messagesNotification[i].from === currentSelectedChat.users[1]._id || messagesNotification[i].from === currentSelectedChat.users[0]._id) {
+            haveNotifications = true;
+            break;
+          }
+        }
+        if(haveNotifications) {
+          {
+            currentSelectedChat.users[0]._id === userData._id
+              ?  deleteNotifications(currentSelectedChat.users[1]._id, currentSelectedChat.users[0]._id)
+              :  deleteNotifications(currentSelectedChat.users[0]._id, currentSelectedChat.users[1]._id)
+          }
+        }
+      }
     }
   },[currentSelectedChat]);
+
 
   useEffect(() => {
     if(notify.length > 0) {
@@ -604,7 +621,7 @@ export const Messages = () => {
                   <Box height="calc(90vh - 150px)"
                   >
                     <ScrollableFeed className="messageDiv">
-                      <UserMessages messages={messages} currentSelectedChat={currentSelectedChat} />
+                      <UserMessages messages={messages} />
                     </ScrollableFeed>
                   </Box>
                   <Box height="80px" display="flex" alignItems="center">

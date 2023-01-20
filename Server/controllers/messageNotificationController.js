@@ -59,8 +59,14 @@ async function deleteMessagesNotification(req, res, next) {
     try {
         const {user_id} = req.params;
 
-        await MessagesNotificationModel.deleteMany({from: user_id, to: req.user._id});
+        let deletedNotifications = await MessagesNotificationModel.deleteMany({from: user_id, to: req.user._id});
 
+        if(!deletedNotifications) {
+            return res.status(200).send({
+                success: false,
+                message: "NO notifications to delete",
+            })
+        }
         return res.status(200).send({
             success: true,
             message: "Messages notification deleted successfully",

@@ -59,13 +59,6 @@ async function accessChat(req, res, next) {
         });
       }
     }
-
-    await ChatsModel.create(req.body);
-
-    return res.status(200).send({
-      success: true,
-      message: "Chat created successfully",
-    });
   } catch (error) {
     // return next(new ErrorHandler(error, 500));
     return res.status(500).send({

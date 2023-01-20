@@ -1,34 +1,23 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
-import React, { useContext } from "react";
+import React, { useContext, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import moment from "moment";
 import { useEffect } from "react";
 
-export const UserMessages = ({ messages, currentSelectedChat }) => {
-  const { userData, messagesNotification, setMessagesNotification,getAllNotifications, deleteNotifications } = useContext(AuthContext);
-  useEffect(() => {
-    if(messagesNotification) {
-      let haveNotifications = false;
-      for(let i=0; i<messagesNotification.length; i++) {
-        if(messagesNotification[i].to === userData._id) {
-          haveNotifications = true;
-          break;
-        }
-      }
-      if(haveNotifications) {
-        {
-          currentSelectedChat.users[0]._id === userData._id
-            ?  deleteNotifications(currentSelectedChat.users[1]._id, currentSelectedChat.users[0]._id)
-            :  deleteNotifications(currentSelectedChat.users[0]._id, currentSelectedChat.users[1]._id)
-        }
-      }
-    }
-  },[])
+export const UserMessages = ({ messages}) => {
+  const { userData, } = useContext(AuthContext);
+  const scrollRef = useRef(undefined);
 
+  useEffect(() => {
+
+    console.log(scrollRef.current);
+  },[]);
+
+  console.log(scrollRef.current);
   return (
     <>
       {messages.length > 0 ? (
-        <Stack gap="10px">
+        <Stack gap="10px" ref={scrollRef} border='1px solid red'>
           {messages.map((el) => (
             <Box
               marginLeft={userData._id === el.sender._id && "30%"}

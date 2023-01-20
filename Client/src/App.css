@@ -12,8 +12,6 @@
 
 .messageDiv {
   padding: 10px 10px 0 10px;
-  /* background: url('https://digwallpapers.com/wallpapers/full/5/7/5/79925-1920x1360-text-message-background-photo-desktop-hd.jpg');
-  object-fit: cover; */
 }
 .messageDiv::-webkit-scrollbar {
   width: 5px;

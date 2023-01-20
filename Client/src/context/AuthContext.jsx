@@ -32,8 +32,6 @@ export const AuthContextprovider = ({children}) => {
         .then(res => res.json())
         .then(res => {
             if(res.success) {
-                console.log(res, 'deleted notifications');
-                // setMessagesNotification(res.data);
                 getAllNotifications(userId);
             }
         })
