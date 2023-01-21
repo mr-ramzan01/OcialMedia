@@ -1,23 +1,16 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
-import React, { useContext, useRef } from "react";
+import React, { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import moment from "moment";
-import { useEffect } from "react";
 
 export const UserMessages = ({ messages}) => {
-  const { userData, } = useContext(AuthContext);
-  const scrollRef = useRef(undefined);
+  const { userData } = useContext(AuthContext);
+  
 
-  useEffect(() => {
-
-    console.log(scrollRef.current);
-  },[]);
-
-  console.log(scrollRef.current);
   return (
     <>
       {messages.length > 0 ? (
-        <Stack gap="10px" ref={scrollRef} border='1px solid red'>
+        <Stack gap="10px">
           {messages.map((el) => (
             <Box
               marginLeft={userData._id === el.sender._id && "30%"}

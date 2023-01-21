@@ -39,12 +39,16 @@ async function getAllMessages(req, res, next) {
 
         const {chatId} = req.params;
 
-        let messages = await MessagesModel.find({chat_id: chatId}).populate({path: 'sender', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: 1}).limit(40);
+        const messagesCount = await MessagesModel.find({chat_id: chatId}).count();
+
+
+        let messages = await MessagesModel.find({chat_id: chatId}).populate({path: 'sender', select: ['_id', 'image', 'username', 'full_name']});
 
         return res.status(200).send({
             success: true,
             message: "Messages data",
-            data: messages
+            data: messages,
+            messagesLength: messagesCount
         })
         
     } catch (error) {
