@@ -34,8 +34,10 @@ export const Explore = () => {
     fetch(`/posts/explore/data?page=${page}`)
     .then((res) => res.json())
     .then((res) => {
-      setExploreData(() => [...exploreData, ...res.data]);
-      setTotalLength(res.totalData);
+      if(res.success) {
+        setExploreData(() => [...exploreData, ...res.data]);
+        setTotalLength(res.totalData);
+      }
     })
     .catch((err) => {
       console.log(err, "error");

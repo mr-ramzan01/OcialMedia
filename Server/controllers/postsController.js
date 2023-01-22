@@ -125,7 +125,7 @@ async function getSinglePost(req, res, next) {
 
         const data = await PostsModel.findOne({_id: id}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
 
-        return res.status(201).send({
+        return res.status(200).send({
             success: true,
             message: 'Post data',
             data: data
@@ -141,7 +141,30 @@ async function getSinglePost(req, res, next) {
 }
 
 
+async function getRecentPosts(req, res, next) {
+    try {
+        const {page} = req.query;
+        let totalData = await PostsModel.find().count();
+        let recentPosts = await PostsModel.find().populate({path: 'user_id', select: ['id', 'image', 'full_name', 'username']}).sort({ createdAt: -1}).skip((page-1)*10).limit(10);
+
+        return res.status(200).send({
+            success: true,
+            message: 'Recent posts',
+            data: recentPosts,
+            totalData: totalData
+        })
+        
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 
 
-module.exports = { createPosts, postOnCloudinary, getPosts, getExploreData, getSinglePost };
+
+
+module.exports = { createPosts, postOnCloudinary, getPosts, getExploreData, getSinglePost, getRecentPosts };

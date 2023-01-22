@@ -10,6 +10,7 @@ export const AuthContextprovider = ({children}) => {
     const [postData, setPostData] = useState([]);
     const [editData, setEditData] = useState({full_name: 'dfa', bio: ``, username:'', email: '', mobile_no: '' });
     const [messagesNotification, setMessagesNotification] = useState([]);
+    
 
 
     const getAllNotifications = (id) => {

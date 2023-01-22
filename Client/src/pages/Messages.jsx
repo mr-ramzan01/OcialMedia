@@ -286,9 +286,6 @@ export const Messages = () => {
     return <Typography fontSize="13px"> {updatedDate}</Typography>;
   };
 
-
-  // handleScroll();
-
   return (
     <>
       {isLoading && <Loader />}

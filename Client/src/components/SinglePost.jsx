@@ -22,7 +22,7 @@ import { MdOutlineEmojiEmotions } from "react-icons/md";
 import EmojiPicker from "emoji-picker-react";
 import { RxCross2 } from "react-icons/rx";
 
-export const SinglePost = ({ data }) => {
+export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
   const [postOpen, setPostOpen] = useState(true);
   const { setShowSinglePost, userData, handleClick } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -39,6 +39,7 @@ export const SinglePost = ({ data }) => {
   const handleClose = () => {
     setPostOpen(false);
     setShowSinglePost(false);
+    setShowSinglePostFromRecent(false);
   };
 
   const handleChange = (e) => {
