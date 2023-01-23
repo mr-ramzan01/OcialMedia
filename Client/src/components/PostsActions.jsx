@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { BsSuitHeartFill, BsSuitHeart } from "react-icons/bs";
 import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
+import { AllReactionsonPost } from "./AllReactionsonPost";
 import { SinglePost } from "./SinglePost";
 
 export const PostsActions = ({ el }) => {
@@ -11,6 +12,11 @@ export const PostsActions = ({ el }) => {
   const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: "" });
   const [likeCount, setLikeCount] = useState(0);
   const { userData } = useContext(AuthContext);
+  const [showAllReactions, setShowAllReactions] = useState(false);
+
+  const handelCloseShowReactions = () => {
+    setShowAllReactions(false);
+  }
 
   useEffect(() => {
     hasLikedByUser();
@@ -83,6 +89,7 @@ export const PostsActions = ({ el }) => {
 
   return (
     <>
+    {showAllReactions && <AllReactionsonPost data={el} showAllReactions={showAllReactions} handelCloseShowReactions={handelCloseShowReactions} />}
       {showSinglePostFromRecent && <SinglePost data={el} setShowSinglePostFromRecent={setShowSinglePostFromRecent} />}
       <Stack direction="row" position={"relative"} gap="15px">
         {hasLiked.liked ? (
@@ -177,7 +184,9 @@ export const PostsActions = ({ el }) => {
       {likeCount === 0 ? (
         <Typography>No Reactions</Typography>
       ) : (
-        <Typography>{likeCount} Reactions</Typography>
+        <Typography>
+            <Typography onClick={() => setShowAllReactions(true)} sx={{cursor: 'pointer'}} component='span'>{likeCount} Reactions</Typography>
+        </Typography>
       )}
     </>
   );

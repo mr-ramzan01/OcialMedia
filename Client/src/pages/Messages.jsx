@@ -458,12 +458,7 @@ export const Messages = () => {
                       <Stack gap="10px">
                         {chatsData.map((el) => (
                           <Stack
-                            className={`${
-                              currentSelectedChat &&
-                              el._id === currentSelectedChat._id
-                                ? "selected"
-                                : "non"
-                            }`}
+                            border={el._id === currentSelectedChat._id ? '1px solid gray' : '1px solid #fff'}
                             key={el._id}
                             p="10px"
                             bgcolor="#f3f3f3"

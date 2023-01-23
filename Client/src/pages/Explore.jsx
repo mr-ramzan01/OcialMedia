@@ -52,8 +52,8 @@ export const Explore = () => {
 
   return (
     <>
-      {isLoading && <Loader />}
       {showSinglePost && <SinglePost data={postData}/>}
+      {isLoading ? <Loader /> :
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
@@ -144,6 +144,7 @@ export const Explore = () => {
           </Box>
         </Box>
       </Stack>
+}
     </>
   );
 };

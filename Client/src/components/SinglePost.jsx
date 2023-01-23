@@ -36,6 +36,13 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
   const [reactionsData, setReactionsData] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
+  useEffect(() => {
+    setIsLoading(true);
+    getComments();
+    hasLikedByUser();
+    isFollowingUser();
+  }, []);
+
   const handleClose = () => {
     setPostOpen(false);
     setShowSinglePost(false);
@@ -87,12 +94,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
         console.log(err, "unfollow error");
       });
   };
-  useEffect(() => {
-    setIsLoading(true);
-    getComments();
-    hasLikedByUser();
-    isFollowingUser();
-  }, []);
 
   const isFollowingUser = () => {
     fetch(
@@ -203,6 +204,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
 
   const AddComments = () => {
     if(comment === '') return;
+    setShowEmojiPicker(false);
     setIsLoading(true);
     fetch(`/comments/create`, {
       method: "POST",
@@ -241,7 +243,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
       });
   };
 
-  const handleSClosehowReactions = () => {
+  const handelCloseShowReactions = () => {
     setShowReactions(false);
   };
 
@@ -249,13 +251,14 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
     setComment((prev) => prev+e.emoji);
   }
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  // if (isLoading) {
+  //   return <Loader />;
+  // }
 
   return (
     <>
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
+        {isLoading ? <Loader /> :
         <Box sx={{ width: "880px" }}>
           <DialogContent>
             <Stack direction="row" height="100%">
@@ -611,11 +614,13 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
             </Stack>
           </DialogContent>
         </Box>
+}
       </Dialog>
-      <Dialog open={showReactions} onClose={handleSClosehowReactions}>
+      <Dialog open={showReactions} onClose={handelCloseShowReactions}>
         <Box
           maxHeight="200px"
           overflow="scroll"
+          mt='20px'
           sx={{ "&::-webkit-scrollbar": { width: "0" } }}
         >
           {reactionsData.length > 0 ? (
@@ -644,7 +649,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
                   <Box>
                     {el.like_type === "love" && (
                       <BsSuitHeartFill
-                        onClick={handleRemoveLikes}
                         fontSize="25px"
                         color="red"
                         style={{ cursor: "pointer" }}
@@ -652,7 +656,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
                     )}
                     {el.like_type === "funny" && (
                       <FaLaughSquint
-                        onClick={handleRemoveLikes}
                         fontSize="25px"
                         color="#eb9800"
                         style={{ cursor: "pointer" }}
@@ -660,7 +663,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
                     )}
                     {el.like_type === "cry" && (
                       <FaSadCry
-                        onClick={handleRemoveLikes}
                         fontSize="25px"
                         color="#00baff"
                         style={{ cursor: "pointer" }}
@@ -668,7 +670,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
                     )}
                     {el.like_type === "angry" && (
                       <FaAngry
-                        onClick={handleRemoveLikes}
                         fontSize="25px"
                         color="#c30909"
                         style={{ cursor: "pointer" }}
@@ -682,7 +683,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
             <Box
               height="100%"
               display="flex"
-              p="20px 0"
+              p="0 5px"
               alignItems="center"
               justifyContent="center"
             >

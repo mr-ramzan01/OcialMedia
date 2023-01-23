@@ -2,14 +2,6 @@
   width: 0px;
 }
 
-.selected {
-  border: 1px solid gray;
-}
-
-.non {
-  border: 1px solid #fff;
-}
-
 .messageDiv {
   padding: 10px 10px 0 10px;
 }

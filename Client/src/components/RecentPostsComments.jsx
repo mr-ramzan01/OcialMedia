@@ -41,9 +41,7 @@ export const RecentPostsComments = ({ el }) => {
 
   if (isLoading) {
     return (
-      <div
-        style={{ display: "grid", placeContent: "center"}}
-      >
+      <div style={{ display: "grid", placeContent: "center" }}>
         <CircularProgress sx={{ color: "#bbbbbb" }} />
       </div>
     );
@@ -60,7 +58,12 @@ export const RecentPostsComments = ({ el }) => {
         <Box>
           <Stack direction="column" gap="10px">
             {commentsData.map((el) => (
-              <Stack direction="row" key={el._id} alignItems="center" gap='10px'>
+              <Stack
+                direction="row"
+                key={el._id}
+                alignItems="center"
+                gap="10px"
+              >
                 <Link
                   href={`/${el.comment_by.username}`}
                   underline="none"
@@ -74,12 +77,14 @@ export const RecentPostsComments = ({ el }) => {
                     {el.comment_by.username}
                   </Typography>
                 </Link>
-                <Typography fontSize="15px">{el.title}</Typography>
+                <Typography mt="5px" fontSize="15px">
+                  {el.title}
+                </Typography>
               </Stack>
             ))}
           </Stack>
           <Typography
-            sx={{ cursor: "pointer", mt: '5px' }}
+            sx={{ cursor: "pointer", mt: "5px" }}
             onClick={() => setShowSinglePostFromRecent(true)}
           >
             {totalComments > 1 && "See all comments"}
@@ -87,7 +92,7 @@ export const RecentPostsComments = ({ el }) => {
         </Box>
       ) : (
         <Box>
-          <Typography textAlign="center" fontSize={"22px"} color="#a1a1a1">
+          <Typography textAlign="center" fontSize={"20px"} p='10px 0' color="#a1a1a1">
             Be the first to make a comment
           </Typography>
         </Box>

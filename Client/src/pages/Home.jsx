@@ -15,6 +15,7 @@ import { Carousel } from "react-responsive-carousel";
 import { RecentPostsComments } from "../components/RecentPostsComments";
 import { SinglePost } from "../components/SinglePost";
 import { PostsActions } from "../components/PostsActions";
+import { Loader } from "../components/Loader";
 
 export const Home = () => {
   const [recentPosts, setRecentPosts] = useState([]);
@@ -77,44 +78,95 @@ export const Home = () => {
     }
 
     const updatedDate = all.join("");
-    return <Typography fontSize="15px"> {updatedDate}</Typography>;
+    return (
+      <Typography fontSize="15px" component="span">
+        {" "}
+        {updatedDate}
+      </Typography>
+    );
   };
 
   return (
     <>
-      <Stack direction={"row"}>
-        <LeftSideBar />
-        <Box marginLeft="240px" width="100%">
-          <Paper
-            m="30px auto"
-            sx={{ minHeight: "90vh", m: "30px auto", width: "600px" }}
-          >
-            {recentPosts.length > 0 ? (
-              <InfiniteScroll
-                dataLength={recentPosts.length}
-                className={"scrollDiv"}
-                next={fetchRecentPosts}
-                hasMore={totalLength !== recentPosts.length}
-                loader={
-                  <div
-                    style={{
-                      display: "grid",
-                      placeContent: "center",
-                      padding: "30px 0",
-                    }}
-                  >
-                    <CircularProgress sx={{ color: "#bbbbbb" }} />
-                  </div>
-                }
-              >
-                {recentPosts.map((el) => (
-                  <Box key={el._id} borderBottom="1px solid gray" p="15px 10px">
-                    <Stack direction="row" p="10px 0" alignItems="center">
-                      <Avatar
-                        sx={{ marginRight: "20px" }}
-                        src={el.user_id.image}
-                      />
-                      <Stack direction="row" gap="10px" alignItems="center">
+      {isLoading ? (
+        <Loader />
+      ) : (
+        <Stack direction={"row"}>
+          <LeftSideBar />
+          <Box marginLeft="240px" width="100%">
+            <Box
+              m="30px auto"
+              sx={{ minHeight: "90vh", m: "30px auto", width: "600px" }}
+            >
+              {recentPosts.length > 0 ? (
+                <InfiniteScroll
+                  dataLength={recentPosts.length}
+                  className={"scrollDiv"}
+                  next={fetchRecentPosts}
+                  hasMore={totalLength !== recentPosts.length}
+                  loader={
+                    <div
+                      style={{
+                        display: "grid",
+                        placeContent: "center",
+                        padding: "30px 0",
+                      }}
+                    >
+                      <CircularProgress sx={{ color: "#bbbbbb" }} />
+                    </div>
+                  }
+                >
+                  {recentPosts.map((el) => (
+                    <Paper
+                      key={el._id}
+                      sx={{p:"15px 10px", mb:'10px'}}
+                    >
+                      <Stack direction="row" p="10px 0" alignItems="center">
+                        <Avatar
+                          sx={{ marginRight: "20px" }}
+                          src={el.user_id.image}
+                        />
+                        <Stack direction="row" gap="10px" alignItems="center">
+                          <Link
+                            href={`/${el.user_id.username}`}
+                            underline="none"
+                            color="#000"
+                          >
+                            <Typography
+                              fontFamily={"Dancing Script"}
+                              fontSize="22px"
+                              fontWeight="600"
+                            >
+                              {el.user_id.username}
+                            </Typography>
+                          </Link>
+                          <Typography mt="5px">
+                            <DateConvert date={el.createdAt} />
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                      <Carousel
+                        showStatus={false}
+                        showIndicators={el.post_images.length > 1}
+                        showThumbs={false}
+                      >
+                        {el.post_images.map((el) => (
+                          <img
+                            key={el}
+                            width="100%"
+                            height="485px"
+                            src={el.url}
+                            alt=""
+                          />
+                        ))}
+                      </Carousel>
+                      <PostsActions el={el} />
+                      <Stack
+                        direction="row"
+                        key={el._id}
+                        alignItems="center"
+                        gap="10px"
+                      >
                         <Link
                           href={`/${el.user_id.username}`}
                           underline="none"
@@ -128,37 +180,44 @@ export const Home = () => {
                             {el.user_id.username}
                           </Typography>
                         </Link>
-                        <DateConvert date={el.createdAt} />
+                        <Typography mt="5px" fontSize="15px">
+                          <Typography component="span">
+                            {el.caption}{" "}
+                          </Typography>
+                          {el.tags.map((elem, ind) => (
+                            <Typography
+                              sx={{ cursor: "pointer" }}
+                              component="span"
+                              color="#0066ff"
+                              key={ind}
+                            >
+                              #{elem}{" "}
+                            </Typography>
+                          ))}
+                        </Typography>
                       </Stack>
-                    </Stack>
-                    <Carousel
-                      showStatus={false}
-                      showIndicators={el.post_images.length > 1}
-                      showThumbs={false}
-                    >
-                      {el.post_images.map((el) => (
-                        <img
-                          key={el}
-                          width="100%"
-                          height="485px"
-                          src={el.url}
-                          alt=""
-                        />
-                      ))}
-                    </Carousel>
-                    <PostsActions el={el} />
-                    <RecentPostsComments el={el} />
-                  </Box>
-                ))}
-              </InfiniteScroll>
-            ) : (
-              <Box sx={{display: 'flex', alignItems: 'center', justifyContent: 'center', height:'90vh'}}>
-                <Typography color='#bbbbbb' fontSize='25px'>Be the first to create a post</Typography>
-              </Box>
-            )}
-          </Paper>
-        </Box>
-      </Stack>
+                      <RecentPostsComments el={el} />
+                    </Paper>
+                  ))}
+                </InfiniteScroll>
+              ) : (
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "90vh",
+                  }}
+                >
+                  <Typography color="#bbbbbb" fontSize="25px">
+                    Be the first to create a post
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Box>
+        </Stack>
+      )}
     </>
   );
 };
