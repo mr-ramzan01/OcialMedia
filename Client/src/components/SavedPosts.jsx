@@ -14,11 +14,11 @@ export const SavedPosts = ({id}) => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
+    setIsLoading(true);
     getSavedPosts();
   }, []);
 
   const getSavedPosts = () => {
-    setIsLoading(true);
     setPage((prev) => prev + 1);
     fetch(`/savedposts/get/all/${id}?page=${page}`)
       .then((res) => res.json())

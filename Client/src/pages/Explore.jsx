@@ -52,7 +52,7 @@ export const Explore = () => {
 
   return (
     <>
-      {showSinglePost && <SinglePost data={postData}/>}
+      {showSinglePost && <SinglePost id={postData._id}/>}
       {isLoading ? <Loader /> :
       <Stack direction={"row"}>
         <LeftSideBar />

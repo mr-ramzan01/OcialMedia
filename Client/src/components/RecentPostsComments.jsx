@@ -50,7 +50,7 @@ export const RecentPostsComments = ({ el }) => {
     <>
       {showSinglePostFromRecent && (
         <SinglePost
-          data={el}
+          id={el._id}
           setShowSinglePostFromRecent={setShowSinglePostFromRecent}
         />
       )}

@@ -138,7 +138,7 @@ export const PostsActions = ({ el }) => {
       )}
       {showSinglePostFromRecent && (
         <SinglePost
-          data={el}
+          id={el._id}
           setShowSinglePostFromRecent={setShowSinglePostFromRecent}
         />
       )}

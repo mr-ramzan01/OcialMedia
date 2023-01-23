@@ -22,7 +22,7 @@ import { MdOutlineEmojiEmotions } from "react-icons/md";
 import EmojiPicker from "emoji-picker-react";
 import { RxCross2 } from "react-icons/rx";
 
-export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
+export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
   const [postOpen, setPostOpen] = useState(true);
   const { setShowSinglePost, userData, handleClick } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -35,12 +35,23 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
   const [showReactions, setShowReactions] = useState(false);
   const [reactionsData, setReactionsData] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [data, setData] = useState({});
 
   useEffect(() => {
     setIsLoading(true);
-    getComments();
-    hasLikedByUser();
-    isFollowingUser();
+    fetch(`/posts/single/${id}`)
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setData(res.data);
+      }
+      getComments(res.data._id);
+      hasLikedByUser(res.data._id);
+      isFollowingUser(res.data.user_id._id);
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
   }, []);
 
   const handleClose = () => {
@@ -96,9 +107,9 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
       });
   };
 
-  const isFollowingUser = () => {
+  const isFollowingUser = (id) => {
     fetch(
-      `/follows/isfollowing?followerID=${data.user_id._id}&followingID=${userData._id}`
+      `/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
     )
       .then((res) => res.json())
       .then((res) => {
@@ -169,8 +180,8 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
       });
   };
 
-  const hasLikedByUser = () => {
-    fetch(`/likes/hasliked/${data._id}`)
+  const hasLikedByUser = (id) => {
+    fetch(`/likes/hasliked/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -190,8 +201,8 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
       });
   };
 
-  const getComments = () => {
-    fetch(`/comments/get/${data._id}`)
+  const getComments = (id) => {
+    fetch(`/comments/get/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -260,6 +271,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
     <>
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
         {isLoading && <Loader /> }
+        {data._id &&
         <Box sx={{ width: "880px" }}>
           <DialogContent>
             <Stack direction="row" height="100%">
@@ -479,7 +491,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
                     )}
                     <Box position="absolute" width="100%" bottom="0">
                       <Box>
-                        <Stack direction="row" gap="15px">
+                        <Stack height='25px' direction="row" gap="15px">
                           {hasLiked.liked ? (
                             <Box>
                               {hasLiked.type === "love" && (
@@ -615,6 +627,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
             </Stack>
           </DialogContent>
         </Box>
+}
       </Dialog>
       <Dialog open={showReactions} onClose={handelCloseShowReactions}>
         <Box
