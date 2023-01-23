@@ -76,7 +76,7 @@ async function unFollowRequest(req, res, next) {
 
         await userModel.findOneAndUpdate({_id: following_Id}, {$inc: {followingCount: -1}});
         await userModel.findOneAndUpdate({_id: follower_Id}, {$inc: {followerCount: -1}})
-        await FollowModel.findOneAndDelete({follower_Id: follower_Id});
+        await FollowModel.findOneAndDelete({follower_Id: follower_Id, following_Id: following_Id});
 
         return res.status(200).send({
             success: true,

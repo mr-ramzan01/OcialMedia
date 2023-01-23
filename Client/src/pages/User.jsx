@@ -52,6 +52,7 @@ export const User = () => {
     })
       .then((res) => res.json())
       .then((res) => {
+        console.log(res, 'follow response');
         fetchData();
       })
       .catch((err) => {
@@ -135,7 +136,7 @@ export const User = () => {
       setUnfollowOpen(true);
     }
   };
-
+  
   const handleUnFollow = () => {
     fetch(`/follows/unfollowRequest`, {
       method: "DELETE",
@@ -149,6 +150,7 @@ export const User = () => {
     })
       .then((res) => res.json())
       .then((res) => {
+        console.log(res , 'unfollow response');
         fetchData();
       })
       .catch((err) => {
