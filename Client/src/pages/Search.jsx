@@ -22,7 +22,6 @@ export const Search = () => {
     SearchInput();
   };
   const SearchInput = debounce(() => {
-    console.log(searchRef.current.value);
     fetch(`/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {

@@ -13,7 +13,7 @@ async function isFollowing(req, res, next) {
         }
         let follower = await FollowModel.findOne({$and: [{following_Id: followingID}, {follower_Id: followerID}]});
         if(!follower) {
-            return res.status(404).send({
+            return res.status(200).send({
                 success: false,
                 message: 'Not following'
             })

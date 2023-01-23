@@ -49,6 +49,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
     setShowSinglePostFromRecent(false);
   };
 
+  
   const handleChange = (e) => {
     setComment(e.target.value);
   };

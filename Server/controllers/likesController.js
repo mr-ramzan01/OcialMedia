@@ -80,7 +80,7 @@ async function hasLiked(req, res, next) {
             })
         }
         else {
-            return res.status(404).send({
+            return res.status(200).send({
                 success: false,
                 message: "User has not liked"
             })

@@ -51,7 +51,9 @@ export const User = () => {
       },
     })
       .then((res) => res.json())
-      .then((res) => {})
+      .then((res) => {
+        fetchData();
+      })
       .catch((err) => {
         alert("Something went wrong");
         console.log(err, "following error");
@@ -59,25 +61,26 @@ export const User = () => {
   };
 
   const getPosts = () => {
-    setPage((prev) => prev+1);
+    setPage((prev) => prev + 1);
     fetch(`/posts/${username}?page=${page}`)
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        setUserPosts(() => [...userPosts, ...res.data]);
-      }
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
-  }
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setUserPosts(() => [...userPosts, ...res.data]);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+  };
 
   const fetchData = () => {
     setIsLoading(true);
+    setPage(1);
     Promise.all([
       fetch("/users/loggedInUser"),
       fetch(`/users/${username}`),
-      fetch(`/posts/${username}?page=${page}`),
+      fetch(`/posts/${username}?page=${1}`),
     ])
       .then((res) => {
         return Promise.all(
@@ -87,13 +90,13 @@ export const User = () => {
         );
       })
       .then((res) => {
-        if(res[0].success) {
+        if (res[0].success) {
           setLoginUserData(res[0].data);
         }
-        if(res[2].success) {
+        if (res[2].success) {
           setUserPosts(res[2].data);
           setTotalPostsLength(res[2].totalPosts);
-          setPage((prev) => prev+1);
+          setPage((prev) => prev + 1);
         }
         if (res[1].success) {
           setOneUserData(res[1].data);
@@ -128,7 +131,6 @@ export const User = () => {
   const handleFollow = () => {
     if (!isFollowing) {
       followRequest();
-      fetchData();
     } else {
       setUnfollowOpen(true);
     }
@@ -146,13 +148,14 @@ export const User = () => {
       },
     })
       .then((res) => res.json())
-      .then((res) => {})
+      .then((res) => {
+        fetchData();
+      })
       .catch((err) => {
         alert("Something went wrong");
         console.log(err, "unfollow error");
       });
     setUnfollowOpen(false);
-    fetchData();
   };
 
   const handleClose = () => {
@@ -238,7 +241,6 @@ export const User = () => {
       </Box>
     );
   }
-
   return (
     <>
       {showSinglePost && <SinglePost data={postData} />}
@@ -423,25 +425,24 @@ export const User = () => {
                 </Stack>
                 {selected === "post" ? (
                   <Box padding="0 30px 30px">
-                    <InfiniteScroll
-                      dataLength={userPosts.length}
-                      className={"scrollDiv"}
-                      next={getPosts}
-                      hasMore={totalPostsLength !== userPosts.length}
-                      useWidow={false}
-                      loader={
-                        <div
-                          style={{
-                            display: "grid",
-                            placeContent: "center",
-                            padding: "30px 0",
-                          }}
-                        >
-                          <CircularProgress sx={{ color: "#bbbbbb" }} />
-                        </div>
-                      }
-                    >
-                      {userPosts.length > 0 ? (
+                    {userPosts.length > 0 ? (
+                      <InfiniteScroll
+                        dataLength={userPosts.length}
+                        className={"scrollDiv"}
+                        next={getPosts}
+                        hasMore={totalPostsLength !== userPosts.length}
+                        loader={
+                          <div
+                            style={{
+                              display: "grid",
+                              placeContent: "center",
+                              padding: "30px 0",
+                            }}
+                          >
+                            <CircularProgress sx={{ color: "#bbbbbb" }} />
+                          </div>
+                        }
+                      >
                         <Grid
                           display="grid"
                           gridTemplateColumns={"repeat(3,1fr)"}
@@ -482,37 +483,37 @@ export const User = () => {
                             </Box>
                           ))}
                         </Grid>
-                      ) : (
-                        <Box
-                          padding="30px 0"
-                          display="grid"
-                          sx={{ placeContent: "center" }}
-                        >
-                          <Box>
-                            <Box width="200px" height="200px">
-                              <img
-                                width="100%"
-                                height="100%"
-                                style={{ objectFit: "contain" }}
-                                src="/Images/nopost.png"
-                                alt=""
-                              />
-                            </Box>
-                            <Typography
-                              textAlign="center"
-                              fontSize={"30px"}
-                              color="#a1a1a1"
-                            >
-                              No Posts Yet
-                            </Typography>
+                      </InfiniteScroll>
+                    ) : (
+                      <Box
+                        padding="30px 0"
+                        display="grid"
+                        sx={{ placeContent: "center" }}
+                      >
+                        <Box>
+                          <Box width="200px" height="200px">
+                            <img
+                              width="100%"
+                              height="100%"
+                              style={{ objectFit: "contain" }}
+                              src="/Images/nopost.png"
+                              alt=""
+                            />
                           </Box>
+                          <Typography
+                            textAlign="center"
+                            fontSize={"30px"}
+                            color="#a1a1a1"
+                          >
+                            No Posts Yet
+                          </Typography>
                         </Box>
-                      )}
-                    </InfiniteScroll>
+                      </Box>
+                    )}
                   </Box>
                 ) : (
-                  <Box border='1px solid red'>Saved
-                  <SavedPosts />
+                  <Box padding="0 30px 30px">
+                    <SavedPosts id={oneUserData._id} />
                   </Box>
                 )}
               </Stack>

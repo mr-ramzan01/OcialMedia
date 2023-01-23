@@ -1,33 +1,67 @@
-import React from "react";
+import { CircularProgress, Grid, Typography } from "@mui/material";
+import { Box } from "@mui/system";
+import React, { useContext, useEffect, useState } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { HiRectangleStack } from "react-icons/hi2";
+import { AuthContext } from "../context/AuthContext";
+import { Loader } from "./Loader";
 
-export const SavedPosts = () => {
+export const SavedPosts = ({id}) => {
+  const [savedPosts, setSavedPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalSavedPostsLength, setTotalSavedPostsLength] = useState(0);
+  const { handleClick } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    getSavedPosts();
+  }, []);
+
+  const getSavedPosts = () => {
+    setIsLoading(true);
+    setPage((prev) => prev + 1);
+    fetch(`/savedposts/get/all/${id}?page=${page}`)
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setSavedPosts([...savedPosts, ...res.data]);
+          setTotalSavedPostsLength(res.totalLength);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      })
+  };
   return (
     <>
-      <InfiniteScroll
-        dataLength={userPosts.length}
-        className={"scrollDiv"}
-        next={getPosts}
-        hasMore={totalPostsLength !== userPosts.length}
-        useWidow={false}
-        loader={
-          <div
-            style={{
-              display: "grid",
-              placeContent: "center",
-              padding: "30px 0",
-            }}
-          >
-            <CircularProgress sx={{ color: "#bbbbbb" }} />
-          </div>
-        }
-      >
-        {userPosts.length > 0 ? (
+    {isLoading && <Loader />}
+      {savedPosts.length > 0 ? (
+        <InfiniteScroll
+          dataLength={savedPosts.length}
+          className={"scrollDiv"}
+          next={getSavedPosts}
+          hasMore={totalSavedPostsLength !== savedPosts.length}
+          loader={
+            <div
+              style={{
+                display: "grid",
+                placeContent: "center",
+                padding: "30px 0",
+              }}
+            >
+              <CircularProgress sx={{ color: "#bbbbbb" }} />
+            </div>
+          }
+        >
           <Grid display="grid" gridTemplateColumns={"repeat(3,1fr)"} gap="10px">
-            {userPosts.map((el) => (
+            {savedPosts.map((el) => (
               <Box
                 key={el._id}
                 height="280px"
-                onClick={() => handleClick(el._id)}
+                onClick={() => handleClick(el.post_id._id)}
                 sx={{
                   cursor: "pointer",
                   position: "relative",
@@ -36,7 +70,7 @@ export const SavedPosts = () => {
                   },
                 }}
               >
-                {el.post_images.length > 1 && (
+                {el.post_id.post_images.length > 1 && (
                   <HiRectangleStack
                     style={{
                       color: "#ffffff",
@@ -51,32 +85,36 @@ export const SavedPosts = () => {
                 <img
                   height="100%"
                   width="100%"
-                  src={el.post_images[0].url}
+                  src={el.post_id.post_images[0].url}
                   loading="lazy"
                   alt=""
                 />
               </Box>
             ))}
           </Grid>
-        ) : (
-          <Box padding="30px 0" display="grid" sx={{ placeContent: "center" }}>
-            <Box>
-              <Box width="200px" height="200px">
-                <img
-                  width="100%"
-                  height="100%"
-                  style={{ objectFit: "contain" }}
-                  src="/Images/nopost.png"
-                  alt=""
-                />
-              </Box>
-              <Typography textAlign="center" fontSize={"30px"} color="#a1a1a1">
-                No Posts Yet
-              </Typography>
-            </Box>
+        </InfiniteScroll>
+      ) : (
+        <Box
+          padding="30px 0"
+          display="flex"
+          flexDirection="column"
+          justifyContent={"center"}
+          alignItems="center"
+        >
+          <Box width="200px" height="200px">
+            <img
+              width="100%"
+              height="100%"
+              style={{ objectFit: "contain" }}
+              src="/Images/nopost.png"
+              alt=""
+            />
           </Box>
-        )}
-      </InfiniteScroll>
+          <Typography fontSize={"30px"} color="#a1a1a1">
+            No Saved Posts Yet
+          </Typography>
+        </Box>
+      )}
     </>
   );
 };
