@@ -13,7 +13,6 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import moment from "moment";
 import { Carousel } from "react-responsive-carousel";
 import { RecentPostsComments } from "../components/RecentPostsComments";
-import { SinglePost } from "../components/SinglePost";
 import { PostsActions } from "../components/PostsActions";
 import { Loader } from "../components/Loader";
 

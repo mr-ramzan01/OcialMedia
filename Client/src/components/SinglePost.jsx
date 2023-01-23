@@ -36,6 +36,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
   const [reactionsData, setReactionsData] = useState([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [data, setData] = useState({});
+  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
     setIsLoading(true);
@@ -44,6 +45,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
     .then(res => {
       if(res.success) {
         setData(res.data);
+        setLikeCount(res.data.likeCount);
       }
       getComments(res.data._id);
       hasLikedByUser(res.data._id);
@@ -57,7 +59,9 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
   const handleClose = () => {
     setPostOpen(false);
     setShowSinglePost(false);
-    setShowSinglePostFromRecent(false);
+    if(setShowSinglePostFromRecent) {
+      setShowSinglePostFromRecent(false);
+    }
   };
 
   
@@ -78,7 +82,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
     })
       .then((res) => res.json())
       .then((res) => {
-        isFollowingUser();
+        isFollowingUser(data.user_id._id);
       })
       .catch((err) => {
         alert("Something went wrong");
@@ -99,7 +103,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
     })
       .then((res) => res.json())
       .then((res) => {
-        isFollowingUser();
+        isFollowingUser(data.user_id._id);
       })
       .catch((err) => {
         alert("Something went wrong");
@@ -149,7 +153,8 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
       .then((res) => {
         if (res.success) {
           handleClick(data._id);
-          hasLikedByUser();
+          setLikeCount((prev) => prev+1);
+          hasLikedByUser(data._id);
         }
       })
       .catch((err) => {
@@ -169,7 +174,8 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
       .then((res) => {
         if (res.success) {
           handleClick(data._id);
-          hasLikedByUser();
+          setLikeCount((prev) => prev-1);
+          hasLikedByUser(data._id);
         }
       })
       .catch((err) => {
@@ -228,7 +234,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          getComments();
+          getComments(data._id);
         }
       })
       .catch((err) => {
@@ -244,7 +250,6 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
     fetch(`/likes/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
-        console.log(res, "res");
         if (res.success) {
           setReactionsData(res.data);
           setShowReactions(true);
@@ -553,7 +558,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent }) => {
                               sx={{ cursor: "pointer" }}
                               onClick={getLikesOnpost}
                             >
-                              {data.likeCount} Reactions
+                              {likeCount} Reactions
                             </Typography>
                           </Typography>
                         </Box>

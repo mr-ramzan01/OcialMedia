@@ -194,7 +194,7 @@ export const Settings = () => {
         setState({ ...state, open: true });
         return false;
       }
-      else if(editData.mobile_no.length != 10) {
+      else if(editData.mobile_no.length !== 10) {
         setMessage("Mobile no. should be 10 digits only");
         setSeverity('error');
         setState({ ...state, open: true });
