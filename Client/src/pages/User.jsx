@@ -2,6 +2,7 @@ import {
   Avatar,
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogTitle,
   Grid,
@@ -15,7 +16,9 @@ import { LeftSideBar } from "../components/LeftSideBar";
 import { Loader } from "../components/Loader";
 import { HiRectangleStack } from "react-icons/hi2";
 import { AuthContext } from "../context/AuthContext";
+import InfiniteScroll from "react-infinite-scroll-component";
 import { SinglePost } from "../components/SinglePost";
+import { SavedPosts } from "../components/SavedPosts";
 
 export const User = () => {
   const { username } = useParams();
@@ -30,7 +33,10 @@ export const User = () => {
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
-  const {showSinglePost, postData, handleClick} = useContext(AuthContext);
+  const { showSinglePost, postData, handleClick } = useContext(AuthContext);
+  const [selected, setSelected] = useState("post");
+  const [page, setPage] = useState(1);
+  const [totalPostsLength, setTotalPostsLength] = useState(0);
   const navigate = useNavigate();
 
   const followRequest = () => {
@@ -52,12 +58,26 @@ export const User = () => {
       });
   };
 
+  const getPosts = () => {
+    setPage((prev) => prev+1);
+    fetch(`/posts/${username}?page=${page}`)
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setUserPosts(() => [...userPosts, ...res.data]);
+      }
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
+  }
+
   const fetchData = () => {
     setIsLoading(true);
     Promise.all([
       fetch("/users/loggedInUser"),
       fetch(`/users/${username}`),
-      fetch(`/posts/${username}`),
+      fetch(`/posts/${username}?page=${page}`),
     ])
       .then((res) => {
         return Promise.all(
@@ -67,8 +87,14 @@ export const User = () => {
         );
       })
       .then((res) => {
-        setLoginUserData(res[0].data);
-        setUserPosts(res[2].data);
+        if(res[0].success) {
+          setLoginUserData(res[0].data);
+        }
+        if(res[2].success) {
+          setUserPosts(res[2].data);
+          setTotalPostsLength(res[2].totalPosts);
+          setPage((prev) => prev+1);
+        }
         if (res[1].success) {
           setOneUserData(res[1].data);
         } else {
@@ -154,19 +180,19 @@ export const User = () => {
 
   const getFollowing = () => {
     fetch(`/follows/getFollowing?userID=${oneUserData._id}`)
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.success) {
-        setFollowingData(res.data);
-        setFollowingOpen(true);
-      } else {
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setFollowingData(res.data);
+          setFollowingOpen(true);
+        } else {
+          alert("Something went wrong");
+        }
+      })
+      .catch((err) => {
         alert("Something went wrong");
-      }
-    })
-    .catch((err) => {
-      alert("Something went wrong");
-      console.log(err, "error");
-    });
+        console.log(err, "error");
+      });
   };
 
   const handleMessageClick = (user_id) => {
@@ -178,16 +204,14 @@ export const User = () => {
       },
     })
       .then((res) => res.json())
-      .then((res) => {
-        
-      })
+      .then((res) => {})
       .catch((err) => {
         console.log(err, "error");
       })
       .finally(() => {
-        navigate('/messages')
+        navigate("/messages");
       });
-  }
+  };
 
   if (isLoading) {
     return <Loader />;
@@ -217,7 +241,7 @@ export const User = () => {
 
   return (
     <>
-      {showSinglePost && <SinglePost data={postData}/>}
+      {showSinglePost && <SinglePost data={postData} />}
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
@@ -365,78 +389,132 @@ export const User = () => {
                 </Grid>
               </Stack>
               <Stack row="column" mt="30px">
-                <Box borderTop='1px solid gray'>
-                  <Typography m='10px 0' textAlign='center' fontSize={'30px'}>Post</Typography>
-                </Box>
-                <Box padding="0 30px 30px">
-                  {userPosts.length > 0 ? (
-                    <Grid
-                      display="grid"
-                      gridTemplateColumns={"repeat(3,1fr)"}
-                      gap="10px"
-                    >
-                      {userPosts.map((el) => (
-                        <Box
-                          key={el._id}
-                          height="280px"
-                          onClick={() => handleClick(el._id)}
-                          sx={{
-                            cursor: "pointer",
-                            position: "relative",
-                            "&:hover": {
-                              opacity: '0.5'
-                            },
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  gap="20px"
+                  borderTop="1px solid gray"
+                >
+                  <Typography
+                    borderTop={
+                      selected === "post" ? "2px solid #000" : "2px solid #fff"
+                    }
+                    onClick={() => setSelected("post")}
+                    p="10px 0"
+                    textAlign="center"
+                    fontSize={"22px"}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    Post
+                  </Typography>
+                  <Typography
+                    borderTop={
+                      selected === "saved" ? "2px solid #000" : "2px solid #fff"
+                    }
+                    onClick={() => setSelected("saved")}
+                    p="10px 0"
+                    textAlign="center"
+                    fontSize={"22px"}
+                    sx={{ cursor: "pointer" }}
+                  >
+                    Saved
+                  </Typography>
+                </Stack>
+                {selected === "post" ? (
+                  <Box padding="0 30px 30px">
+                    <InfiniteScroll
+                      dataLength={userPosts.length}
+                      className={"scrollDiv"}
+                      next={getPosts}
+                      hasMore={totalPostsLength !== userPosts.length}
+                      useWidow={false}
+                      loader={
+                        <div
+                          style={{
+                            display: "grid",
+                            placeContent: "center",
+                            padding: "30px 0",
                           }}
                         >
-                          {el.post_images.length > 1 && (
-                            <HiRectangleStack
-                              style={{
-                                color: "#ffffff",
-                                fontSize: "30px",
-                                top: "2px",
-                                position: "absolute",
-                                right: "0",
-                                transform: "rotate(90deg)",
-                              }}
-                            />
-                          )}
-                          <img
-                            height="100%"
-                            width="100%"
-                            src={el.post_images[0].url}
-                            loading='lazy'
-                            alt=""
-                          />
-                        </Box>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <Box
-                      padding="30px 0"
-                      display="grid"
-                      sx={{ placeContent: "center" }}
+                          <CircularProgress sx={{ color: "#bbbbbb" }} />
+                        </div>
+                      }
                     >
-                      <Box>
-                        <Box width="200px" height="200px">
-                          <img
-                            width="100%"
-                            height="100%"
-                            style={{ objectFit: "contain" }}
-                            src="/Images/nopost.png"
-                            alt=""
-                          />
-                        </Box>
-                        <Typography
-                          textAlign="center"
-                          fontSize={"30px"}
-                          color="#a1a1a1"
+                      {userPosts.length > 0 ? (
+                        <Grid
+                          display="grid"
+                          gridTemplateColumns={"repeat(3,1fr)"}
+                          gap="10px"
                         >
-                          No Posts Yet
-                        </Typography>
-                      </Box>
-                    </Box>
-                  )}
-                </Box>
+                          {userPosts.map((el) => (
+                            <Box
+                              key={el._id}
+                              height="280px"
+                              onClick={() => handleClick(el._id)}
+                              sx={{
+                                cursor: "pointer",
+                                position: "relative",
+                                "&:hover": {
+                                  opacity: "0.5",
+                                },
+                              }}
+                            >
+                              {el.post_images.length > 1 && (
+                                <HiRectangleStack
+                                  style={{
+                                    color: "#ffffff",
+                                    fontSize: "30px",
+                                    top: "2px",
+                                    position: "absolute",
+                                    right: "0",
+                                    transform: "rotate(90deg)",
+                                  }}
+                                />
+                              )}
+                              <img
+                                height="100%"
+                                width="100%"
+                                src={el.post_images[0].url}
+                                loading="lazy"
+                                alt=""
+                              />
+                            </Box>
+                          ))}
+                        </Grid>
+                      ) : (
+                        <Box
+                          padding="30px 0"
+                          display="grid"
+                          sx={{ placeContent: "center" }}
+                        >
+                          <Box>
+                            <Box width="200px" height="200px">
+                              <img
+                                width="100%"
+                                height="100%"
+                                style={{ objectFit: "contain" }}
+                                src="/Images/nopost.png"
+                                alt=""
+                              />
+                            </Box>
+                            <Typography
+                              textAlign="center"
+                              fontSize={"30px"}
+                              color="#a1a1a1"
+                            >
+                              No Posts Yet
+                            </Typography>
+                          </Box>
+                        </Box>
+                      )}
+                    </InfiniteScroll>
+                  </Box>
+                ) : (
+                  <Box border='1px solid red'>Saved
+                  <SavedPosts />
+                  </Box>
+                )}
               </Stack>
             </Stack>
           </Box>

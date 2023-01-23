@@ -98,15 +98,19 @@ async function getExploreData(req, res, next) {
 async function getPosts(req, res, next) {
     try {
         const { username } = req.params;
+        const { page } = req.query;
 
         let user = await userModel.findOne({ username: username });
 
-        const data = await PostsModel.find({user_id: user._id});
+        const totalPosts = await PostsModel.find({user_id: user._id}).count();
 
-        return res.status(201).send({
+        const data = await PostsModel.find({user_id: user._id}).sort({ createdAt: -1}).skip((page-1)*24).limit(24);
+
+        return res.status(200).send({
             success: true,
             message: 'Post data',
-            data: data
+            data: data,
+            totalPosts
         })
         
     } catch (error) {

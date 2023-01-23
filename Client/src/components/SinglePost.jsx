@@ -258,7 +258,7 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
   return (
     <>
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
-        {isLoading ? <Loader /> :
+        {isLoading && <Loader /> }
         <Box sx={{ width: "880px" }}>
           <DialogContent>
             <Stack direction="row" height="100%">
@@ -614,7 +614,6 @@ export const SinglePost = ({ data, setShowSinglePostFromRecent }) => {
             </Stack>
           </DialogContent>
         </Box>
-}
       </Dialog>
       <Dialog open={showReactions} onClose={handelCloseShowReactions}>
         <Box
