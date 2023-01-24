@@ -1,4 +1,3 @@
-const { populate } = require("../models/chatsModel");
 const ChatsModel = require("../models/chatsModel");
 
 async function accessChat(req, res, next) {

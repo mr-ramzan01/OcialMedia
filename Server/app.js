@@ -12,6 +12,7 @@ const chatsRouter = require('./routers/chatsRouter.js');
 const messagesRouter = require('./routers/messagesRouter.js');
 const messagesNotificationRouter = require('./routers/messageNotificationRouter.js');
 const savedPostsRouter = require('./routers/savedPostsRouter.js');
+const notificationsRouter = require('./routers/notificationsRouter.js');
 
 
 const app = express();
@@ -36,6 +37,7 @@ app.use('/chats', chatsRouter);
 app.use('/messages', messagesRouter);
 app.use('/messages/notifications', messagesNotificationRouter);
 app.use('/savedposts', savedPostsRouter);
+app.use('/notifications', notificationsRouter);
 
 
 
