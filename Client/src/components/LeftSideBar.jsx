@@ -50,6 +50,10 @@ export const LeftSideBar = () => {
     horizontal: "center",
   });
   const { vertical, horizontal, statusOpen } = state;
+  
+  useEffect(() => {
+    getUser();
+  }, []);
 
   const logout = () => {
     setOpen(false);
@@ -138,7 +142,6 @@ export const LeftSideBar = () => {
     for(let i=0; i<postFiles.length; i++) {
       var formDatafile = new FormData();
       formDatafile.append("posts", postFiles[i]);
-      // await postOnCloudinary(formDatafile);
       await fetch('/posts/upload-poston-cloudinary', {
         method: 'POST',
         body: formDatafile,
@@ -195,9 +198,6 @@ export const LeftSideBar = () => {
     })
   };
 
-  useEffect(() => {
-    getUser();
-  }, []);
 
 
 
@@ -245,7 +245,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <AiFillHome fontSize={"25px"} />
               <Typography ml="15px">Home</Typography>
@@ -265,7 +264,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <BsSearch fontSize={"25px"} />
               <Typography ml="15px">Search</Typography>
@@ -285,7 +283,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <MdOutlineExplore fontSize={"25px"} />
               <Typography ml="15px">Explore</Typography>
@@ -305,7 +302,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <Badge
                 sx={{
@@ -336,7 +332,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <Badge
                 sx={{
@@ -368,7 +363,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <AiOutlinePlusSquare fontSize={"25px"} />
               <Typography ml="15px">Create</Typography>
@@ -388,7 +382,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <Avatar
                 src={userData.image}
@@ -411,7 +404,6 @@ export const LeftSideBar = () => {
               underline="none"
               display={"flex"}
               alignItems={"center"}
-              // border='1px solid red'
             >
               <IoSettingsOutline fontSize={"25px"} />
               <Typography ml="15px">Settings</Typography>
@@ -431,7 +423,6 @@ export const LeftSideBar = () => {
               display={"flex"}
               alignItems={"center"}
               onClick={handleLogout}
-              // border='1px solid red'
             >
               <IoLogOutOutline fontSize={"25px"} />
               <Typography ml="15px">Logout</Typography>

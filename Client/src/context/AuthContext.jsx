@@ -1,4 +1,4 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 export const AuthContext = createContext();
 
@@ -11,7 +11,6 @@ export const AuthContextprovider = ({children}) => {
     const [editData, setEditData] = useState({full_name: 'dfa', bio: ``, username:'', email: '', mobile_no: '' });
     const [messagesNotification, setMessagesNotification] = useState([]);
     
-
 
     const getAllNotifications = (id) => {
         fetch(`/messages/notifications/get/${id}`)

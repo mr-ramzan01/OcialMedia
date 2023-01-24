@@ -48,8 +48,6 @@ export const Explore = () => {
   };
 
 
-  
-
   return (
     <>
       {showSinglePost && <SinglePost id={postData._id}/>}

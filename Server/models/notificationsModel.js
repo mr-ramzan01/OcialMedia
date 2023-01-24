@@ -20,9 +20,17 @@ const nofificationsSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "comments"
     },
+    follow_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "follows"
+    },
     like_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "likes"
+    },
+    seen: {
+        type: Boolean,
+        default: false
     }
 },{
     timestamps: true,

@@ -1,10 +1,9 @@
 const express = require('express');
-const { accessChat, getAllChats } = require('../controllers/chatsController');
+const { getAllNotifications } = require('../controllers/notificationsController');
 const isAuthenticated = require('../middlewares/auth');
 
 const notificationsRouter = express.Router();
 
-notificationsRouter.post('/create', isAuthenticated, accessChat);
-notificationsRouter.get('/allchats', isAuthenticated, getAllChats);
+notificationsRouter.get('/get/all', isAuthenticated, getAllNotifications);
 
 module.exports = notificationsRouter;

@@ -118,7 +118,7 @@ export const Home = () => {
                   {recentPosts.map((el) => (
                     <Paper
                       key={el._id}
-                      sx={{p:"15px 10px", mb:'10px'}}
+                      sx={{p:"15px 10px", mb:'10px', border: '1px solid #d1d1d1'}}
                     >
                       <Stack direction="row" p="10px 0" alignItems="center">
                         <Avatar

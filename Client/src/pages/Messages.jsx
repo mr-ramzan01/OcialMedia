@@ -299,7 +299,7 @@ export const Messages = () => {
         >
           <Box
             m="20px 0"
-            height="90vh"
+            height="calc(100vh - 45px)"
             display={"grid"}
             gridTemplateColumns="40% 60%"
             width="900px"
@@ -308,7 +308,7 @@ export const Messages = () => {
               sx={{
                 mr: "20px",
                 border: "1px solid #d2d2d2",
-                maxHeight: "90vh",
+                maxHeight: "calc(100vh - 45px)",
               }}
             >
               <Box height="100%" position="relative" zIndex="2">
@@ -549,7 +549,7 @@ export const Messages = () => {
                 </Box>
               </Box>
             </Paper>
-            <Paper sx={{ border: "1px solid #d2d2d2", maxHeight: "90vh" }}>
+            <Paper sx={{ border: "1px solid #d2d2d2", maxHeight: "calc(100vh - 45px)" }}>
               {currentSelectedChat ? (
                 <Box height="100%" position="relative">
                   <Stack
@@ -610,7 +610,7 @@ export const Messages = () => {
                       />
                     </Stack>
                   </Stack>
-                  <Box height="calc(90vh - 150px)"
+                  <Box height="calc(100vh - 195px)"
                   >
                     <ScrollableFeed className="messageDiv">
                       <UserMessages messages={messages} />
@@ -648,7 +648,7 @@ export const Messages = () => {
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
                             width={495}
-                            height={350}
+                            height={400}
                             emojiStyle="google"
                           />
                         )}

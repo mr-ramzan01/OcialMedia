@@ -1,12 +1,17 @@
 const CommentsModel = require("../models/commentsModel");
+const NofificationsModel = require("../models/notificationsModel");
+const PostsModel = require("../models/postsModel");
 
 async function CreateComment(req, res, next) {
     try {
         const { _id } = req.user;
         req.body.comment_by = _id;
+        console.log(req.body);
 
-        await CommentsModel.create(req.body);
-
+        let comment = await CommentsModel.create(req.body);
+        let comments = await CommentsModel.findOne({ _id: comment._id}).populate({path: 'post_Id', select: ['user_id']});
+        await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {commentCount: +1}});
+        await NofificationsModel.create({type: 'comment', from: _id, to: comments.post_Id.user_id, comment_id: comments._id})
         return res.status(200).send({
             success: true,
             message: "Comment created successfully"

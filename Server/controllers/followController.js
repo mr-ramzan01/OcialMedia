@@ -1,4 +1,5 @@
 const FollowModel = require("../models/followModel");
+const NofificationsModel = require("../models/notificationsModel");
 const userModel = require("../models/userModel");
 
 async function isFollowing(req, res, next) {
@@ -46,8 +47,9 @@ async function followRequest(req, res, next) {
 
         await userModel.findOneAndUpdate({_id: following_Id}, {$inc: {followingCount: +1}});
         await userModel.findOneAndUpdate({_id: follower_Id}, {$inc: {followerCount: +1}})
-        await FollowModel.create(req.body);
-
+        let follow = await FollowModel.create(req.body);
+        
+        await NofificationsModel.create({type: 'follow', from: following_Id, to: follower_Id, follow_id: follow._id})
         return res.status(201).send({
             success: true,
             message: 'Successfully following'

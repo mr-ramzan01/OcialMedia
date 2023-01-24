@@ -1,4 +1,5 @@
 const LikesModel = require("../models/LikesModel");
+const NofificationsModel = require("../models/notificationsModel");
 const PostsModel = require("../models/postsModel");
 
 async function getLikesOnPost(req, res, next) {
@@ -26,8 +27,11 @@ async function getLikesOnPost(req, res, next) {
 async function likeRequest(req, res, next) {
     try {
 
-        await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {likeCount: +1}});
+        const {_id} = req.user;
+
         let like = await LikesModel.create(req.body);
+        let post = await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {likeCount: +1}});
+        await NofificationsModel.create({type: 'like', from: _id, to: post.user_id, like_id: like._id  })
         return res.status(200).send({
             success: true,
             message: "User liked successfully"
