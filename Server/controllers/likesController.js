@@ -54,6 +54,7 @@ async function removeLikeRequest(req, res, next) {
         let like = await LikesModel.findOne({_id: deleteId});
         await PostsModel.findOneAndUpdate({_id: like.post_Id}, {$inc: {likeCount: -1}});
         await LikesModel.deleteOne({_id: deleteId });
+        await NofificationsModel.deleteOne({type: 'like', like_id: deleteId});
         return res.status(200).send({
             success: true,
             message: "User Unlike successfully"

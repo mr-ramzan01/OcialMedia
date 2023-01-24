@@ -90,10 +90,10 @@ export const Notifications = () => {
                               gap="10px"
                               justifyContent="space-between"
                             >
-                              {/* <NotificationMessage el={el} type={el.type} likeCount={el.like_id.post_Id.likeCount}/> */}
+                              <NotificationMessage el={el} type={el.type} likeCount={el.like_id.post_Id.likeCount}/>
                               <Avatar
                                 sx={{ borderRadius: "0" }}
-                                // src={el.like_id.post_Id.post_images[0].url}
+                                src={el.like_id.post_Id.post_images[0].url}
                                 alt=""
                               />
                             </Stack>
