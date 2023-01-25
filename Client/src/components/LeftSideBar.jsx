@@ -598,6 +598,7 @@ export const LeftSideBar = () => {
                       placeholder="Write your caption..."
                       type="text"
                       fullWidth
+                      autoComplete="off"
                       autoFocus
                       onChange={(e) =>
                         setPostData({ ...postData, caption: e.target.value })
@@ -634,6 +635,7 @@ export const LeftSideBar = () => {
                     <TextField
                       placeholder="Add location"
                       type="text"
+                      autoComplete="off"
                       fullWidth
                       onChange={(e) =>
                         setPostData({ ...postData, location: e.target.value })
@@ -670,6 +672,7 @@ export const LeftSideBar = () => {
                     <TextField
                       placeholder="Add your tags..."
                       type="text"
+                      autoComplete="off"
                       fullWidth
                       disabled={tags.length === 5}
                       onKeyUp={handleTags}

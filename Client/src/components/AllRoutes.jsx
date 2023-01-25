@@ -13,16 +13,17 @@ import { Signup } from '../pages/Signup'
 import { User } from '../pages/User'
 import { GoogleOauth } from './GoogleOauth'
 import { PrivateRoute } from './PrivateRoute'
+import { PrivateRouteAfterLogin } from './PrivateRouteAfterLogin'
 
 export const AllRoutes = () => {
   return (
     <Routes>
         <Route path='/' element={<PrivateRoute><Home/></PrivateRoute>}></Route>
-        <Route path='/accounts/login/' element={<Login/>}></Route>
-        <Route path='/accounts/signup/' element={<Signup/>}></Route>
-        <Route path='/accounts/forgot-password/' element={<ForgotPassword/>}></Route>
+        <Route path='/accounts/login/' element={<PrivateRouteAfterLogin><Login/></PrivateRouteAfterLogin>}></Route>
+        <Route path='/accounts/signup/' element={<PrivateRouteAfterLogin><Signup/></PrivateRouteAfterLogin>}></Route>
+        <Route path='/accounts/forgot-password/' element={<PrivateRouteAfterLogin><ForgotPassword/></PrivateRouteAfterLogin>}></Route>
         <Route path='/google_Oauth/' element={<GoogleOauth/>}></Route>
-        <Route path='/accounts/forgot-password/create-new-password/:token' element={<CreateNewPassword/>}></Route>
+        <Route path='/accounts/forgot-password/create-new-password/:token' element={<PrivateRouteAfterLogin><CreateNewPassword/></PrivateRouteAfterLogin>}></Route>
         <Route path='/explore/' element={<PrivateRoute><Explore/></PrivateRoute>}></Route>
         <Route path='/search/' element={<PrivateRoute><Search/></PrivateRoute>}></Route>
         <Route path='/messages/' element={<PrivateRoute><Messages/></PrivateRoute>}></Route>
