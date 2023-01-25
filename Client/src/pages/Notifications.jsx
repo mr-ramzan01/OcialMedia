@@ -1,44 +1,54 @@
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  Link,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { LeftSideBar } from "../components/LeftSideBar";
-import { AuthContext } from "../context/AuthContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 
 import { NotificationMessage } from "../components/NotificationMessage";
+import { LikeNotifications } from "../components/LikeNotifications";
+import { CommentNotifications } from "../components/CommentNotifications";
+import { AuthContext } from "../context/AuthContext";
 
 export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [totalNotificationsLength, setTotalNotificationsLength] = useState(0);
+  const {setGeneralNotifications} = useContext(AuthContext);
   const [page, setPage] = useState(1);
 
-  // const { getGeneralNotifications } = useContext(AuthContext);
   useEffect(() => {
     getGeneralNotifications();
+    hasSeenNotifications();
   }, []);
 
   const getGeneralNotifications = () => {
-    fetch(`/notifications/get/all`)
-      .then((res) => res.json())
-      .then((res) => {
-        console.log(res, "notifications");
-        if (res.success) {
-          setNotifications(res.data);
-          setTotalNotificationsLength(res.totalLength);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
+    setPage((prev) => prev + 1);
+    fetch(`/notifications/get/all?page=${page}`)
+    .then((res) => res.json())
+    .then((res) => {
+      if (res.success) {
+        setNotifications([...notifications, ...res.data]);
+        setTotalNotificationsLength(res.totalLength);
+      }
+    })
+    .catch((err) => {
+      console.log(err, "error");
+    });
   };
+
+  const hasSeenNotifications = () => {
+    fetch('/notifications/has/seen', {
+      method: 'PATCH',
+    })
+    .then(res => res.json())
+    .then(res => {
+      if(res.success) {
+        setGeneralNotifications(true);
+      }
+    })
+    .catch(err => {
+      console.log(err, 'error');
+    })
+  }
 
   return (
     <>
@@ -60,7 +70,7 @@ export const Notifications = () => {
             }}
           >
             {notifications.length > 0 ? (
-              <Box border="1px solid blue" p="15px 20px">
+              <Box p="15px 20px">
                 <InfiniteScroll
                   dataLength={notifications.length}
                   className={"scrollDiv"}
@@ -82,40 +92,10 @@ export const Notifications = () => {
                     {notifications.map((el) => (
                       <Box key={el._id}>
                         {el.type === "like" && el.from._id !== el.to && (
-                          <Box>
-                            <Stack
-                              direction="row"
-                              key={el._id}
-                              alignItems="center"
-                              gap="10px"
-                              justifyContent="space-between"
-                            >
-                              <NotificationMessage el={el} type={el.type} likeCount={el.like_id.post_Id.likeCount}/>
-                              <Avatar
-                                sx={{ borderRadius: "0" }}
-                                src={el.like_id.post_Id.post_images[0].url}
-                                alt=""
-                              />
-                            </Stack>
-                          </Box>
+                          <LikeNotifications el={el} />
                         )}
                         {el.type === "comment" && el.from._id !== el.to && (
-                          <Box>
-                            <Stack
-                              direction="row"
-                              key={el._id}
-                              alignItems="center"
-                              gap="10px"
-                              justifyContent="space-between"
-                            >
-                              <NotificationMessage el={el} type={el.type} commentCount={el.comment_id.post_Id.commentCount}/>
-                              <Avatar
-                                sx={{ borderRadius: "0" }}
-                                src={el.comment_id.post_Id.post_images[0].url}
-                                alt=""
-                              />
-                            </Stack>
-                          </Box>
+                          <CommentNotifications el={el} />
                         )}
                         {el.type === "follow" && el.from._id !== el.to && (
                           <Box>

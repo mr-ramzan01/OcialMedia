@@ -36,7 +36,7 @@ export const LeftSideBar = () => {
   const [postsOption, setPostsOption] = useState(false);
   const [previewOption, setPreviewOption] = useState(false);
   const [previewImages, setPreviewImages] = useState([]);
-  const { userData, getUser, messagesNotification } = useContext(AuthContext);
+  const { userData, getUser, messagesNotification, hasGeneralNotifications, generalNotifications } = useContext(AuthContext);
   const [tagsInput, setTagsInput] = useState("");
   const [postData, setPostData] = useState({ caption: "", location: "" });
   const [postFiles, setPostFiles] = useState([]);
@@ -44,6 +44,7 @@ export const LeftSideBar = () => {
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState("error");
   const [loading, setLoading] = useState(false);
+
   const [state, setState] = useState({
     statusOpen: false,
     vertical: "top",
@@ -53,6 +54,9 @@ export const LeftSideBar = () => {
   
   useEffect(() => {
     getUser();
+    // if(generalNotifications) {
+      hasGeneralNotifications();
+    // }
   }, []);
 
   const logout = () => {
@@ -341,7 +345,7 @@ export const LeftSideBar = () => {
                   },
                 }}
                 variant="dot"
-                invisible={false}
+                invisible={generalNotifications}
                 overlap="circular"
               >
                 <BsSuitHeart fontSize={"25px"} />

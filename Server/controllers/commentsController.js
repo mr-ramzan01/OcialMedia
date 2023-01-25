@@ -11,7 +11,9 @@ async function CreateComment(req, res, next) {
         let comment = await CommentsModel.create(req.body);
         let comments = await CommentsModel.findOne({ _id: comment._id}).populate({path: 'post_Id', select: ['user_id']});
         await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {commentCount: +1}});
-        await NofificationsModel.create({type: 'comment', from: _id, to: comments.post_Id.user_id, comment_id: comments._id})
+        if(_id !== comments.post_Id.user_id) {
+            await NofificationsModel.create({type: 'comment', from: _id, to: comments.post_Id.user_id, comment_id: comments._id});
+        }
         return res.status(200).send({
             success: true,
             message: "Comment created successfully"

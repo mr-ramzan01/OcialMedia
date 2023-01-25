@@ -31,7 +31,10 @@ async function likeRequest(req, res, next) {
 
         let like = await LikesModel.create(req.body);
         let post = await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {likeCount: +1}});
-        await NofificationsModel.create({type: 'like', from: _id, to: post.user_id, like_id: like._id  })
+        if(_id !== post.user_id) {
+            console.log(post);
+            await NofificationsModel.create({type: 'like', from: _id, to: post.user_id, like_id: like._id  });
+        }
         return res.status(200).send({
             success: true,
             message: "User liked successfully"

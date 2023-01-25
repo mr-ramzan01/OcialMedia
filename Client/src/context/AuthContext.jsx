@@ -10,7 +10,21 @@ export const AuthContextprovider = ({children}) => {
     const [postData, setPostData] = useState([]);
     const [editData, setEditData] = useState({full_name: 'dfa', bio: ``, username:'', email: '', mobile_no: '' });
     const [messagesNotification, setMessagesNotification] = useState([]);
+    const [generalNotifications, setGeneralNotifications] = useState(true);
     
+
+    const hasGeneralNotifications = () => {
+        fetch('/notifications/has')
+        .then((res) => res.json())
+          .then((res) => {
+            if (res.success) {
+              setGeneralNotifications(false);
+            }
+          })
+          .catch((err) => {
+            console.log(err, "error");
+          });
+      }
 
     const getAllNotifications = (id) => {
         fetch(`/messages/notifications/get/${id}`)
@@ -130,5 +144,5 @@ export const AuthContextprovider = ({children}) => {
 
         window.location = `${rootUrl}?redirect_uri=${redirect_uri}&client_id=${client_id}&access_type=${access_type}&response_type=${response_type}&prompt=${prompt}&scope=${scope}`
     }
-    return <AuthContext.Provider value={{isAuth, isLoading, userData, editData, showSinglePost, postData, messagesNotification, getAllNotifications, deleteNotifications, setMessagesNotification, sendMessageNotification, handleClick, setShowSinglePost, setEditData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
+    return <AuthContext.Provider value={{isAuth, isLoading, userData, editData, showSinglePost, postData, messagesNotification, generalNotifications, hasGeneralNotifications, setGeneralNotifications, getAllNotifications, deleteNotifications, setMessagesNotification, sendMessageNotification, handleClick, setShowSinglePost, setEditData, getUser, setIsAuth, googleRequest}}>{children}</AuthContext.Provider>
 }
