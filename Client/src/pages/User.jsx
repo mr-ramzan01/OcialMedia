@@ -405,23 +405,26 @@ export const User = () => {
                     onClick={() => setSelected("post")}
                     p="10px 0"
                     textAlign="center"
-                    fontSize={"22px"}
+                    fontSize={"20px"}
                     sx={{ cursor: "pointer" }}
                   >
                     Post
                   </Typography>
-                  <Typography
+                  {
+                    loginUserData._id === oneUserData._id &&
+                    <Typography
                     borderTop={
                       selected === "saved" ? "2px solid #000" : "2px solid #fff"
                     }
                     onClick={() => setSelected("saved")}
                     p="10px 0"
                     textAlign="center"
-                    fontSize={"22px"}
+                    fontSize={"20px"}
                     sx={{ cursor: "pointer" }}
                   >
                     Saved
                   </Typography>
+                  }
                 </Stack>
                 {selected === "post" ? (
                   <Box padding="0 30px 30px">

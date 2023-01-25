@@ -22,7 +22,7 @@ export const AllRoutes = () => {
         <Route path='/accounts/signup/' element={<Signup/>}></Route>
         <Route path='/accounts/forgot-password/' element={<ForgotPassword/>}></Route>
         <Route path='/google_Oauth/' element={<GoogleOauth/>}></Route>
-        <Route path='/accounts/forgot-password/create-new-password/' element={<CreateNewPassword/>}></Route>
+        <Route path='/accounts/forgot-password/create-new-password/:token' element={<CreateNewPassword/>}></Route>
         <Route path='/explore/' element={<PrivateRoute><Explore/></PrivateRoute>}></Route>
         <Route path='/search/' element={<PrivateRoute><Search/></PrivateRoute>}></Route>
         <Route path='/messages/' element={<PrivateRoute><Messages/></PrivateRoute>}></Route>

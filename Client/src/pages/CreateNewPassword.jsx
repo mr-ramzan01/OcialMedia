@@ -1,6 +1,6 @@
 import { Box, Button, Container, CssBaseline, TextField, ThemeProvider, Typography, createTheme, InputAdornment, IconButton } from '@mui/material'
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import validator from 'validator'
 import {MdVisibilityOff} from 'react-icons/md';
 import {MdVisibility} from 'react-icons/md';
@@ -13,6 +13,7 @@ export const CreateNewPassword = () => {
   const [passwordVisibility2, setPasswordVisibility2] = useState(false);
   const navigate = useNavigate();
 
+  const {token} = useParams();
   const handleChange = (e) => {
     const {name, value} = e.target;
     setData({...data, [name]: value});
@@ -21,7 +22,7 @@ export const CreateNewPassword = () => {
 
 
   const changePassword = () => {
-    fetch(`/users/forgot-password/set-new-password`, {
+    fetch(`/users/forgot-password/set-new-password/${token}`, {
       method: 'POST',
       body: JSON.stringify({password: data.password1}),
       headers: {
@@ -30,6 +31,7 @@ export const CreateNewPassword = () => {
     })
     .then((res) => res.json())
     .then((res) => {
+      console.log(res, 'forgot')
       if(res.success) {
         alert(res.message);
         navigate('/accounts/login')
@@ -37,6 +39,10 @@ export const CreateNewPassword = () => {
       else if(res.message === 'Somthing went wrong, Please reset your password again.') {
         alert(res.message);
         navigate('/accounts/forgot-password');
+      }
+      else if(res.message === 'jwt expired') {
+        alert('Session has been expired try again');
+        navigate('/accounts/login')
       }
     })
     .catch((err) => {

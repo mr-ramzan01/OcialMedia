@@ -260,15 +260,20 @@ async function forgotPassword(req, res, next) {
         // Checking user, is it present with that email or not
         let user = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'email-password'}] });
         if(user) {
-            const forgotpasswordAcces = uuidv4();
-            await userModel.findByIdAndUpdate(user._id, {$set: { forgotpasswordAcces}}, {new: true})
-            return res.cookie("forgot_password_access", forgotpasswordAcces, {
-                expires: new Date(Date.now() + 5*60*1000), // 5 minutes
-                httpOnly: true
-            }).status(200).send({
+            const token = jwt.sign({
+                email: user.email,
+                username: user.username,
+                _id: user._id,
+            }, jwt_secret_key, {
+                expiresIn: 300
+            });
+            console.log(token);
+            // const forgotpasswordAcces = uuidv4();
+            // await userModel.findByIdAndUpdate(user._id, {$set: { forgotpasswordAcces}}, {new: true})
+            return res.status(200).send({
                 success: true,
                 message: 'Authenticated user',
-                full_name: user.full_name,
+                token: token
             })
         }
         return res.status(403).send({
@@ -289,10 +294,14 @@ async function forgotPassword(req, res, next) {
 async function setForgotPassword(req, res, next) {
     try {
         // Hashing Password
+        console.log(req.body, 'id');
         const hashPassword = await bcrypt.hash(req.body.password, 10);
 
+        console.log(hashPassword, 'hashpassword');
+
         // updating password 
-        await userModel.findOneAndUpdate({forgotpasswordAcces: req.forgot_password_access}, {$set: {password: hashPassword }}, {new: true})
+        await userModel.findOneAndUpdate({_id: req.body._id}, {$set: {password: hashPassword }}, {new: true})
+        console.log('h')
         return res.status(200).send({
             success: true,
             message: 'Password updated successfully'
@@ -300,9 +309,10 @@ async function setForgotPassword(req, res, next) {
         
     } catch (error) {
         // return next(new ErrorHandler(error, 500));
+        console.log("here")
         return res.status(500).send({
             success: false,
-            message: error.message
+            message: "error.message"
         });
     }
 }

@@ -1,23 +1,27 @@
-const userModel = require("../models/userModel");
+const jwt = require("jsonwebtoken")
+require('dotenv').config();
+
+const jwt_secret_key = process.env.JWT_SECRET_KEY;
 
 async function passwordTokenCheck(req, res, next) {
     try {
-        let {forgot_password_access} = req.cookies;
-        if(!forgot_password_access) {
-            return res.status(403).send({
+        const {token} = req.params;
+        console.log(token, 'token');
+        if(!token) {
+            return res.send({
                 success: false,
-                message: 'Somthing went wrong, Please reset your password again.'
+                message: 'please provide a token'
             })
         }
-        let user = await userModel.findOne({forgotpasswordAcces: forgot_password_access});
-        if(!user) {
-            return res.status(404).send({
-                success: false,
-                message: 'Invalid forgot token'
-            })
+        let verify = jwt.verify(token, jwt_secret_key);
+        if(verify?._id) {
+            req.body._id = verify._id;
+            next();
         }
-        req.forgot_password_access = forgot_password_access;
-        next();
+        return res.status(403).send({
+            success: false,
+            message: 'Something went wrong, Please reset your password again here.'
+        })
     } catch (error) {
         return res.status(500).send({
             success: false,

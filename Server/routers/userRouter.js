@@ -15,7 +15,7 @@ userRouter.get('/:username', isAuthenticated, getUser);
 userRouter.post('/signup', SignUPUser);
 userRouter.post('/login', LoginUser);
 userRouter.post('/forgot-password', forgotPassword);
-userRouter.post('/forgot-password/set-new-password', passwordTokenCheck, setForgotPassword);
+userRouter.post('/forgot-password/set-new-password/:token', passwordTokenCheck, setForgotPassword);
 userRouter.patch('/reset-password', isAuthenticated, resetPassword);
 userRouter.patch('/remove-profile-photo/', isAuthenticated, removeProfile);
 userRouter.patch('/upload-profile-photo', isAuthenticated, uploader, uploadProfile);

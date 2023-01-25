@@ -16,6 +16,7 @@ function Copyright(props) {
   );
 }
 
+
 const theme = createTheme(); 
 export const ForgotPassword = () => {
   const [data, setData] = useState({email: '',});
@@ -41,18 +42,18 @@ export const ForgotPassword = () => {
     .then((res) => res.json())
     .then((res) => {
       if(res.success) {
-        console.log(res);
+        console.log(res, 'console');
         // Seding Email to registered user email
-        emailjs.send("service_t8tkdmq","template_z78wv9c",{
-          user_name: res.full_name,
-          link: `http://localhost:3000/accounts/forgot-password/create-new-password`,
-          reply_to: data.email,
-          },"CYyDb5GDuo6dEEiox")
-          .then(() => {
+        // emailjs.send("service_t8tkdmq","template_z78wv9c",{
+        //   user_name: res.full_name,
+          // link: `http://localhost:3000/accounts/forgot-password/create-new-password/${res.token}`,
+        //   reply_to: data.email,
+        //   },"CYyDb5GDuo6dEEiox")
+        //   .then(() => {
             setSentInvitationLink(true);
-          }).catch(() => {
-            alert("Someting went wrong while sending email!")
-        })
+        //   }).catch(() => {
+        //     alert("Someting went wrong while sending email!")
+        // }
       }
 
       // if entered email does not present in the database
