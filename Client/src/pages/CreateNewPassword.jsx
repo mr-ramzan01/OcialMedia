@@ -20,18 +20,17 @@ export const CreateNewPassword = () => {
     passwordValidation(name, value);
   }
 
-
   const changePassword = () => {
-    fetch(`/users/forgot-password/set-new-password/${token}`, {
+    fetch(`/users/forgot-password/set-new-password`, {
       method: 'POST',
       body: JSON.stringify({password: data.password1}),
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'authorization': `Bearer ${token}`
       }
     })
     .then((res) => res.json())
     .then((res) => {
-      console.log(res, 'forgot')
       if(res.success) {
         alert(res.message);
         navigate('/accounts/login')

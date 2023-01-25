@@ -267,9 +267,7 @@ async function forgotPassword(req, res, next) {
             }, jwt_secret_key, {
                 expiresIn: 300
             });
-            console.log(token);
-            // const forgotpasswordAcces = uuidv4();
-            // await userModel.findByIdAndUpdate(user._id, {$set: { forgotpasswordAcces}}, {new: true})
+            
             return res.status(200).send({
                 success: true,
                 message: 'Authenticated user',
@@ -293,26 +291,40 @@ async function forgotPassword(req, res, next) {
 
 async function setForgotPassword(req, res, next) {
     try {
-        // Hashing Password
-        console.log(req.body, 'id');
-        const hashPassword = await bcrypt.hash(req.body.password, 10);
+        const passwordHeader = req.headers.authorization;
 
-        console.log(hashPassword, 'hashpassword');
+        if (passwordHeader) {
+            const token = passwordHeader.split(" ")[1];
+            if(token) {
+                const decoded = jwt.verify(token, jwt_secret_key);
+                if(decoded) {
+                    // Hashing Password
+                    const hashPassword = await bcrypt.hash(req.body.password, 10);
 
-        // updating password 
-        await userModel.findOneAndUpdate({_id: req.body._id}, {$set: {password: hashPassword }}, {new: true})
-        console.log('h')
-        return res.status(200).send({
-            success: true,
-            message: 'Password updated successfully'
-        })
+                    // updating password
+                    await userModel.findOneAndUpdate(
+                        { _id: decoded._id },
+                        { $set: { password: hashPassword } },
+                        { new: true }
+                    );
+                    return res.status(200).send({
+                        success: true,
+                        message: "Password updated successfully",
+                    });
+                }
+                
+            }
+        }
+        return res.status(403).send({
+            success: false,
+            message: "Something went wrong, Please reset your password again.",
+        });
         
     } catch (error) {
         // return next(new ErrorHandler(error, 500));
-        console.log("here")
         return res.status(500).send({
             success: false,
-            message: "error.message"
+            message: error.message
         });
     }
 }

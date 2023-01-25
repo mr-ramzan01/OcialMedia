@@ -12,7 +12,6 @@ const userSchema = mongoose.Schema(
         followingCount: {type: Number, default: 0},
         followerCount: {type: Number, default: 0},
         isPrivate: {type: Boolean, default: false},
-        forgotpasswordAcces: {type: String, required: false}, 
         image_public_id: {type: String, default: ''},
         bio: {type: String, default: ""},
         mobile_no: {type: String, default: ""}
