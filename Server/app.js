@@ -13,6 +13,7 @@ const messagesRouter = require('./routers/messagesRouter.js');
 const messagesNotificationRouter = require('./routers/messageNotificationRouter.js');
 const savedPostsRouter = require('./routers/savedPostsRouter.js');
 const notificationsRouter = require('./routers/notificationsRouter.js');
+const storiesRouter = require('./routers/storiesRouter.js');
 
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/messages', messagesRouter);
 app.use('/messages/notifications', messagesNotificationRouter);
 app.use('/savedposts', savedPostsRouter);
 app.use('/notifications', notificationsRouter);
+app.use('/stories', storiesRouter);
 
 
 

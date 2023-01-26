@@ -15,6 +15,7 @@ import { Carousel } from "react-responsive-carousel";
 import { RecentPostsComments } from "../components/RecentPostsComments";
 import { PostsActions } from "../components/PostsActions";
 import { Loader } from "../components/Loader";
+import { Stories } from "../components/Stories";
 
 export const Home = () => {
   const [recentPosts, setRecentPosts] = useState([]);
@@ -97,6 +98,7 @@ export const Home = () => {
               m="30px auto"
               sx={{ minHeight: "90vh", m: "30px auto", width: "600px" }}
             >
+              <Stories />
               {recentPosts.length > 0 ? (
                 <InfiniteScroll
                   dataLength={recentPosts.length}
