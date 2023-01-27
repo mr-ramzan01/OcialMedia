@@ -24,7 +24,7 @@ export const CommentNotifications = ({el}) => {
         />
         <Avatar
           onClick={() => setShowSinglePostFromNotifications(true)}
-          sx={{ borderRadius: "0" }}
+          sx={{ borderRadius: "0", cursor: 'pointer'}}
           src={el.comment_id.post_Id.post_images[0].url}
           alt=""
         />

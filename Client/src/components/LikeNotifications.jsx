@@ -30,7 +30,7 @@ export const LikeNotifications = ({ el }) => {
         />
         <Avatar
           onClick={() => setShowSinglePostFromNotifications(true)}
-          sx={{ borderRadius: "0" }}
+          sx={{ borderRadius: "0", cursor: "pointer"}}
           src={el.like_id.post_Id.post_images[0].url}
           alt=""
         />

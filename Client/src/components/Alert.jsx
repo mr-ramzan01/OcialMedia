@@ -1,23 +1,23 @@
-import { Snackbar } from '@mui/material'
+import { Snackbar, Slide, Alert } from '@mui/material'
 import React, { useState } from 'react'
 
-export const Alert = ({message, severity}) => {
+export const ShowAlert = ({message, severity, alertOpen, setAlertOpen}) => {
     const [state, setState] = useState({
         open: false,
         vertical: 'top',
         horizontal: 'center',
     });
     
-    const { vertical, horizontal, open } = state;
+    const { vertical, horizontal } = state;
 
     const handleClose = () => {
-        setState({ ...state, open: false });
+        setAlertOpen(false);
     };
 
   return (
     <Snackbar
       anchorOrigin={{ vertical, horizontal }}
-      open={open}
+      open={alertOpen}
       autoHideDuration={5000}
       TransitionComponent={Slide}
       onClose={handleClose}

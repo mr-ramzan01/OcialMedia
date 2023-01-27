@@ -293,7 +293,7 @@ export const Settings = () => {
                 <DialogTitle sx={{ color: '#000', fontSize: '15px'}}>Change Profile Photo</DialogTitle>
                 <Divider/>
                 <InputLabel htmlFor="filePicker" sx={{ color: '#0066ff',padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Upload Photo</InputLabel>
-                <TextField onChange={handleUploadProfile}  id='filePicker' type='file'sx={{display: 'none'}} inputProps={{accept: 'image/png, image/jpg, image/jpeg'}} ></TextField>
+                <TextField onChange={handleUploadProfile} onClick={e => e.target.value = null}  id='filePicker' type='file'sx={{display: 'none'}} inputProps={{accept: 'image/png, image/jpg, image/jpeg'}} ></TextField>
                 <Divider/>
                 <DialogContent onClick={handleRemoveProfile} sx={{ color: 'tomato', padding: '15px 0', textAlign: 'center', '&:hover': {cursor: 'pointer'}}}>Remove Photo</DialogContent>
                 <Divider/>
