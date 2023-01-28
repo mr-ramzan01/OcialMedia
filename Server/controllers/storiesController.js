@@ -57,6 +57,26 @@ async function getAllStories(req, res, next) {
         const stories = await StoriesModel.find({user_id: { $in: following.map(function(el) { return el.follower_Id})}}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
         return res.send({
             success: true,
+            message: 'Stories data',
+            data: stories
+        })
+    } catch (error) {
+        // return next(new ErrorHandler(error, 500));
+        return res.status(500).send({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
+async function getAllStoriesDate(req, res, next) {
+    try {
+        const { _id } = req.user;
+        const following = await FollowModel.find({following_Id: _id});
+        const stories = await StoriesModel.find({ $and: [ {user_id: { $in: following.map(function(el) { return el.follower_Id})}}, {date: {$gte: Date.now()}}]}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
+        return res.send({
+            success: true,
             message: 'following data',
             data: stories
         })
@@ -69,4 +89,4 @@ async function getAllStories(req, res, next) {
     }
 }
 
-module.exports = {uploadStory, getAllStories};
+module.exports = {uploadStory, getAllStories, getAllStoriesDate};

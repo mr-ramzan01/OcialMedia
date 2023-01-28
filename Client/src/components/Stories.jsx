@@ -29,7 +29,6 @@ export const Stories = () => {
   const [severity, setSeverity] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-
   const handleUploadStory = (e) => {
     const files = e.target.files[0];
     setFile(files);
@@ -50,14 +49,14 @@ export const Stories = () => {
       .then((res) => {
         if (res.success) {
           setAlertMessage(res.message);
-          setSeverity('success');
+          setSeverity("success");
           setShowAlert(true);
         }
       })
       .catch((err) => {
         console.log(err, "error");
         setAlertMessage("Something went wrong please try later");
-        setSeverity('error');
+        setSeverity("error");
       })
       .finally(() => {
         setIsLoading(false);
@@ -69,7 +68,7 @@ export const Stories = () => {
 
   return (
     <>
-    {isLoading && <Loader />}
+      {isLoading && <Loader />}
       {showAlert && (
         <ShowAlert
           message={alertMessage}
@@ -78,11 +77,11 @@ export const Stories = () => {
           setAlertOpen={setShowAlert}
         />
       )}
-      <Box height="70px" mb="20px">
+      <Box height="80px" mb="20px">
         <Paper
           sx={{ height: "100%", display: "flex", border: "1px solid #d1d1d1" }}
         >
-          <Stack direction="row" borderRight="1.5px solid #d1d1d1" width="90px">
+          <Stack direction="row"  width="83px">
             <Grid width="100%" height="100%">
               <InputLabel
                 htmlFor="storycreate"
@@ -95,7 +94,7 @@ export const Stories = () => {
               >
                 <Box
                   position="relative"
-                  height="70px"
+                  height="80px"
                   display="flex"
                   justifyContent="center"
                   alignItems="center"
@@ -103,7 +102,7 @@ export const Stories = () => {
                   <Avatar
                     src={userData.image}
                     alt=""
-                    sx={{ position: "absolute", left: "12px" }}
+                    sx={{ position: "absolute", width: '50px', height: '50px', left: "12px" }}
                   />
                   <AiFillPlusCircle
                     style={{
@@ -111,7 +110,7 @@ export const Stories = () => {
                       borderRadius: "50%",
                       left: "27px",
                       position: "absolute",
-                      fontSize: "40px",
+                      fontSize: "45px",
                       color: "#000",
                     }}
                   />
@@ -130,7 +129,23 @@ export const Stories = () => {
               ></TextField>
             </Grid>
           </Stack>
-          <Box padding='0 10px' display='grid' alignContent='center' width="100%">
+          <Box
+            padding="0 10px"
+            display="flex"
+            alignItems="center"
+            sx={{
+              overflow: "scroll",
+              "::-webkit-scrollbar": {
+                width: "5px",
+                height: "5px"
+              },
+              "::-webkit-scrollbar-thumb": {
+                background: "#d1d1d1",
+                borderRadius: "10px",
+              },
+            }}
+            width="calc(100% - 83px)"
+          >
             <AllStories />
           </Box>
         </Paper>

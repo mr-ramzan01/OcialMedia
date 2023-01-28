@@ -13,10 +13,15 @@ const storiesSchema = new mongoose.Schema({
     public_id: {
         type: String,
         required: true
+    },
+    date: {
+        type: Number,
+        default: Date.now()
     }
 },{
     timestamps: true,
-    versionKey: false
+    versionKey: false,
+    ttl: 120
 });
 
 

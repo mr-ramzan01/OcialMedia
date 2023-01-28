@@ -7,5 +7,6 @@ var uploader = multer().single('story')
 const storiesRouter = express.Router();
 storiesRouter.post('/upload', isAuthenticated, uploader, uploadStory);
 storiesRouter.get('/get', isAuthenticated, getAllStories);
+storiesRouter.get('/get/date', isAuthenticated, getAllStories);
 
 module.exports = storiesRouter;

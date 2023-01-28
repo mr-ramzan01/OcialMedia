@@ -12,7 +12,7 @@ export const ShowStory = ({ image, showStory, setShowStory}) => {
         if (running) {
           interval = setInterval(() => {
             setProgress((prev) => prev + 1);
-          }, 100);
+          }, 50);
         } else {
           clearInterval(interval);
         }

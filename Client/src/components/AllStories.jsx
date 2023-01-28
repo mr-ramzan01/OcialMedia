@@ -21,6 +21,26 @@ export const AllStories = () => {
       .catch((err) => {
         console.log(err, "error");
       });
+
+      fetch(`/stories/get/date`)
+      .then((res) => res.json())
+      .then((res) => {
+        if(res.success) {
+          setStories(res.data);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+
+      fetch(`/stories/get/date`)
+      .then((res) => res.json())
+      .then((res) => {
+        console.log(res, 'res');
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
   };
   return <>
     {
