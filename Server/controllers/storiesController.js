@@ -54,7 +54,13 @@ async function getAllStories(req, res, next) {
     try {
         const { _id } = req.user;
         const following = await FollowModel.find({following_Id: _id});
-        const stories = await StoriesModel.find({user_id: { $in: following.map(function(el) { return el.follower_Id})}}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
+        const storiesToDelete = await StoriesModel.find({ $and: [ {user_id: { $in: following.map(function(el) { return el.follower_Id})}}, {createdAt: {$lte: Date.now()-86400000}}]}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
+        
+        storiesToDelete.forEach(async (el) => {
+            await cloudinary.v2.uploader.destroy(el.public_id);
+            await StoriesModel.deleteOne({_id: el._id})
+        })
+        const stories = await StoriesModel.find({user_id: { $in: following.map(function(el) { return el.follower_Id})}}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: -1});
         return res.send({
             success: true,
             message: 'Stories data',
@@ -72,13 +78,15 @@ async function getAllStories(req, res, next) {
 
 async function getAllStoriesDate(req, res, next) {
     try {
-        const { _id } = req.user;
-        const following = await FollowModel.find({following_Id: _id});
-        const stories = await StoriesModel.find({ $and: [ {user_id: { $in: following.map(function(el) { return el.follower_Id})}}, {date: {$gte: Date.now()}}]}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
+        // const { _id } = req.user;
+        // const following = await FollowModel.find({following_Id: _id});
+        // const storiesToDelete = await StoriesModel.find({ $and: [ {user_id: { $in: following.map(function(el) { return el.follower_Id})}}, {createdAt: {$lte: Date.now()-86400000}}]}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: -1});
+        
+        
         return res.send({
             success: true,
             message: 'following data',
-            data: stories
+            data: storiesToDelete
         })
     } catch (error) {
         // return next(new ErrorHandler(error, 500));

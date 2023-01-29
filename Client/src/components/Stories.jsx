@@ -124,7 +124,6 @@ export const Stories = () => {
                 sx={{ display: "none" }}
                 inputProps={{
                   accept: "image/png, image/jpg, image/jpeg",
-                  multiple: true,
                 }}
               ></TextField>
             </Grid>
