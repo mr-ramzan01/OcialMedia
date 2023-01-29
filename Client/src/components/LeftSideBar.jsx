@@ -209,6 +209,7 @@ export const LeftSideBar = () => {
     <>
     {loading?<Loader/>:<Box></Box>}
       <Box
+        // display={{sx: 'none', sm: 'none', lg: 'block', xl: 'block'}}
         overflow={"scroll"}
         sx={{
           "::-webkit-scrollbar": {
@@ -233,6 +234,8 @@ export const LeftSideBar = () => {
           >
             Ocial Media
           </Typography>
+          <Avatar sx={{borderRadius: '0', border: '1px solid blue', height: '70px', width: '70px', objectFit: 'contain'}} src="/Images/OMLight.png" alt="" />
+          
           <Stack direction={"column"}>
             <Link
               href="/"
