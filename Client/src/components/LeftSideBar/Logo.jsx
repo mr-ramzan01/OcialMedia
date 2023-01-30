@@ -4,17 +4,19 @@ export const Logo = () => {
   return (
     <>
       <Typography
-        variant="h4"
-        mt="40px"
-        component={"h1"}
+        variant='h4'
+        mt={{xs: '0', sm: '40px'}}
+        // fontSize={{xs: '10px', sm: '30px'}}
+        fontWeight='500'
         fontFamily="'Dancing Script', cursive"
-        display={{ xs: "none", lg: "block" }}
+        display={{ xs: "block", sm: 'none', lg: "block" }}
       >
         Ocial Media
       </Typography>
       <Avatar
         sx={{
           borderRadius: "0",
+          ml: '-5px',
           display: { xs: "none", sm: "block", lg: 'none' },
           mt: "40px",
           height: "40px",

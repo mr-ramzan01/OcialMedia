@@ -7,11 +7,9 @@ import {
   DialogTitle,
   Link,
   Stack,
-  Typography
+  Typography,
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
-
-
 
 import { AuthContext } from "../context/AuthContext";
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
@@ -26,43 +24,14 @@ import { SettingsIcon } from "./LeftSideBar/SettingsIcon";
 import { LogoutIcon } from "./LeftSideBar/LogoutIcon";
 
 export const LeftSideBar = () => {
+  const { getUser, hasGeneralNotifications } = useContext(AuthContext);
 
-
-
-  const { userData, getUser, hasGeneralNotifications } = useContext(AuthContext);
-  
-
-
-
-  const [state, setState] = useState({
-    statusOpen: false,
-    vertical: "top",
-    horizontal: "center",
-  });
-  const { vertical, horizontal, statusOpen } = state;
-  
   useEffect(() => {
     getUser();
     // if(generalNotifications) {
-      hasGeneralNotifications();
+    hasGeneralNotifications();
     // }
   }, []);
-
-
-
-  const handleStatusClose = () => {
-    setState({ ...state, statusOpen: false });
-  };
-
-  
-
-  
-
-
-  
-
-
-
 
   return (
     <>
@@ -73,8 +42,9 @@ export const LeftSideBar = () => {
             display: "none",
           },
         }}
+        display={{xs: 'none', sm: 'block'}}
         padding="0 20px"
-        width="200px"
+        width={{ xs: "40px", lg: "200px" }}
         bgcolor={"#fff"}
         borderRight="1px solid #d2d2d2"
         zIndex={"100"}
@@ -96,25 +66,6 @@ export const LeftSideBar = () => {
           </Stack>
         </Box>
       </Box>
-      
-      
-      {/* <Snackbar
-        anchorOrigin={{ vertical, horizontal }}
-        open={statusOpen}
-        autoHideDuration={5000}
-        TransitionComponent={Slide}
-        onClose={handleStatusClose}
-        key={vertical + horizontal}
-      >
-        <Alert
-          icon={false}
-          onClose={handleStatusClose}
-          severity={severity}
-          sx={{ width: "100%" }}
-        >
-          {message}
-        </Alert>
-      </Snackbar> */}
     </>
   );
 };

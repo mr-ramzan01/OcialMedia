@@ -160,7 +160,7 @@ export const CreateIcon = () => {
   }
   return (
     <>
-     {loading?<Loader/>:<Box></Box>}
+     {loading && <Loader/>}
      {showAlert && (
         <ShowAlert
           message={message}
@@ -173,16 +173,16 @@ export const CreateIcon = () => {
         onClick={() => setPostsOption(true)}
         sx={{
           "&:hover": {
-            backgroundColor: "#fafafa",
+            backgroundColor:{xs: '', lg: "#fafafa"},
             cursor: "pointer",
             borderRadius: "20px",
           },
         }}
-        m="10px 0 8px 0"
+        m={{xs: '0', sm: "10px 0 8px 0"}}
         color={"#000"}
         p="10px"
         underline="none"
-        display={"flex"}
+        display={{xs: 'block', lg: 'flex'}}
         alignItems={"center"}
       >
         <AiOutlinePlusSquare fontSize={"25px"} />
@@ -190,7 +190,7 @@ export const CreateIcon = () => {
           Create
         </Typography>
       </Link>
-      <Box>
+      {/* <Box> */}
         <Dialog open={postsOption} onClose={handleClose}>
           <Box width="300px">
             <DialogTitle
@@ -261,8 +261,8 @@ export const CreateIcon = () => {
             </DialogContent>
           </Box>
         </Dialog>
-      </Box>
-      <Box>
+      {/* </Box> */}
+      {/* <Box> */}
         <Dialog
           fullWidth
           maxWidth="md"
@@ -452,7 +452,7 @@ export const CreateIcon = () => {
             </Stack>
           </DialogContent>
         </Dialog>
-      </Box>
+      {/* </Box> */}
     </>
   );
 };

@@ -11,16 +11,16 @@ export const MessagesIcon = () => {
         href="/messages"
         sx={{
           "&:hover": {
-            backgroundColor: "#fafafa",
+            backgroundColor:{xs: '', lg: "#fafafa"},
             cursor: "pointer",
             borderRadius: "20px",
           },
         }}
-        m="10px 0 8px 0"
+        m={{xs: '0', sm: "10px 0 8px 0"}}
         color={"#000"}
         p="10px"
         underline="none"
-        display={"flex"}
+        display={{xs: 'block', lg: 'flex'}}
         alignItems={"center"}
       >
         <Badge
