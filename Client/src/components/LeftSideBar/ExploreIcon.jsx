@@ -1,11 +1,11 @@
-import { Link, Typography } from "@mui/material";
-import { BsSearch } from "react-icons/bs";
+import { Link, Typography } from '@mui/material'
+import { MdOutlineExplore } from "react-icons/md";
 
-export const SearchIcon = () => {
+export const ExploreIcon = () => {
   return (
     <>
       <Link
-        href="/search"
+        href="/explore"
         sx={{
           "&:hover": {
             backgroundColor:{xs: '', lg: "#fafafa"},
@@ -20,11 +20,11 @@ export const SearchIcon = () => {
         display={{xs: 'block', lg: 'flex'}}
         alignItems={"center"}
       >
-        <BsSearch fontSize={"25px"} />
+        <MdOutlineExplore  fontSize={"25px"} />
         <Typography display={{ xs: "none", lg: "block" }} ml="15px">
-          Search
+          Explore
         </Typography>
       </Link>
     </>
-  );
-};
+  )
+}

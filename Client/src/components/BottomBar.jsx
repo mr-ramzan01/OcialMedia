@@ -1,6 +1,7 @@
 import { Box } from "@mui/material";
 import { Stack } from "@mui/system";
 import { CreateIcon } from "./LeftSideBar/CreateIcon";
+import { ExploreIcon } from "./LeftSideBar/ExploreIcon";
 import { HomeIcon } from "./LeftSideBar/HomeIcon";
 import { NotificationsIcon } from "./LeftSideBar/NotificationsIcon";
 import { ProfileIcon } from "./LeftSideBar/ProfileIcon";
@@ -23,6 +24,7 @@ export const BottomBar = () => {
         <Stack direction='row' width='100%' justifyContent='space-around'>
             <HomeIcon />
             <SearchIcon />
+            <ExploreIcon />
             <CreateIcon />
             <NotificationsIcon />
             <ProfileIcon />

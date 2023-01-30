@@ -175,12 +175,12 @@ export const Stories = () => {
         </DialogActions>
         <DialogContent>
           <Avatar
-            style={{
+            sx={{
               objectFit: "contain",
               border: "1px solid #d1d1d1",
               borderRadius: "5px",
               width: "calc(100% - 5px)",
-              height: "300px",
+              height: {xs: '240px', sm: "300px"},
             }}
             src={previewImage}
             alt=""

@@ -51,11 +51,11 @@ export const Search = () => {
             width={{
               xs: "100%",
               sm: "500px",
-              md: "800px",
+              md: "700px",
               lg: "600px",
               xl: "800px",
             }}
-            m={{ xs: "60px 20px", sm: "20px auto" }}
+            m={{ xs: "60px auto", sm: "20px auto" }}
           >
             <Paper
               component="form"
@@ -89,7 +89,7 @@ export const Search = () => {
               <Paper
                 sx={{
                   height: {
-                    xs: "calc(100vh - 160px)",
+                    xs: "calc(100vh - 180px)",
                     sm: "calc(100vh - 100px)",
                   },
                   overflowY: "scroll",

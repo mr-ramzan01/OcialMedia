@@ -6,7 +6,7 @@ export const Logo = () => {
       <Typography
         variant='h4'
         mt={{xs: '0', sm: '40px'}}
-        // fontSize={{xs: '10px', sm: '30px'}}
+        fontSize={{xs: '25px', sm: '30px'}}
         fontWeight='500'
         fontFamily="'Dancing Script', cursive"
         display={{ xs: "block", sm: 'none', lg: "block" }}

@@ -22,15 +22,14 @@ import { CreateIcon } from "./LeftSideBar/CreateIcon";
 import { ProfileIcon } from "./LeftSideBar/ProfileIcon";
 import { SettingsIcon } from "./LeftSideBar/SettingsIcon";
 import { LogoutIcon } from "./LeftSideBar/LogoutIcon";
+import { ExploreIcon } from "./LeftSideBar/ExploreIcon";
 
 export const LeftSideBar = () => {
   const { getUser, hasGeneralNotifications } = useContext(AuthContext);
 
   useEffect(() => {
     getUser();
-    // if(generalNotifications) {
     hasGeneralNotifications();
-    // }
   }, []);
 
   return (
@@ -57,6 +56,7 @@ export const LeftSideBar = () => {
           <Stack direction={"column"}>
             <HomeIcon />
             <SearchIcon />
+            <ExploreIcon />
             <MessagesIcon />
             <NotificationsIcon />
             <CreateIcon />

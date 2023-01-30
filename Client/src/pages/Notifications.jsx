@@ -1,4 +1,4 @@
-import { Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import { Avatar, Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
 import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { LeftSideBar } from "../components/LeftSideBar";
@@ -8,6 +8,8 @@ import { NotificationMessage } from "../components/NotificationMessage";
 import { LikeNotifications } from "../components/LikeNotifications";
 import { CommentNotifications } from "../components/CommentNotifications";
 import { AuthContext } from "../context/AuthContext";
+import { Navbar } from "../components/Navbar";
+import { BottomBar } from "../components/BottomBar";
 
 export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -52,21 +54,23 @@ export const Notifications = () => {
 
   return (
     <>
+    <Navbar />
+    <BottomBar />
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
-          marginLeft="240px"
+          marginLeft={{xs: '0', sm: '80px', lg: "240px"}}
           display="grid"
           justifyContent="center"
           width="100%"
         >
           <Paper
             sx={{
-              m: "20px 0",
-              minHeight: "calc(100vh - 45px)",
+              m: {xs: '60px 20px', sm: "20px 0"},
+              minHeight: {xs: "calc(100vh - 125px)", sm: "calc(100vh - 45px)"},
               display: "grid",
               border: "1px solid #d1d1d1",
-              width: "600px",
+              width: {xs: 'calc(100% -40px)', sm: '450px', md: '600px', lg: "650px"},
             }}
           >
             {notifications.length > 0 ? (
@@ -108,16 +112,16 @@ export const Notifications = () => {
                 </InfiniteScroll>
               </Box>
             ) : (
-              <Box display="flex" alignItems="center" justifyContent="center">
+              <Box display="flex" width={{xs: 'calc(100vw - 40px)', sm: '100%'}} alignItems="center" justifyContent="center">
                 <Box
                   display="flex"
                   flexDirection="column"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Box width="200px" height="200px">
-                    <img
-                      style={{
+                  <Box width={{xs: "150px", sm: '200px'}} height={{xs: "150px", sm: '200px'}}>
+                    <Avatar
+                      sx={{
                         objectFit: "cover",
                         width: "100%",
                         height: "100%",
@@ -131,6 +135,7 @@ export const Notifications = () => {
                     fontSize="22px"
                     textAlign="center"
                     mt="20px"
+                    p='0 10px'
                   >
                     No Notifications to show
                   </Typography>

@@ -1,4 +1,5 @@
 import {
+  Avatar,
   Box,
   CircularProgress,
   Grid,
@@ -14,6 +15,8 @@ import { Loader } from "../components/Loader";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { SinglePost } from "../components/SinglePost";
 import { AuthContext } from "../context/AuthContext";
+import { Navbar } from "../components/Navbar";
+import { BottomBar } from "../components/BottomBar";
 
 export const Explore = () => {
   const [exploreData, setExploreData] = useState([]);
@@ -50,17 +53,19 @@ export const Explore = () => {
 
   return (
     <>
+    <Navbar />
+    <BottomBar />
       {showSinglePost && <SinglePost id={postData._id}/>}
       {isLoading ? <Loader /> :
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
-          marginLeft="240px"
+          marginLeft={{xs: '0', sm: '80px', lg: "240px"}}
           width="100%"
           display="grid"
           justifyContent="center"
         >
-          <Box padding='30px 0' width="900px">
+          <Box p={{xs: '70px 20px', sm: '30px 0'}} width={{xs: 'calc(100% - 40px)', sm: '500px', md: "800px", lg: '900px'}} >
             {exploreData.length > 0 ? (
               <InfiniteScroll
                 dataLength={exploreData.length}
@@ -79,7 +84,7 @@ export const Explore = () => {
                   {exploreData.map((el) => (
                     <Box
                       key={el._id}
-                      height="280px"
+                      height={{xs: '150px', sm: '200px', md: "280px"}}
                       onClick={() => handleClick(el._id)}
                       sx={{
                         cursor: "pointer",
