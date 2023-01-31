@@ -39,7 +39,7 @@ export const ShowStory = ({ image, showStory, setShowStory}) => {
           }}
         />
         <DialogContent>
-          <Avatar
+          <img
             style={{
               objectFit: "contain",
               border: "1px solid #d1d1d1",

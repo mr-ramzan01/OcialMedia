@@ -6,7 +6,6 @@ import {
   DialogContent,
   Grid,
   InputLabel,
-  LinearProgress,
   Paper,
   TextField,
   Typography,
@@ -16,8 +15,8 @@ import { useContext, useState } from "react";
 import { AiFillPlusCircle } from "react-icons/ai";
 import { AuthContext } from "../context/AuthContext";
 import { ShowAlert } from "./Alert";
-import { AllStories } from "./AllStories";
 import { Loader } from "./Loader";
+import { AllStories } from "./Story/AllStories";
 
 export const Stories = () => {
   const [previewImage, setPreviewImage] = useState(null);

@@ -11,7 +11,7 @@ import { ShowStory } from "./ShowStory";
 
 export const StoryIcons = ({ story }) => {
   const [showStory, setShowStory] = useState(false);
-  
+
   return (
     <>
       <Avatar
@@ -20,14 +20,16 @@ export const StoryIcons = ({ story }) => {
         src={story.user_id.image}
         alt="users"
       />
-      <Typography
-        color="#303030"
-        fontSize="12px"
-        fontFamily="Dancing Script"
-      >
+      <Typography color="#303030" fontSize="12px" fontFamily="Dancing Script">
         {story.user_id.username}
       </Typography>
-      {showStory && <ShowStory image={story.image} showStory={showStory} setShowStory={setShowStory}/>}
+      {showStory && (
+        <ShowStory
+          image={story.image}
+          showStory={showStory}
+          setShowStory={setShowStory}
+        />
+      )}
     </>
   );
 };
