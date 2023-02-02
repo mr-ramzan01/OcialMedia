@@ -84,7 +84,7 @@ export const Explore = () => {
                   {exploreData.map((el) => (
                     <Box
                       key={el._id}
-                      height={{xs: '150px', sm: '200px', md: "280px"}}
+                      height={{xs: '130px', sm: '200px', md: "280px"}}
                       onClick={() => handleClick(el._id)}
                       sx={{
                         cursor: "pointer",

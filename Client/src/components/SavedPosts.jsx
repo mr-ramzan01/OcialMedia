@@ -60,7 +60,7 @@ export const SavedPosts = ({id}) => {
             {savedPosts.map((el) => (
               <Box
                 key={el._id}
-                height="280px"
+                height={{ xs: "130px", sm: "170px", md: "280px" }}
                 onClick={() => handleClick(el.post_id._id)}
                 sx={{
                   cursor: "pointer",

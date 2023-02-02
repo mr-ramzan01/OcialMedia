@@ -21,6 +21,9 @@ import { SinglePost } from "../components/SinglePost";
 import { SavedPosts } from "../components/SavedPosts";
 import { ShowFollowing } from "../components/Profile/ShowFollowing";
 import { ShowFollower } from "../components/Profile/ShowFollower";
+import { AiOutlineMessage } from "react-icons/ai";
+import { Navbar } from "../components/Navbar";
+import { BottomBar } from "../components/BottomBar";
 
 export const User = () => {
   const { username } = useParams();
@@ -260,26 +263,40 @@ export const User = () => {
         />
       )}
       {showSinglePost && <SinglePost id={postData._id} />}
+      <Navbar />
+      <BottomBar />
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
-          marginLeft="240px"
+          marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
           width="100%"
           display="grid"
           justifyContent="center"
         >
-          <Box width="900px">
-            <Stack direction="column">
-              <Stack sx={{ marginTop: "30px" }} direction="row">
+          <Box
+            width={{ xs: "100%", sm: "500px", md: "800px", lg: "900px" }}
+          >
+            <Stack direction="column" m={{xs: '60px 0', sm: '30px 0'}} border='1px solid green'>
+              <Stack direction="row">
                 <Grid
                   display="grid"
                   sx={{ placeContent: "center" }}
-                  width="35%"
+                  width={{ xs: "120px", sm: "35%" }}
                 >
                   <Avatar
                     sx={{
-                      height: "150px",
-                      width: "150px",
+                      height: {
+                        xs: "65px",
+                        sm: "100px",
+                        md: "120px",
+                        lg: "150px",
+                      },
+                      width: {
+                        xs: "65px",
+                        sm: "100px",
+                        md: "120px",
+                        lg: "150px",
+                      },
                     }}
                     src={oneUserData.image}
                     alt={oneUserData.full_name}
@@ -289,16 +306,20 @@ export const User = () => {
                   display="flex"
                   flexDirection="column"
                   gap="20px"
-                  width="65%"
+                  width={{ xs: "100%", sm: "65%" }}
                 >
-                  <Stack direction="row" gap="15px" alignItems="center">
+                  <Stack
+                    direction="row"
+                    gap={{ xs: "8px", sm: "15px" }}
+                    alignItems="center"
+                  >
                     <Typography
                       fontFamily="'Petrona', serif"
                       fontStyle={"italic"}
                       fontWeight={400}
-                      fontSize="25px"
+                      fontSize={{ xs: "15px", sm: "20px", md: "25px" }}
                       color="#303030"
-                      mr="20px"
+                      mr={{ xs: "5px", sm: "20px" }}
                     >
                       {oneUserData.username}
                     </Typography>
@@ -310,6 +331,7 @@ export const User = () => {
                             backgroundColor: "#d3d3d3",
                             color: "#000",
                             letterSpacing: "0px",
+                            fontSize: { xs: "10px", sm: "13px" },
                             padding: "5px 10px",
                             boxShadow: "none",
                             "&:hover": {
@@ -329,13 +351,14 @@ export const User = () => {
                           sx={{
                             backgroundColor: "#129ffd",
                             letterSpacing: "0px",
+                            fontSize: { xs: "10px", md: "13px" },
                             padding: "5px 10px",
                             boxShadow: "none",
                             "&:hover": {
                               backgroundColor: "#0066ff",
                               boxShadow: "none",
                             },
-                            width: "100px",
+                            width: { xs: "70px", sm: "100px" },
                           }}
                         >
                           {isFollowing ? "Following" : "Follow"}
@@ -345,7 +368,9 @@ export const User = () => {
                           sx={{
                             backgroundColor: "#eee",
                             color: "#000",
+                            display: { xs: "none", sm: "block" },
                             letterSpacing: "0px",
+                            fontSize: { xs: "10px", md: "13px" },
                             padding: "5px 10px",
                             boxShadow: "none",
                             "&:hover": {
@@ -357,15 +382,35 @@ export const User = () => {
                         >
                           Message
                         </Button>
+                        <Box
+                          onClick={() => handleMessageClick(oneUserData._id)}
+                          padding="2px 10px"
+                          borderRadius="5px"
+                          backgroundColor="#eee"
+                          display={{ xs: "block", sm: "none" }}
+                        >
+                          <AiOutlineMessage />
+                        </Box>
                       </>
                     )}
                   </Stack>
-                  <Stack direction="row" gap="30px" alignItems="center">
+                  <Stack
+                    direction="row"
+                    gap={{ xs: "10px", sm: "30px" }}
+                    alignItems="center"
+                  >
                     <Stack direction="row" alignItems="center">
-                      <Typography mr="5px" fontSize="18px" marginBottom="2px">
+                      <Typography
+                        mr="5px"
+                        fontSize={{ xs: "15px", sm: "18px" }}
+                        marginBottom="2px"
+                      >
                         {oneUserData.postsCount}
                       </Typography>
-                      <Typography color="#363638" fontSize="15px">
+                      <Typography
+                        color="#363638"
+                        fontSize={{ xs: "12px", sm: "15px" }}
+                      >
                         posts
                       </Typography>
                     </Stack>
@@ -375,10 +420,17 @@ export const User = () => {
                       direction="row"
                       alignItems="center"
                     >
-                      <Typography mr="5px" fontSize="18px" marginBottom="2px">
+                      <Typography
+                        mr="5px"
+                        fontSize={{ xs: "15px", sm: "18px" }}
+                        marginBottom="2px"
+                      >
                         {oneUserData.followerCount}
                       </Typography>
-                      <Typography color="#363638" fontSize="15px">
+                      <Typography
+                        color="#363638"
+                        fontSize={{ xs: "12px", sm: "15px" }}
+                      >
                         followers
                       </Typography>
                     </Stack>
@@ -388,21 +440,30 @@ export const User = () => {
                       direction="row"
                       alignItems="center"
                     >
-                      <Typography mr="5px" fontSize="18px" marginBottom="2px">
+                      <Typography
+                        mr="5px"
+                        fontSize={{ xs: "15px", sm: "18px" }}
+                        marginBottom="2px"
+                      >
                         {oneUserData.followingCount}
                       </Typography>
-                      <Typography color="#363638" fontSize="15px">
+                      <Typography
+                        color="#363638"
+                        fontSize={{ xs: "12px", sm: "15px" }}
+                      >
                         following
                       </Typography>
                     </Stack>
                   </Stack>
                   <Box width="50%" marginTop="20px">
-                    <Typography fontSize={"20px"}>
+                    <Typography fontSize={{ xs: "17px", sm: "20px" }}>
                       {oneUserData.full_name}
                     </Typography>
                   </Box>
                   <Box width="50%" marginTop="-10px">
-                    <Typography>{oneUserData.bio}</Typography>
+                    <Typography fontSize={{ xs: "13px", sm: "15px" }}>
+                      {oneUserData.bio}
+                    </Typography>
                   </Box>
                 </Grid>
               </Stack>
@@ -471,7 +532,7 @@ export const User = () => {
                           {userPosts.map((el) => (
                             <Box
                               key={el._id}
-                              height="280px"
+                              height={{ xs: "130px", sm: "170px", md: "280px" }}
                               onClick={() => handleClick(el._id)}
                               sx={{
                                 cursor: "pointer",
