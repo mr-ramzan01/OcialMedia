@@ -92,7 +92,7 @@ export const ResetPassword = () => {
           setAlertOpen={setShowAlert}
         />
       )}
-      <Box mt="20px">
+      <Box mt="20px" pb='20px'>
         <Box component="form" width={{ xs: "calc(100% - 40px)", sm: "85%", md: "70%", lg: "60%" }} m="auto" onSubmit={handleSubmit}>
           <Stack
             m={"40px 0"}

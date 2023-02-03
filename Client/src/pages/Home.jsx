@@ -7,7 +7,6 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { LeftSideBar } from "../components/LeftSideBar";
 import { useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import moment from "moment";
@@ -16,8 +15,9 @@ import { RecentPostsComments } from "../components/RecentPostsComments";
 import { PostsActions } from "../components/PostsActions";
 import { Loader } from "../components/Loader";
 import { Stories } from "../components/Stories";
-import { BottomBar } from "../components/BottomBar";
-import { Navbar } from "../components/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
 
 export const Home = () => {
   const [recentPosts, setRecentPosts] = useState([]);
@@ -90,18 +90,18 @@ export const Home = () => {
 
   return (
     <>
-    <Navbar />
-    <BottomBar />
+      <Navbar />
+      <BottomBar />
       {isLoading ? (
         <Loader />
       ) : (
         <Stack direction={"row"}>
           <LeftSideBar />
-          <Box marginLeft={{xs: '0', sm: '80px', lg: "240px"}} width="100%">
+          <Box marginLeft={{ xs: "0", sm: "80px", lg: "240px" }} width="100%">
             <Box
-              width={{xs: '100%', sm: '450px', md: "600px"}} 
-              sx={{ minHeight: "90vh", m: "40px auto"}}
-              p={{xs: '20px', sm: '0'}}
+              width={{ xs: "100%", sm: "450px", md: "600px" }}
+              sx={{ minHeight: "90vh", m: "40px auto" }}
+              p={{ xs: "20px", sm: "0" }}
             >
               <Stories />
               {recentPosts.length > 0 ? (
@@ -125,7 +125,11 @@ export const Home = () => {
                   {recentPosts.map((el) => (
                     <Paper
                       key={el._id}
-                      sx={{p:{xs: '5px 10px', sm: "15px 10px"}, mb:'10px', border: '1px solid #d1d1d1'}}
+                      sx={{
+                        p: { xs: "5px 10px", sm: "15px 10px" },
+                        mb: "10px",
+                        border: "1px solid #d1d1d1",
+                      }}
                     >
                       <Stack direction="row" p="10px 0" alignItems="center">
                         <Avatar
@@ -158,7 +162,12 @@ export const Home = () => {
                       >
                         {el.post_images.map((el) => (
                           <Avatar
-                            sx={{objectFit: 'contain', borderRadius: '0', width: '100%', height: {xs: '350px', sm: '400px',  md: '485px'}}}
+                            sx={{
+                              objectFit: "contain",
+                              borderRadius: "0",
+                              width: "100%",
+                              height: { xs: "350px", sm: "400px", md: "485px" },
+                            }}
                             key={el}
                             width="100%"
                             height="485px"

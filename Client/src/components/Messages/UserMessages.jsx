@@ -1,11 +1,10 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
 import React, { useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext";
 import moment from "moment";
 
-export const UserMessages = ({ messages}) => {
+export const UserMessages = ({ messages }) => {
   const { userData } = useContext(AuthContext);
-  
 
   return (
     <>

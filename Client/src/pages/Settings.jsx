@@ -1,12 +1,12 @@
 import { Box, Paper, Stack } from "@mui/material";
 import { useContext, useEffect } from "react";
 import { useState } from "react";
-import { LeftSideBar } from "../components/LeftSideBar";
 import { AuthContext } from "../context/AuthContext";
 import { ResetPassword } from "../components/Settings/ResetPassword";
 import { EditProfile } from "../components/Settings/EditProfile";
-import { Navbar } from "../components/Navbar";
-import { BottomBar } from "../components/BottomBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
 
 export const Settings = () => {
   const [isActive, setIsActive] = useState("edit");
@@ -22,12 +22,27 @@ export const Settings = () => {
 
   return (
     <>
-    <Navbar />
-    <BottomBar />
+      <Navbar />
+      <BottomBar />
       <Stack direction={"row"}>
         <LeftSideBar />
-        <Box marginLeft={{xs: '0', sm: '80px', lg: "240px"}} width="100%">
-          <Paper sx={{ border: '1px solid #d1d1d1', minHeight: {xs: "calc(100vh - 145px)", sm: "calc(100vh - 65px)"}, width: {xs: 'calc(100% - 40px)', sm: '500px', md: '700px', lg: '900px'}, margin: {xs: '70px 20px', sm: '30px auto'} }}>
+        <Box marginLeft={{ xs: "0", sm: "80px", lg: "240px" }} width="100%">
+          <Paper
+            sx={{
+              border: "1px solid #d1d1d1",
+              minHeight: {
+                xs: "calc(100vh - 145px)",
+                sm: "calc(100vh - 65px)",
+              },
+              width: {
+                xs: "calc(100% - 40px)",
+                sm: "500px",
+                md: "700px",
+                lg: "900px",
+              },
+              margin: { xs: "70px 20px", sm: "30px auto" },
+            }}
+          >
             <Stack
               borderBottom="1px solid #d2d2d2"
               justifyContent={"center"}

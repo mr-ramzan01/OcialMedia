@@ -271,18 +271,14 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
     setComment((prev) => prev+e.emoji);
   }
 
-  // if (isLoading) {
-  //   return <Loader />;
-  // }
-
   return (
     <>
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
         {isLoading && <Loader /> }
         {data._id &&
-        <Box sx={{ width: "880px" }}>
+        <Box sx={{ width: {xs: '300px', sm: '500px', md: '880px'} }}>
           <DialogContent>
-            <Stack direction="row" height="100%">
+            <Stack direction={{xs: 'column', md: 'row'}} height="100%">
               <Box overflow="hidden"  borderRadius="10px" width="50%">
                 <Carousel
                   showStatus={false}

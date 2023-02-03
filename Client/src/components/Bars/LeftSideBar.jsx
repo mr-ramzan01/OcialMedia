@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 
-import { AuthContext } from "../context/AuthContext";
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { Logo } from "./LeftSideBar/Logo";
 import { HomeIcon } from "./LeftSideBar/HomeIcon";
@@ -23,6 +22,7 @@ import { ProfileIcon } from "./LeftSideBar/ProfileIcon";
 import { SettingsIcon } from "./LeftSideBar/SettingsIcon";
 import { LogoutIcon } from "./LeftSideBar/LogoutIcon";
 import { ExploreIcon } from "./LeftSideBar/ExploreIcon";
+import { AuthContext } from "../../context/AuthContext";
 
 export const LeftSideBar = () => {
   const { getUser, hasGeneralNotifications } = useContext(AuthContext);
@@ -41,7 +41,7 @@ export const LeftSideBar = () => {
             display: "none",
           },
         }}
-        display={{xs: 'none', sm: 'block'}}
+        display={{ xs: "none", sm: "block" }}
         padding="0 20px"
         width={{ xs: "40px", lg: "200px" }}
         bgcolor={"#fff"}

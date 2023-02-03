@@ -1,7 +1,7 @@
 import { Badge, Link, Typography } from "@mui/material";
 import { useContext } from "react";
 import { AiOutlineMessage } from "react-icons/ai";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../../context/AuthContext";
 
 export const MessagesIcon = () => {
     const {messagesNotification } = useContext(AuthContext);

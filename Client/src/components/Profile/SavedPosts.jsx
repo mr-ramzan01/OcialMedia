@@ -3,10 +3,10 @@ import { Box } from "@mui/system";
 import React, { useContext, useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { HiRectangleStack } from "react-icons/hi2";
-import { AuthContext } from "../context/AuthContext";
-import { Loader } from "./Loader";
+import { AuthContext } from "../../context/AuthContext";
+import { Loader } from "../Loader";
 
-export const SavedPosts = ({id}) => {
+export const SavedPosts = ({ id }) => {
   const [savedPosts, setSavedPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalSavedPostsLength, setTotalSavedPostsLength] = useState(0);
@@ -33,11 +33,11 @@ export const SavedPosts = ({id}) => {
       })
       .finally(() => {
         setIsLoading(false);
-      })
+      });
   };
   return (
     <>
-    {isLoading && <Loader />}
+      {isLoading && <Loader />}
       {savedPosts.length > 0 ? (
         <InfiniteScroll
           dataLength={savedPosts.length}

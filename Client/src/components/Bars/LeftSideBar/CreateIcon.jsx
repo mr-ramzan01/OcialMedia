@@ -14,10 +14,10 @@ import {
 } from "@mui/material";
 import { useContext, useState } from "react";
 import { AiOutlinePlusSquare } from "react-icons/ai";
-import { AuthContext } from "../../context/AuthContext";
-import { Loader } from "../Loader";
 import { Carousel } from "react-responsive-carousel";
-import { ShowAlert } from "../Alert";
+import { AuthContext } from "../../../context/AuthContext";
+import { ShowAlert } from "../../Alert";
+import { Loader } from "../../Loader";
 
 export const CreateIcon = () => {
   const [postsOption, setPostsOption] = useState(false);

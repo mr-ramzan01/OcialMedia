@@ -12,18 +12,18 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { LeftSideBar } from "../components/LeftSideBar";
 import { Loader } from "../components/Loader";
 import { HiRectangleStack } from "react-icons/hi2";
 import { AuthContext } from "../context/AuthContext";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { SinglePost } from "../components/SinglePost";
-import { SavedPosts } from "../components/SavedPosts";
+import { SavedPosts } from "../components/Profile/SavedPosts";
 import { ShowFollowing } from "../components/Profile/ShowFollowing";
 import { ShowFollower } from "../components/Profile/ShowFollower";
 import { AiOutlineMessage } from "react-icons/ai";
-import { Navbar } from "../components/Navbar";
-import { BottomBar } from "../components/BottomBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
 
 export const User = () => {
   const { username } = useParams();
@@ -273,10 +273,8 @@ export const User = () => {
           display="grid"
           justifyContent="center"
         >
-          <Box
-            width={{ xs: "100%", sm: "500px", md: "800px", lg: "900px" }}
-          >
-            <Stack direction="column" m={{xs: '60px 0', sm: '30px 0'}} border='1px solid green'>
+          <Box width={{ xs: "100%", sm: "500px", md: "800px", lg: "900px" }}>
+            <Stack direction="column" m={{ xs: "60px 0", sm: "30px 0" }}>
               <Stack direction="row">
                 <Grid
                   display="grid"
@@ -482,7 +480,7 @@ export const User = () => {
                     onClick={() => setSelected("post")}
                     p="10px 0"
                     textAlign="center"
-                    fontSize={"20px"}
+                    fontSize={{ xs: "15px", sm: "20px" }}
                     sx={{ cursor: "pointer" }}
                   >
                     Post
@@ -497,7 +495,7 @@ export const User = () => {
                       onClick={() => setSelected("saved")}
                       p="10px 0"
                       textAlign="center"
-                      fontSize={"20px"}
+                      fontSize={{ xs: "15px", sm: "20px" }}
                       sx={{ cursor: "pointer" }}
                     >
                       Saved

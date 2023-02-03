@@ -8,7 +8,7 @@ export const ShowFollowing = ({followingOpen, followingData, handleClose}) => {
         <Box
           sx={{
             maxHeight: "60vh",
-            width: "30vw",
+            width: "100%",
             overflowY: "scroll",
             borderRadius: "5px",
             "::-webkit-scrollbar": {

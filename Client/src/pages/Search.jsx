@@ -10,10 +10,10 @@ import {
 } from "@mui/material";
 import { useState, useRef } from "react";
 import Avatar from "@mui/material/Avatar";
-import { LeftSideBar } from "../components/LeftSideBar";
 import ClearIcon from "@mui/icons-material/Clear";
-import { Navbar } from "../components/Navbar";
-import { BottomBar } from "../components/BottomBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
 
 export const Search = () => {
   const searchRef = useRef(null);
@@ -88,7 +88,7 @@ export const Search = () => {
             {users.length > 0 && searchRef.current.value.length > 0 ? (
               <Paper
                 sx={{
-                  height: {
+                  maxHeight: {
                     xs: "calc(100vh - 180px)",
                     sm: "calc(100vh - 100px)",
                   },

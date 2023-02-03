@@ -1,6 +1,6 @@
 import { Avatar, Link, Typography } from "@mui/material";
 import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "../../../context/AuthContext";
 
 export const ProfileIcon = () => {
   const { userData } = useContext(AuthContext);

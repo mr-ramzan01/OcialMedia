@@ -1,20 +1,27 @@
-import { Avatar, Box, CircularProgress, Paper, Stack, Typography } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  CircularProgress,
+  Paper,
+  Stack,
+  Typography,
+} from "@mui/material";
 import React, { useContext, useState } from "react";
 import { useEffect } from "react";
-import { LeftSideBar } from "../components/LeftSideBar";
 import InfiniteScroll from "react-infinite-scroll-component";
 
-import { NotificationMessage } from "../components/NotificationMessage";
-import { LikeNotifications } from "../components/LikeNotifications";
-import { CommentNotifications } from "../components/CommentNotifications";
+import { NotificationMessage } from "../components/Notifications/NotificationMessage";
+import { LikeNotifications } from "../components/Notifications/LikeNotifications";
+import { CommentNotifications } from "../components/Notifications/CommentNotifications";
 import { AuthContext } from "../context/AuthContext";
-import { Navbar } from "../components/Navbar";
-import { BottomBar } from "../components/BottomBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
 
 export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [totalNotificationsLength, setTotalNotificationsLength] = useState(0);
-  const {setGeneralNotifications} = useContext(AuthContext);
+  const { setGeneralNotifications } = useContext(AuthContext);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -25,52 +32,60 @@ export const Notifications = () => {
   const getGeneralNotifications = () => {
     setPage((prev) => prev + 1);
     fetch(`/notifications/get/all?page=${page}`)
-    .then((res) => res.json())
-    .then((res) => {
-      if (res.success) {
-        setNotifications([...notifications, ...res.data]);
-        setTotalNotificationsLength(res.totalLength);
-      }
-    })
-    .catch((err) => {
-      console.log(err, "error");
-    });
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setNotifications([...notifications, ...res.data]);
+          setTotalNotificationsLength(res.totalLength);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
   };
 
   const hasSeenNotifications = () => {
-    fetch('/notifications/has/seen', {
-      method: 'PATCH',
+    fetch("/notifications/has/seen", {
+      method: "PATCH",
     })
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        setGeneralNotifications(true);
-      }
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
-  }
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setGeneralNotifications(true);
+        }
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
+  };
 
   return (
     <>
-    <Navbar />
-    <BottomBar />
+      <Navbar />
+      <BottomBar />
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
-          marginLeft={{xs: '0', sm: '80px', lg: "240px"}}
+          marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
           display="grid"
           justifyContent="center"
           width="100%"
         >
           <Paper
             sx={{
-              m: {xs: '60px 20px', sm: "20px 0"},
-              minHeight: {xs: "calc(100vh - 125px)", sm: "calc(100vh - 45px)"},
+              m: { xs: "60px 20px", sm: "20px 0" },
+              minHeight: {
+                xs: "calc(100vh - 125px)",
+                sm: "calc(100vh - 45px)",
+              },
               display: "grid",
               border: "1px solid #d1d1d1",
-              width: {xs: 'calc(100% -40px)', sm: '450px', md: '600px', lg: "650px"},
+              width: {
+                xs: "calc(100% -40px)",
+                sm: "450px",
+                md: "600px",
+                lg: "650px",
+              },
             }}
           >
             {notifications.length > 0 ? (
@@ -112,14 +127,22 @@ export const Notifications = () => {
                 </InfiniteScroll>
               </Box>
             ) : (
-              <Box display="flex" width={{xs: 'calc(100vw - 40px)', sm: '100%'}} alignItems="center" justifyContent="center">
+              <Box
+                display="flex"
+                width={{ xs: "calc(100vw - 40px)", sm: "100%" }}
+                alignItems="center"
+                justifyContent="center"
+              >
                 <Box
                   display="flex"
                   flexDirection="column"
                   justifyContent="center"
                   alignItems="center"
                 >
-                  <Box width={{xs: "150px", sm: '200px'}} height={{xs: "150px", sm: '200px'}}>
+                  <Box
+                    width={{ xs: "150px", sm: "200px" }}
+                    height={{ xs: "150px", sm: "200px" }}
+                  >
                     <Avatar
                       sx={{
                         objectFit: "cover",
@@ -135,7 +158,7 @@ export const Notifications = () => {
                     fontSize="22px"
                     textAlign="center"
                     mt="20px"
-                    p='0 10px'
+                    p="0 10px"
                   >
                     No Notifications to show
                   </Typography>

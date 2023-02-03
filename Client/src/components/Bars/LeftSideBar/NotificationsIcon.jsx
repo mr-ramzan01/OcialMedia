@@ -1,7 +1,7 @@
 import { Badge, Link, Typography } from "@mui/material";
 import { useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
 import { BsSuitHeart } from "react-icons/bs";
+import { AuthContext } from "../../../context/AuthContext";
 
 export const NotificationsIcon = () => {
   const { generalNotifications } = useContext(AuthContext);

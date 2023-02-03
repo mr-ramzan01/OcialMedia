@@ -1,7 +1,7 @@
 import { Avatar, Box, Stack } from "@mui/material";
 import React, { useState } from "react";
 import { NotificationMessage } from "./NotificationMessage";
-import { SinglePost } from "./SinglePost";
+import { SinglePost } from "../SinglePost";
 
 export const LikeNotifications = ({ el }) => {
   const [showSinglePostFromNotifications, setShowSinglePostFromNotifications] =
@@ -30,7 +30,7 @@ export const LikeNotifications = ({ el }) => {
         />
         <Avatar
           onClick={() => setShowSinglePostFromNotifications(true)}
-          sx={{ borderRadius: "0", cursor: "pointer"}}
+          sx={{ borderRadius: "0", cursor: "pointer" }}
           src={el.like_id.post_Id.post_images[0].url}
           alt=""
         />

@@ -12,11 +12,10 @@ import {
 import React, { useRef, useState } from "react";
 import { useEffect } from "react";
 import { useContext } from "react";
-import { LeftSideBar } from "../components/LeftSideBar";
 import { Loader } from "../components/Loader";
 import { AuthContext } from "../context/AuthContext";
 import { CiSearch } from "react-icons/ci";
-import { IoCallOutline } from "react-icons/io5";
+import { IoCallOutline, IoChevronBack } from "react-icons/io5";
 import { BiVideo } from "react-icons/bi";
 import { BsInfoCircle } from "react-icons/bs";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
@@ -25,14 +24,22 @@ import { RxCross2 } from "react-icons/rx";
 import EmojiPicker from "emoji-picker-react";
 import moment from "moment";
 import ScrollableFeed from "react-scrollable-feed";
-import {io} from 'socket.io-client'
-import { UserMessages } from "../components/UserMessages";
-const ENDPOINT = 'http://localhost:3000';
+import { io } from "socket.io-client";
+import { UserMessages } from "../components/Messages/UserMessages";
+import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { Navbar } from "../components/Bars/Navbar";
+import { BottomBar } from "../components/Bars/BottomBar";
+const ENDPOINT = "http://localhost:3000";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
 export const Messages = () => {
-  const { userData, sendMessageNotification, messagesNotification, deleteNotifications } = useContext(AuthContext);
+  const {
+    userData,
+    sendMessageNotification,
+    messagesNotification,
+    deleteNotifications,
+  } = useContext(AuthContext);
   const [chatsData, setChatsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
@@ -45,6 +52,8 @@ export const Messages = () => {
   const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
   const [notify, setNotify] = useState([]);
+  const [displayMessage, setDisplayMessage] = useState("none");
+  const [displayChats, setDisplayChats] = useState("block");
 
   useEffect(() => {
     setIsLoading(true);
@@ -55,58 +64,70 @@ export const Messages = () => {
 
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
-      socket.emit('setup', userData);
-      socket.on('connected', () => setSocketConnected(true));
+      socket.emit("setup", userData);
+      socket.on("connected", () => setSocketConnected(true));
       socket.on("typing", () => setIsTyping(true));
       socket.on("stop typing", () => setIsTyping(false));
     }
-  },[userData]);
-
+  }, [userData]);
 
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
       selectedChatCompare = currentSelectedChat;
-      if(messagesNotification) {
+      if (messagesNotification) {
         let haveNotifications = false;
-        for(let i=0; i<messagesNotification.length; i++) {
-          if(messagesNotification[i].from === currentSelectedChat.users[1]._id || messagesNotification[i].from === currentSelectedChat.users[0]._id) {
+        for (let i = 0; i < messagesNotification.length; i++) {
+          if (
+            messagesNotification[i].from === currentSelectedChat.users[1]._id ||
+            messagesNotification[i].from === currentSelectedChat.users[0]._id
+          ) {
             haveNotifications = true;
             break;
           }
         }
-        if(haveNotifications) {
+        if (haveNotifications) {
           {
             currentSelectedChat.users[0]._id === userData._id
-              ?  deleteNotifications(currentSelectedChat.users[1]._id, currentSelectedChat.users[0]._id)
-              :  deleteNotifications(currentSelectedChat.users[0]._id, currentSelectedChat.users[1]._id)
+              ? deleteNotifications(
+                  currentSelectedChat.users[1]._id,
+                  currentSelectedChat.users[0]._id
+                )
+              : deleteNotifications(
+                  currentSelectedChat.users[0]._id,
+                  currentSelectedChat.users[1]._id
+                );
           }
         }
       }
     }
-  },[currentSelectedChat]);
-
+  }, [currentSelectedChat]);
 
   useEffect(() => {
-    if(notify.length > 0) {
-      sendMessageNotification(notify[notify.length-1]._id, notify[notify.length-1].sender._id);
+    if (notify.length > 0) {
+      sendMessageNotification(
+        notify[notify.length - 1]._id,
+        notify[notify.length - 1].sender._id
+      );
     }
-  },[notify])
-  
+  }, [notify]);
+
   useEffect(() => {
     if (Object.keys(userData).length > 0) {
-      socket.on('message received', (newMessageReceived) => {
-        if(!selectedChatCompare || selectedChatCompare._id !== newMessageReceived.chat_id._id) {
+      socket.on("message received", (newMessageReceived) => {
+        if (
+          !selectedChatCompare ||
+          selectedChatCompare._id !== newMessageReceived.chat_id._id
+        ) {
           //give Notification
           if (!notify.includes(newMessageReceived)) {
             setNotify([...notify, newMessageReceived]);
           }
-        }
-        else {
+        } else {
           setMessages([...messages, newMessageReceived]);
         }
-      })
+      });
     }
-  })
+  });
 
   const typingHandler = (e) => {
     setMsg(e.target.value);
@@ -172,7 +193,7 @@ export const Messages = () => {
     })
       .then((res) => res.json())
       .then((res) => {
-        socket.emit('new message', res.data);
+        socket.emit("new message", res.data);
         setMessages([...messages, res.data]);
       })
       .catch((err) => {
@@ -185,7 +206,6 @@ export const Messages = () => {
   };
 
   const searchUsers = debounce(() => {
-    console.log(searchRef.current.value);
     fetch(`/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
@@ -217,18 +237,25 @@ export const Messages = () => {
     getAllMessages(chat);
   };
 
+  const goBackToChat = () => {
+    setDisplayChats("block");
+    setDisplayMessage("none");
+  };
+
   const getAllMessages = (chat) => {
     fetch(`/messages/get/${chat._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
+          setDisplayChats("none");
+          setDisplayMessage("block");
           setMessages(res.data);
-          socket.emit('join chat', chat._id);
+          socket.emit("join chat", chat._id);
         }
       })
       .catch((err) => {
         console.log(err, "error");
-      })
+      });
   };
 
   const handleAccessChat = (user_id) => {
@@ -240,9 +267,7 @@ export const Messages = () => {
       },
     })
       .then((res) => res.json())
-      .then((res) => {
-        console.log(res);
-      })
+      .then((res) => {})
       .catch((err) => {
         console.log(err, "error");
       })
@@ -288,26 +313,41 @@ export const Messages = () => {
   return (
     <>
       {isLoading && <Loader />}
+      <Navbar />
+      <BottomBar />
       <Stack direction={"row"}>
         <LeftSideBar />
         <Box
-          marginLeft="240px"
+          marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
           width="100%"
           display="grid"
           justifyContent="center"
         >
           <Box
-            m="20px 0"
-            height="calc(100vh - 45px)"
+            m={{ xs: "60px 0", sm: "20px 0" }}
+            height={{ xs: "calc(100vh - 125px)", sm: "calc(100vh - 45px)" }}
             display={"grid"}
-            gridTemplateColumns="40% 60%"
-            width="900px"
+            gridTemplateColumns={{
+              xs: "calc(100vw - 40px) 100%",
+              sm: "100% 100%",
+              md: "40% 60%",
+            }}
+            width={{
+              xs: "100%",
+              sm: "500px",
+              md: "800px",
+              lg: "900px",
+            }}
           >
             <Paper
               sx={{
-                mr: "20px",
+                mr: { xs: "0", md: "20px" },
                 border: "1px solid #d2d2d2",
-                maxHeight: "calc(100vh - 45px)",
+                maxHeight: {
+                  xs: "calc(100vh - 125px)",
+                  sm: "calc(100vh - 45px)",
+                },
+                display: { xs: displayChats, md: "block" },
               }}
             >
               <Box height="100%" position="relative" zIndex="2">
@@ -457,7 +497,11 @@ export const Messages = () => {
                       <Stack gap="10px">
                         {chatsData.map((el) => (
                           <Stack
-                            border={el._id === currentSelectedChat._id ? '1px solid gray' : '1px solid #fff'}
+                            border={
+                              el._id === currentSelectedChat._id
+                                ? "1px solid gray"
+                                : "1px solid #fff"
+                            }
                             key={el._id}
                             p="10px"
                             bgcolor="#f3f3f3"
@@ -548,7 +592,16 @@ export const Messages = () => {
                 </Box>
               </Box>
             </Paper>
-            <Paper sx={{ border: "1px solid #d2d2d2", maxHeight: "calc(100vh - 45px)" }}>
+            <Paper
+              sx={{
+                border: "1px solid #d2d2d2",
+                maxHeight: {
+                  xs: "calc(100vh - 125px)",
+                  sm: "calc(100vh - 45px)",
+                },
+                display: { xs: displayMessage, md: "block" },
+              }}
+            >
               {currentSelectedChat ? (
                 <Box height="100%" position="relative">
                   <Stack
@@ -560,36 +613,49 @@ export const Messages = () => {
                       direction="row"
                       p="20px 10px"
                       height="30px"
-                      gap="20px"
+                      gap={{ xs: "10px", md: "20px" }}
                     >
-                      <Avatar
-                        sx={{ h: "40px", w: "40px" }}
-                        src={
-                          currentSelectedChat.users[0]._id === userData._id
-                            ? currentSelectedChat.users[1].image
-                            : currentSelectedChat.users[0].image
-                        }
-                        alt="userImage"
-                      /> 
-                      <Stack direction='column'>
-                      <Link
-                        href={
-                          currentSelectedChat.users[0]._id === userData._id
-                            ? currentSelectedChat.users[1].username
-                            : currentSelectedChat.users[0].username
-                        }
-                        underline="none"
-                        color="#000"
-                      >
-                        <Typography fontSize="20px" fontWeight="500">
-                          {currentSelectedChat.users[0]._id === userData._id
-                            ? currentSelectedChat.users[1].full_name
-                            : currentSelectedChat.users[0].full_name}
+                      <Stack gap="5px" alignItems="center" direction="row">
+                        <Box display={{ xs: "block", md: "none" }}>
+                          <IoChevronBack
+                            onClick={goBackToChat}
+                            fontSize="20px"
+                            style={{ cursor: "pointer" }}
+                          />
+                        </Box>
+
+                        <Avatar
+                          sx={{ h: "40px", w: "40px" }}
+                          src={
+                            currentSelectedChat.users[0]._id === userData._id
+                              ? currentSelectedChat.users[1].image
+                              : currentSelectedChat.users[0].image
+                          }
+                          alt="userImage"
+                        />
+                      </Stack>
+                      <Stack direction="column">
+                        <Link
+                          href={
+                            currentSelectedChat.users[0]._id === userData._id
+                              ? currentSelectedChat.users[1].username
+                              : currentSelectedChat.users[0].username
+                          }
+                          underline="none"
+                          color="#000"
+                        >
+                          <Typography
+                            fontSize={{ xs: "15px", md: "20px" }}
+                            fontWeight="500"
+                          >
+                            {currentSelectedChat.users[0]._id === userData._id
+                              ? currentSelectedChat.users[1].full_name
+                              : currentSelectedChat.users[0].full_name}
+                          </Typography>
+                        </Link>
+                        <Typography height="25px" mt="-5px">
+                          {istyping && "typing..."}
                         </Typography>
-                      </Link>
-                      <Typography height='25px' mt='-5px'>
-                        {istyping && 'typing...'}
-                      </Typography>
                       </Stack>
                     </Stack>
                     <Stack
@@ -599,17 +665,24 @@ export const Messages = () => {
                       p="0 10px"
                     >
                       <IoCallOutline
-                        fontSize="25px"
+                        fontSize= "20px"
                         style={{ cursor: "pointer" }}
                       />
-                      <BiVideo fontSize="25px" style={{ cursor: "pointer" }} />
+                      <BiVideo
+                        fontSize= "20px"
+                        style={{ cursor: "pointer" }}
+                      />
                       <BsInfoCircle
-                        fontSize="25px"
+                        fontSize= "20px"
                         style={{ cursor: "pointer" }}
                       />
                     </Stack>
                   </Stack>
-                  <Box height="calc(100vh - 195px)"
+                  <Box
+                    height={{
+                      xs: "calc(100vh - 275px)",
+                      sm: "calc(100vh - 195px)",
+                    }}
                   >
                     <ScrollableFeed className="messageDiv">
                       <UserMessages messages={messages} />
@@ -641,12 +714,12 @@ export const Messages = () => {
                           color="gray"
                         />
                       )}
-                      <Box position="absolute" bottom="80px" left="20px">
+                      <Box position="absolute" width='calc(100% - 20px)' bottom="80px" left="10px">
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
-                            width={495}
+                            width={'100%'}
                             height={400}
                             emojiStyle="google"
                           />
