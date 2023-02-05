@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan');
-const handleError = require('./middlewares/Error.js');
 const cookieParser = require('cookie-parser');
 const userRouter = require('./routers/userRouter.js');
 const followRouter = require('./routers/followRouter.js');
@@ -42,8 +40,6 @@ app.use('/notifications', notificationsRouter);
 app.use('/stories', storiesRouter);
 
 
-
-app.use(handleError);
 
 app.get('*', (req, res) => {
   res.status(400).send("Invalid request");

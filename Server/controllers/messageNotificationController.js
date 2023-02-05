@@ -1,10 +1,19 @@
 const MessagesNotificationModel = require("../models/messageNotificationModel");
 
-async function getAllMessagesNotification(req, res, next) {
+async function getAllMessagesNotification(req, res) {
     try {
 
         const {user_id} = req.params;
 
+        // If user_id is not specified
+        if(!user_id) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid params parameters'
+            })
+        }
+
+        // Finding all the messages notifications
         let messagesNotification = await MessagesNotificationModel.find({to: user_id});
 
         return res.status(200).send({
@@ -14,7 +23,6 @@ async function getAllMessagesNotification(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -23,12 +31,14 @@ async function getAllMessagesNotification(req, res, next) {
 }
 
 
-async function sendMessagesNotification(req, res, next) {
+async function sendMessagesNotification(req, res) {
     try {
         req.body.to = req.user._id;
 
+        // Finding if message notification is already present
         let presentAlready = await MessagesNotificationModel.findOne({message_id: req.body.message_id});
 
+        // If already present
         if(presentAlready) {
             return res.status(200).send({
                 success: false,
@@ -36,8 +46,8 @@ async function sendMessagesNotification(req, res, next) {
             })
         }
 
+        // Creating a message notification
         let notification = await MessagesNotificationModel.create(req.body);
-        // let messagesNotification = await MessagesNotificationModel.find({to: user_id});
 
         return res.status(200).send({
             success: true,
@@ -46,7 +56,6 @@ async function sendMessagesNotification(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -55,12 +64,22 @@ async function sendMessagesNotification(req, res, next) {
 }
 
 
-async function deleteMessagesNotification(req, res, next) {
+async function deleteMessagesNotification(req, res) {
     try {
         const {user_id} = req.params;
 
+        // If user_id is not specified
+        if(!user_id) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid params parameters'
+            })
+        }
+
+        // Deleting all the messages notificaions
         let deletedNotifications = await MessagesNotificationModel.deleteMany({from: user_id, to: req.user._id});
 
+        // if not messages to delete
         if(!deletedNotifications) {
             return res.status(200).send({
                 success: false,
@@ -73,7 +92,6 @@ async function deleteMessagesNotification(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message

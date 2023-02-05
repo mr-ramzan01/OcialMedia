@@ -22,7 +22,11 @@ import { MdOutlineEmojiEmotions } from "react-icons/md";
 import EmojiPicker from "emoji-picker-react";
 import { RxCross2 } from "react-icons/rx";
 
-export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostFromNotifications }) => {
+export const SinglePost = ({
+  id,
+  setShowSinglePostFromRecent,
+  setShowSinglePostFromNotifications,
+}) => {
   const [postOpen, setPostOpen] = useState(true);
   const { setShowSinglePost, userData, handleClick } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -41,33 +45,32 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
   useEffect(() => {
     setIsLoading(true);
     fetch(`/posts/single/${id}`)
-    .then(res => res.json())
-    .then(res => {
-      if(res.success) {
-        setData(res.data);
-        setLikeCount(res.data.likeCount);
-      }
-      getComments(res.data._id);
-      hasLikedByUser(res.data._id);
-      isFollowingUser(res.data.user_id._id);
-    })
-    .catch(err => {
-      console.log(err, 'error');
-    })
+      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) {
+          setData(res.data);
+          setLikeCount(res.data.likeCount);
+        }
+        getComments(res.data._id);
+        hasLikedByUser(res.data._id);
+        isFollowingUser(res.data.user_id._id);
+      })
+      .catch((err) => {
+        console.log(err, "error");
+      });
   }, []);
 
   const handleClose = () => {
     setPostOpen(false);
     setShowSinglePost(false);
-    if(setShowSinglePostFromRecent) {
+    if (setShowSinglePostFromRecent) {
       setShowSinglePostFromRecent(false);
     }
-    if(setShowSinglePostFromNotifications) {
+    if (setShowSinglePostFromNotifications) {
       setShowSinglePostFromNotifications(false);
     }
   };
 
-  
   const handleChange = (e) => {
     setComment(e.target.value);
   };
@@ -115,9 +118,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
   };
 
   const isFollowingUser = (id) => {
-    fetch(
-      `/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
-    )
+    fetch(`/follows/isfollowing?followerID=${id}&followingID=${userData._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -156,7 +157,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
       .then((res) => {
         if (res.success) {
           handleClick(data._id);
-          setLikeCount((prev) => prev+1);
+          setLikeCount((prev) => prev + 1);
           hasLikedByUser(data._id);
         }
       })
@@ -177,7 +178,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
       .then((res) => {
         if (res.success) {
           handleClick(data._id);
-          setLikeCount((prev) => prev-1);
+          setLikeCount((prev) => prev - 1);
           hasLikedByUser(data._id);
         }
       })
@@ -224,7 +225,7 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
   };
 
   const AddComments = () => {
-    if(comment === '') return;
+    if (comment === "") return;
     setShowEmojiPicker(false);
     setIsLoading(true);
     fetch(`/comments/create`, {
@@ -268,376 +269,435 @@ export const SinglePost = ({ id, setShowSinglePostFromRecent, setShowSinglePostF
   };
 
   const handleSelectEmoji = (e) => {
-    setComment((prev) => prev+e.emoji);
-  }
+    setComment((prev) => prev + e.emoji);
+  };
 
   return (
     <>
       <Dialog open={postOpen} onClose={handleClose} maxWidth="md">
-        {isLoading && <Loader /> }
-        {data._id &&
-        <Box sx={{ width: {xs: '300px', sm: '500px', md: '880px'} }}>
-          <DialogContent>
-            <Stack direction={{xs: 'column', md: 'row'}} height="100%">
-              <Box overflow="hidden"  borderRadius="10px" width="50%">
-                <Carousel
-                  showStatus={false}
-                  showIndicators={data.post_images.length > 1}
-                  showThumbs={false}
+        {isLoading && <Loader />}
+        {data._id && (
+          <Box
+            padding="0"
+            margin="0"
+            sx={{ width: { xs: "340px", sm: "500px", md: "880px" } }}
+          >
+            <DialogContent>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                gap={{ xs: "10px", md: "0" }}
+                height="100%"
+              >
+                <Box
+                  overflow="hidden"
+                  border="1px solid #d1d1d1"
+                  borderRadius="10px"
+                  width={{ xs: "100%", md: "50%" }}
                 >
-                  {data.post_images.map((el) => (
-                    <img
-                      key={el}
-                      width="100%"
-                      height="485px"
-                      src={el.url}
-                      alt=""
-                    />
-                  ))}
-                </Carousel>
-              </Box>
-              <Box width="50%" height="485px">
-                <Stack
-                  height="100%"
-                  padding="0 20px"
-                  direction="column"
-                  position='relative'
+                  <Carousel
+                    showStatus={false}
+                    showIndicators={data.post_images.length > 1}
+                    showThumbs={false}
+                  >
+                    {data.post_images.map((el) => (
+                      <Avatar
+                        key={el}
+                        sx={{
+                          width: "100%",
+                          height: { xs: "200px", sm: "300px", md: "485px" },
+                          borderRadius: "0",
+                        }}
+                        src={el.url}
+                        alt=""
+                      />
+                    ))}
+                  </Carousel>
+                </Box>
+                <Box
+                  width={{ xs: "100%", md: "50%" }}
+                  height={{ xs: "300px", md: "485px" }}
                 >
                   <Stack
-                    direction="row"
-                    alignItems="center"
+                    height="100%"
+                    padding={{ xs: "0", md: "0 20px" }}
+                    direction="column"
+                    position="relative"
                   >
-                    <Avatar
-                      sx={{ marginRight: "20px" }}
-                      src={data.user_id.image}
-                    />
-                    <Stack direction="column">
-                      <Stack direction="row" alignItems="center">
-                        <Link
-                          href={`/${data.user_id.username}`}
-                          underline="none"
-                          color="#000"
-                        >
-                          <Typography
-                            fontFamily={"Dancing Script"}
-                            fontSize="22px"
-                            fontWeight="600"
-                          >
-                            {data.user_id.username}
-                          </Typography>
-                        </Link>
-                        {userData._id !== data.user_id._id && (
-                          <Box>
-                            {isFollowing ? (
-                              <Typography
-                                marginLeft="15px"
-                                color="#0066ff"
-                                sx={{ cursor: "pointer" }}
-                                onClick={unFollowRequest}
-                              >
-                                UnFollow
-                              </Typography>
-                            ) : (
-                              <Typography
-                                marginLeft="15px"
-                                color="#0066ff"
-                                sx={{ cursor: "pointer" }}
-                                onClick={followRequest}
-                              >
-                                Follow
-                              </Typography>
-                            )}{" "}
-                          </Box>
-                        )}
-                      </Stack>
-                      <Typography fontSize="13px" fontWeight="400">
-                        {data.location}
-                        {data.location === "" ? "" : ", "}
-                        {new Date(data.createdAt).getDate()}{" "}
-                        {new Date(data.createdAt).toLocaleString("default", {
-                          month: "long",
-                        })}{" "}
-                        {new Date(data.createdAt).getFullYear()}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  <Box height="100%" position="relative">
-                    <Stack mt="10px" direction="column">
-                      <Typography>{data.caption}</Typography>
-                      <Typography color="#0066ff">
-                        {data.tags.map((el, ind) => (
-                          <Typography
-                            sx={{ cursor: "pointer" }}
-                            component="span"
-                            key={ind}
-                          >
-                            #{el}{" "}
-                          </Typography>
-                        ))}
-                      </Typography>
-                    </Stack>
-                    <Box
-                      overflow={"scroll"}
-                      height="210px"
-                      mt="10px"
-                      p="0 10px"
-                      border="1px solid #d2d2d2"
-                      borderRadius="10px"
-                      sx={{ "&::-webkit-scrollbar": { width: "0" } }}
+                    <Stack
+                      direction="row"
+                      alignItems="center"
+                      display={{ xs: "none", md: "flex" }}
                     >
-                      <Box height="100%">
-                        {commentsData.length > 0 ? (
-                          <Box>
-                            <Stack direction="column" gap="10px">
-                              {commentsData.map((el) => (
-                                <Stack
-                                  direction="row"
-                                  key={el._id}
-                                  alignItems="center"
-                                >
-                                  <Avatar
-                                    sx={{ marginRight: "20px" }}
-                                    src={el.comment_by.image}
-                                  />
-                                  <Stack direction="column">
-                                    <Link
-                                      href={`/${el.comment_by.username}`}
-                                      underline="none"
-                                      color="#000"
-                                    >
-                                      <Typography
-                                        fontFamily={"Dancing Script"}
-                                        fontSize="22px"
-                                        fontWeight="600"
-                                      >
-                                        {el.comment_by.username}
-                                      </Typography>
-                                    </Link>
-                                    <Typography fontSize="15px">
-                                      {el.title}
-                                    </Typography>
-                                    <Typography fontSize="10px">
-                                      {moment(el.createdAt).fromNow()}
-                                    </Typography>
-                                  </Stack>
-                                </Stack>
-                              ))}
-                            </Stack>
-                          </Box>
-                        ) : (
-                          <Box>
-                            <Stack direction="column">
-                              <Box
-                                display="grid"
-                                sx={{ placeContent: "center" }}
-                              >
-                                <img
-                                  style={{ objectFit: "contain" }}
-                                  height="180px"
-                                  src="/Images/comments.png"
-                                  alt="gd"
-                                />
-                              </Box>
-                              <Typography
-                                textAlign="center"
-                                fontSize={"25px"}
-                                color="#a1a1a1"
-                                mt="-20px"
-                              >
-                                No Comments Yet
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        )}
-                      </Box>
-                    </Box>
-                    {actionsOpen && (
-                      <Box
-                        onMouseOver={() => setActionsOpen(true)}
-                        onMouseOut={() => setActionsOpen(false)}
-                        height="50px"
-                        bottom="125px"
-                        position="absolute"
-                      >
-                        <Stack
-                          gap="15px"
-                          borderRadius="10px"
-                          bgcolor={"#eee"}
-                          padding="10px 10px"
-                          direction="row"
-                        >
-                          <BsSuitHeartFill
-                            fontSize="25px"
-                            onClick={() => handleLikes("love")}
-                            color="red"
-                            style={{ cursor: "pointer" }}
-                          />
-                          <FaLaughSquint
-                            fontSize="25px"
-                            onClick={() => handleLikes("funny")}
-                            color="#eb9800"
-                            style={{ cursor: "pointer" }}
-                          />
-                          <FaAngry
-                            fontSize="25px"
-                            onClick={() => handleLikes("angry")}
-                            color="#c30909"
-                            style={{ cursor: "pointer" }}
-                          />
-                          <FaSadCry
-                            fontSize="25px"
-                            onClick={() => handleLikes("cry")}
-                            color="#00baff"
-                            style={{ cursor: "pointer" }}
-                          />
-                        </Stack>
-                      </Box>
-                    )}
-                    <Box position="absolute" width="100%" bottom="0">
-                      <Box>
-                        <Stack height='25px' direction="row" gap="15px">
-                          {hasLiked.liked ? (
+                      <Avatar
+                        sx={{ marginRight: "20px" }}
+                        src={data.user_id.image}
+                      />
+                      <Stack direction="column">
+                        <Stack direction="row" alignItems="center">
+                          <Link
+                            href={`/${data.user_id.username}`}
+                            underline="none"
+                            color="#000"
+                          >
+                            <Typography
+                              fontFamily={"Dancing Script"}
+                              fontSize="22px"
+                              fontWeight="600"
+                            >
+                              {data.user_id.username}
+                            </Typography>
+                          </Link>
+                          {userData._id !== data.user_id._id && (
                             <Box>
-                              {hasLiked.type === "love" && (
-                                <BsSuitHeartFill
-                                  onClick={handleRemoveLikes}
-                                  fontSize="25px"
-                                  color="red"
-                                  style={{ cursor: "pointer" }}
-                                />
-                              )}
-                              {hasLiked.type === "funny" && (
-                                <FaLaughSquint
-                                  onClick={handleRemoveLikes}
-                                  fontSize="25px"
-                                  color="#eb9800"
-                                  style={{ cursor: "pointer" }}
-                                />
-                              )}
-                              {hasLiked.type === "cry" && (
-                                <FaSadCry
-                                  onClick={handleRemoveLikes}
-                                  fontSize="25px"
-                                  color="#00baff"
-                                  style={{ cursor: "pointer" }}
-                                />
-                              )}
-                              {hasLiked.type === "angry" && (
-                                <FaAngry
-                                  onClick={handleRemoveLikes}
-                                  fontSize="25px"
-                                  color="#c30909"
-                                  style={{ cursor: "pointer" }}
-                                />
-                              )}
+                              {isFollowing ? (
+                                <Typography
+                                  marginLeft="15px"
+                                  color="#0066ff"
+                                  sx={{ cursor: "pointer" }}
+                                  onClick={unFollowRequest}
+                                >
+                                  UnFollow
+                                </Typography>
+                              ) : (
+                                <Typography
+                                  marginLeft="15px"
+                                  color="#0066ff"
+                                  sx={{ cursor: "pointer" }}
+                                  onClick={followRequest}
+                                >
+                                  Follow
+                                </Typography>
+                              )}{" "}
+                            </Box>
+                          )}
+                        </Stack>
+                        <Typography fontSize="13px" fontWeight="400">
+                          {data.location}
+                          {data.location === "" ? "" : ", "}
+                          {new Date(data.createdAt).getDate()}{" "}
+                          {new Date(data.createdAt).toLocaleString("default", {
+                            month: "long",
+                          })}{" "}
+                          {new Date(data.createdAt).getFullYear()}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                    <Box height="100%" width='100%' position="relative">
+                      <Stack mt={{ xs: "0", md: "10px" }} direction="column">
+                        <Typography
+                          fontSize={{ xs: "10px", sm: "13px", md: "15px" }}
+                        >
+                          {data.caption}
+                        </Typography>
+                        <Typography color="#0066ff">
+                          {data.tags.map((el, ind) => (
+                            <Typography
+                              height="17px"
+                              fontSize={{ xs: "10px", sm: "13px", md: "15px" }}
+                              sx={{ cursor: "pointer" }}
+                              component="span"
+                              key={ind}
+                            >
+                              #{el}{" "}
+                            </Typography>
+                          ))}
+                        </Typography>
+                      </Stack>
+                      <Box
+                        overflow={"scroll"}
+                        height={{ xs: "110px", md: "210px" }}
+                        mt="10px"
+                        p="0 10px"
+                        border="1px solid #d2d2d2"
+                        borderRadius="10px"
+                        sx={{ "&::-webkit-scrollbar": { width: "0" } }}
+                      >
+                        <Box height="100%">
+                          {commentsData.length > 0 ? (
+                            <Box>
+                              <Stack direction="column" gap="10px">
+                                {commentsData.map((el) => (
+                                  <Stack
+                                    direction="row"
+                                    key={el._id}
+                                    alignItems="center"
+                                  >
+                                    <Avatar
+                                      sx={{ marginRight: "20px" }}
+                                      src={el.comment_by.image}
+                                    />
+                                    <Stack direction="column">
+                                      <Link
+                                        href={`/${el.comment_by.username}`}
+                                        underline="none"
+                                        color="#000"
+                                      >
+                                        <Typography
+                                          fontFamily={"Dancing Script"}
+                                          fontSize={{
+                                            xs: "15px",
+                                            sm: "18px",
+                                            md: "22px",
+                                          }}
+                                          fontWeight="600"
+                                        >
+                                          {el.comment_by.username}
+                                        </Typography>
+                                      </Link>
+                                      <Typography
+                                        fontSize={{
+                                          xs: "10px",
+                                          sm: "13px",
+                                          md: "15px",
+                                        }}
+                                      >
+                                        {el.title}
+                                      </Typography>
+                                      <Typography
+                                        fontSize={{
+                                          xs: "7px",
+                                          sm: "8px",
+                                          md: "10px",
+                                        }}
+                                      >
+                                        {moment(el.createdAt).fromNow()}
+                                      </Typography>
+                                    </Stack>
+                                  </Stack>
+                                ))}
+                              </Stack>
                             </Box>
                           ) : (
-                            <BsSuitHeart
-                              fontSize="25px"
-                              onMouseOver={() => setActionsOpen(true)}
-                              onMouseOut={() => setActionsOpen(false)}
-                              style={{ cursor: "pointer" }}
-                            />
+                            <Box>
+                              <Stack direction="column">
+                                <Box
+                                  display={{ xs: "none", md: "grid" }}
+                                  sx={{ placeContent: "center" }}
+                                >
+                                  <img
+                                    style={{ objectFit: "contain" }}
+                                    height="180px"
+                                    src="/Images/comments.png"
+                                    alt="gd"
+                                  />
+                                </Box>
+                                <Typography
+                                  textAlign="center"
+                                  fontSize={"25px"}
+                                  color="#a1a1a1"
+                                  mt={{ xs: "0", md: "-20px" }}
+                                >
+                                  No Comments Yet
+                                </Typography>
+                              </Stack>
+                            </Box>
                           )}
-
-                          <FaRegComment
-                            fontSize="25px"
-                            onClick={handleComment}
-                            style={{ cursor: "pointer" }}
-                          />
-                          <GrShareOption
-                            fontSize="25px"
-                            style={{ cursor: "pointer" }}
-                          />
-                        </Stack>
-                        <Box marginTop="10px">
-                          <Typography>
-                            <Typography
-                              component="span"
-                              sx={{ cursor: "pointer" }}
-                              onClick={getLikesOnpost}
-                            >
-                              {likeCount} Reactions
-                            </Typography>
-                          </Typography>
                         </Box>
                       </Box>
-                      <TextField
-                        margin="normal"
-                        required
-                        fullWidth
-                        onChange={handleChange}
-                        value={comment}
-                        inputRef={commentRef}
-                        placeholder="Add a comment"
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "transparent",
-                            },
-                            "&:hover fieldset": {
-                              border: "none",
-                            },
-                            "&.Mui-focused fieldset": {
-                              border: "none",
-                            },
-                          },
-                          bgcolor: "transparent",
-                          borderRadius: "5px",
-                          border: "1px solid #d2d2d2",
-                        }}
-                        type="text"
-                        id="comment"
-                        autoComplete="off"
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
+                      {actionsOpen && (
+                        <Box
+                          onMouseOver={() => setActionsOpen(true)}
+                          onMouseOut={() => setActionsOpen(false)}
+                          height="50px"
+                          bottom="125px"
+                          position="absolute"
+                        >
+                          <Stack
+                            gap="15px"
+                            borderRadius="10px"
+                            bgcolor={"#eee"}
+                            padding="10px 10px"
+                            direction="row"
+                          >
+                            <BsSuitHeartFill
+                              fontSize="25px"
+                              onClick={() => handleLikes("love")}
+                              color="red"
+                              style={{ cursor: "pointer" }}
+                            />
+                            <FaLaughSquint
+                              fontSize="25px"
+                              onClick={() => handleLikes("funny")}
+                              color="#eb9800"
+                              style={{ cursor: "pointer" }}
+                            />
+                            <FaAngry
+                              fontSize="25px"
+                              onClick={() => handleLikes("angry")}
+                              color="#c30909"
+                              style={{ cursor: "pointer" }}
+                            />
+                            <FaSadCry
+                              fontSize="25px"
+                              onClick={() => handleLikes("cry")}
+                              color="#00baff"
+                              style={{ cursor: "pointer" }}
+                            />
+                          </Stack>
+                        </Box>
+                      )}
+                      <Box position="absolute" width="100%" bottom="0">
+                        <Box>
+                          <Stack height="25px" direction="row" gap="15px">
+                            {hasLiked.liked ? (
+                              <Box>
+                                {hasLiked.type === "love" && (
+                                  <BsSuitHeartFill
+                                    onClick={handleRemoveLikes}
+                                    fontSize="25px"
+                                    color="red"
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                )}
+                                {hasLiked.type === "funny" && (
+                                  <FaLaughSquint
+                                    onClick={handleRemoveLikes}
+                                    fontSize="25px"
+                                    color="#eb9800"
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                )}
+                                {hasLiked.type === "cry" && (
+                                  <FaSadCry
+                                    onClick={handleRemoveLikes}
+                                    fontSize="25px"
+                                    color="#00baff"
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                )}
+                                {hasLiked.type === "angry" && (
+                                  <FaAngry
+                                    onClick={handleRemoveLikes}
+                                    fontSize="25px"
+                                    color="#c30909"
+                                    style={{ cursor: "pointer" }}
+                                  />
+                                )}
+                              </Box>
+                            ) : (
+                              <BsSuitHeart
+                                fontSize="25px"
+                                onMouseOver={() => setActionsOpen(true)}
+                                onMouseOut={() => setActionsOpen(false)}
+                                style={{ cursor: "pointer" }}
+                              />
+                            )}
+
+                            <FaRegComment
+                              fontSize="25px"
+                              onClick={handleComment}
+                              style={{ cursor: "pointer" }}
+                            />
+                            <GrShareOption
+                              fontSize="25px"
+                              style={{ cursor: "pointer" }}
+                            />
+                          </Stack>
+                          <Box marginTop="10px">
+                            <Typography>
                               <Typography
-                                sx={{ cursor: "pointer", color: "#676767" }}
-                                onClick={AddComments}
+                                component="span"
+                                sx={{ cursor: "pointer" }}
+                                onClick={getLikesOnpost}
                               >
-                                Post
+                                {likeCount} Reactions
                               </Typography>
-                            </InputAdornment>
-                          ),
-                          startAdornment: (
-                            <InputAdornment position="end">
-                              {
-                                showEmojiPicker ? <RxCross2 onClick={() => setShowEmojiPicker(false)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} /> :
-                                <MdOutlineEmojiEmotions onClick={() => setShowEmojiPicker(true)} style={{marginLeft: '-10px', marginRight:'10px', fontSize:'25px', cursor: 'pointer'}} />
-                              }
-                            </InputAdornment>
-                          ),
-                          style: {
-                            height: "40px",
-                          },
-                        }}
-                      />
-                    </Box>
-                    <Box position="absolute" bottom="60px">
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <TextField
+                          margin="normal"
+                          required
+                          fullWidth
+                          onChange={handleChange}
+                          value={comment}
+                          inputRef={commentRef}
+                          placeholder="Add a comment"
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": {
+                                borderColor: "transparent",
+                              },
+                              "&:hover fieldset": {
+                                border: "none",
+                              },
+                              "&.Mui-focused fieldset": {
+                                border: "none",
+                              },
+                            },
+                            bgcolor: "transparent",
+                            borderRadius: "5px",
+                            border: "1px solid #d2d2d2",
+                          }}
+                          type="text"
+                          id="comment"
+                          autoComplete="off"
+                          InputProps={{
+                            endAdornment: (
+                              <InputAdornment position="end">
+                                <Typography
+                                  sx={{ cursor: "pointer", color: "#676767" }}
+                                  onClick={AddComments}
+                                >
+                                  Post
+                                </Typography>
+                              </InputAdornment>
+                            ),
+                            startAdornment: (
+                              <InputAdornment position="end">
+                                {showEmojiPicker ? (
+                                  <RxCross2
+                                    onClick={() => setShowEmojiPicker(false)}
+                                    style={{
+                                      marginLeft: "-10px",
+                                      marginRight: "10px",
+                                      fontSize: "25px",
+                                      cursor: "pointer",
+                                    }}
+                                  />
+                                ) : (
+                                  <MdOutlineEmojiEmotions
+                                    onClick={() => setShowEmojiPicker(true)}
+                                    style={{
+                                      marginLeft: "-10px",
+                                      marginRight: "10px",
+                                      fontSize: "25px",
+                                      cursor: "pointer",
+                                    }}
+                                  />
+                                )}
+                              </InputAdornment>
+                            ),
+                            style: {
+                              height: "40px",
+                            },
+                          }}
+                        />
+                      </Box>
+                      <Box position="absolute" width='100%' bottom="60px">
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
-                            width={373}
+                            width={"100%"}
                             height={310}
                             emojiStyle="google"
                           />
                         )}
                       </Box>
-                  </Box>
-                </Stack>
-              </Box>
-            </Stack>
-          </DialogContent>
-        </Box>
-}
+                    </Box>
+                  </Stack>
+                </Box>
+              </Stack>
+            </DialogContent>
+          </Box>
+        )}
       </Dialog>
       <Dialog open={showReactions} onClose={handelCloseShowReactions}>
         <Box
           maxHeight="200px"
           overflow="scroll"
-          mt='20px'
+          mt="20px"
           sx={{ "&::-webkit-scrollbar": { width: "0" } }}
         >
           {reactionsData.length > 0 ? (

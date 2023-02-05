@@ -1,6 +1,4 @@
-const ErrorHandler = require("../middlewares/ErrorHandler.js");
 const userModel = require("../models/userModel.js");
-const { v4: uuidv4 } = require('uuid');
 const jwt = require('jsonwebtoken')
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
@@ -14,9 +12,10 @@ const cloudinary = require('cloudinary');
 const streamifier = require('streamifier')
 
 
-
-async function LoggedOutUser(req, res, next) {
+async function LoggedOutUser(req, res) {
     try {
+
+        // Deleting cookies from browser
         res.cookie('ocialMedia_token', null, {
             expires: new Date(Date.now()),
             httpOnly: true,
@@ -25,8 +24,8 @@ async function LoggedOutUser(req, res, next) {
             success: true,
             message: 'user logged out successfully'
         })
+
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -35,8 +34,10 @@ async function LoggedOutUser(req, res, next) {
 }
 
 
-async function LoggedInUser(req, res, next) {
+async function LoggedInUser(req, res) {
     try {
+
+        // Finding user data
         let user = await userModel.findOne({_id: req.user._id});
     
         return res.status(200).send({
@@ -46,7 +47,6 @@ async function LoggedInUser(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -79,6 +79,7 @@ async function getGoogleOAuthTokens(code) {
     ];
 }
   
+
 async function googleOAuth(req, res){
     try {
         const { code } = req.query;
@@ -86,9 +87,7 @@ async function googleOAuth(req, res){
         const user = jwt_decode(id_token);
         const options = {
             expires: new Date(Date.now() + 30*24*60*60*1000),
-            // maxAge: 500000000,
             httpOnly: true,
-            // secure: true
         };
 
         // Checking User
@@ -146,7 +145,7 @@ async function googleOAuth(req, res){
 };
 
 
-async function LoginUser(req, res, next) {
+async function LoginUser(req, res) {
     try {
         // Checking User email
         let existingUser = await userModel.findOne({ $or: [{email: req.body.emailorusername}, {username: req.body.emailorusername} ] }).select("+password");
@@ -170,9 +169,7 @@ async function LoginUser(req, res, next) {
             
             const options = {
                 expires: new Date(Date.now() + 30*24*60*60*1000),
-                // maxAge: 500000000,
                 httpOnly: true,
-                // secure: true
             };
             res.status(200).cookie("ocialMedia_token", token, {...options}).send({
                 success: true,
@@ -186,7 +183,6 @@ async function LoginUser(req, res, next) {
             })
         }
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -195,9 +191,10 @@ async function LoginUser(req, res, next) {
 }
 
 
-async function SignUPUser(req, res, next) {
+async function SignUPUser(req, res) {
     try {
 
+        // Finding existing user with google auth
         let existingUser = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'google'}] });
         if(existingUser) {
             return res.status(403).send({
@@ -237,16 +234,13 @@ async function SignUPUser(req, res, next) {
 
         const options = {
             expires: new Date(Date.now() + 30*24*60*60*1000),
-            // maxAge: 500000000,
             httpOnly: true,
-            // secure: true
         };
         res.status(200).cookie("ocialMedia_token", token, {...options}).send({
             success: true,
             message: 'Signup successfully',
         })
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -255,7 +249,7 @@ async function SignUPUser(req, res, next) {
 }
 
 
-async function forgotPassword(req, res, next) {
+async function forgotPassword(req, res) {
     try {
         // Checking user, is it present with that email or not
         let user = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'email-password'}] });
@@ -280,7 +274,6 @@ async function forgotPassword(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -289,11 +282,13 @@ async function forgotPassword(req, res, next) {
 }
 
 
-async function setForgotPassword(req, res, next) {
+async function setForgotPassword(req, res) {
     try {
         const passwordHeader = req.headers.authorization;
 
         if (passwordHeader) {
+
+            // Getting token
             const token = passwordHeader.split(" ")[1];
             if(token) {
                 const decoded = jwt.verify(token, jwt_secret_key);
@@ -321,7 +316,6 @@ async function setForgotPassword(req, res, next) {
         });
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -330,11 +324,12 @@ async function setForgotPassword(req, res, next) {
 }
 
 
-async function resetPassword(req, res, next) {
+async function resetPassword(req, res) {
     try {
         const { _id, email } = req.user;
         const { old_password, new_password } = req.body;
 
+        // Finding user
         const user = await userModel.findOne({ _id: _id }).select("+password");
 
         const passwordMatches = await bcrypt.compare(old_password, user.password);
@@ -358,7 +353,6 @@ async function resetPassword(req, res, next) {
         }
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -367,10 +361,13 @@ async function resetPassword(req, res, next) {
 }
 
 
-async function searchUser(req, res, next) {
+async function searchUser(req, res) {
     try {
         const {q} = req.query;
+
+        // Finding all users
         let users = await userModel.find({$or: [{full_name: {$regex: new RegExp(q, 'i')}},{username: {$regex: new RegExp(q, 'i')}}]}).limit(50);
+        
         res.send({
             success: true,
             message: 'related users',
@@ -378,7 +375,6 @@ async function searchUser(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -387,11 +383,22 @@ async function searchUser(req, res, next) {
 }
 
 
-async function getUser(req, res, next) {
+async function getUser(req, res) {
     try {
         let {username} = req.params;
 
+        // If q is not specified
+        if(!username) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid params parameters'
+            })
+        }
+
+        // Finding user
         let  user = await userModel.findOne({ username: username });
+
+        // If user not found
         if(!user) {
             return res.status(404).send({
                 success: false,
@@ -404,7 +411,6 @@ async function getUser(req, res, next) {
             data: user
         })
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -413,19 +419,25 @@ async function getUser(req, res, next) {
 }
 
 
-async function removeProfile(req, res, next) {
+async function removeProfile(req, res) {
     try {
         const {_id} = req.user;
+
+        // Finding user
         const user = await userModel.findOne({_id: _id});
+
+        // Deleting profile from cloudinary
         await cloudinary.v2.uploader.destroy(user.image_public_id);
 
+        // Updating user data
         await userModel.findByIdAndUpdate(_id, {image: ''});
+        
         return res.send({
             success: true,
             message: 'Profile photo successfully removed'
         })
+
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -434,14 +446,19 @@ async function removeProfile(req, res, next) {
 }
 
 
-async function uploadProfile(req, res, next) {
+async function uploadProfile(req, res) {
     try {
         const { _id } = req.user;
+
+        // Finding user
         const user = await userModel.findOne({_id: _id});
+
+        // Deleting profile from cloudinary
         if(user.image_public_id !== '') {
             await cloudinary.v2.uploader.destroy(user.image_public_id);
         }
 
+        // Uploading image on cloudinary
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
                 let stream = cloudinary.v2.uploader.upload_stream(
@@ -460,13 +477,19 @@ async function uploadProfile(req, res, next) {
     
         async function upload(req) {
             let result = await streamUpload(req);
+
+            // If uploaded success
             if(result) {
+
+                // Updating user data
                 await userModel.findByIdAndUpdate(_id, {image: result.secure_url, $set: { image_public_id: result.public_id}});
                 return res.send({
                     success: true,
                     message: 'Profile updated successfully'
                 });
             }
+
+            // If uploaded failed
             else {
                 res.send({
                     success: false,
@@ -478,7 +501,6 @@ async function uploadProfile(req, res, next) {
         upload(req);
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -486,13 +508,19 @@ async function uploadProfile(req, res, next) {
     }
 }
 
-async function editUserProfile(req, res, next) {
+async function editUserProfile(req, res) {
     try {
         let { _id } = req.user;
+
+        // Finding user
         let user = await userModel.findById(_id);
 
+        // If usernames are different
         if(user.username !== req.body.username) {
+
+            // Checking if username already exists
             let existingUsername = await userModel.findOne({username: req.body.username});
+
             if(existingUsername) {
                 return res.status(400).send({
                     success: false,
@@ -500,10 +528,14 @@ async function editUserProfile(req, res, next) {
                 })
             }
             else {
+
+                // Updating user data
                 await userModel.findByIdAndUpdate(_id, req.body);
             }
         }
         else {
+
+            // Updating user data
             await userModel.findByIdAndUpdate(_id, req.body);
         }
         return res.status(200).send({
@@ -512,7 +544,6 @@ async function editUserProfile(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message

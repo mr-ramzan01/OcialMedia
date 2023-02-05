@@ -5,7 +5,11 @@ const jwt_secret_key = process.env.JWT_SECRET_KEY;
 
 function isAuthenticated (req, res, next) {
     try {
+
+        // Getting token from cookies
         let {ocialMedia_token} = req.cookies;
+
+        // If token is not available
         if(!ocialMedia_token) {
             return res.status(401).send({
                 success: false,
@@ -13,6 +17,8 @@ function isAuthenticated (req, res, next) {
             })
         }
         try {
+            
+            // Verifying token
             jwt.verify(ocialMedia_token, jwt_secret_key);
             const user = jwt.decode(ocialMedia_token);
             req.user = user;

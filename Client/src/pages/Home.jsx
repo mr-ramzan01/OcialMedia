@@ -180,7 +180,6 @@ export const Home = () => {
                       <Stack
                         direction="row"
                         key={el._id}
-                        alignItems="center"
                         gap="10px"
                       >
                         <Link

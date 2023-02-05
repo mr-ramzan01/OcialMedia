@@ -28,19 +28,15 @@ const { Server } = require("socket.io");
 const httpServer = http.createServer(app);
 const io = new Server(httpServer);
 
-let totalUsers = 0;
+
 io.on("connection", (socket) => {
-  totalUsers+= 1;
-  console.log('A new user connected', totalUsers);
 
   socket.on('setup', (userData) => {
     socket.join(userData._id);
-    console.log('user joined')
     socket.emit('connected')
   })
 
   socket.on('join chat', (room) => {
-    console.log('joined room')
     socket.join(room);
   })
 
@@ -58,8 +54,7 @@ io.on("connection", (socket) => {
   })
 
   socket.on("disconnect", () => {
-    totalUsers-= 1;
-    console.log('User disconnected', totalUsers);
+    console.log('User disconnected');
   })
 
   socket.off("setup", () => {

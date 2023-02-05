@@ -3,7 +3,7 @@ const streamifier = require('streamifier');
 const PostsModel = require('../models/postsModel');
 const userModel = require('../models/userModel');
 
-async function postOnCloudinary(req, res, next) {
+async function postOnCloudinary(req, res) {
     try {
         let streamUpload = (req) => {
             return new Promise((resolve, reject) => {
@@ -21,8 +21,11 @@ async function postOnCloudinary(req, res, next) {
             });
         };
 
+        // uploading image on cloudinary through stream
         async function upload(req) {
             let result = await streamUpload(req);
+
+            // For successfully upload
             if(result) {
                 return res.send({
                     success: true,
@@ -30,6 +33,8 @@ async function postOnCloudinary(req, res, next) {
                     data: result
                 });
             }
+
+            // Error while uploading
             else {
                 res.send({
                     success: false,
@@ -41,7 +46,6 @@ async function postOnCloudinary(req, res, next) {
         upload(req);
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -50,12 +54,16 @@ async function postOnCloudinary(req, res, next) {
 }
 
 
-async function createPosts(req, res, next) {
+async function createPosts(req, res) {
     try {
         const {_id} = req.user;
         req.body.user_id = _id;
-        await userModel.findByIdAndUpdate(_id, {$inc: {postsCount: +1}})
+
+        // Creating post
         await PostsModel.create(req.body);
+
+        // Incrementing the no of post on user
+        await userModel.findByIdAndUpdate(_id, {$inc: {postsCount: +1}})
 
         return res.status(201).send({
             success: true,
@@ -63,7 +71,6 @@ async function createPosts(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -72,13 +79,25 @@ async function createPosts(req, res, next) {
 }
 
 
-async function getExploreData(req, res, next) {
+async function getExploreData(req, res) {
     try {
         const {page} = req.query;
+
+        // If page is not specified
+        if(!page) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid query parameters'
+            })
+        }
+
+        // Finding total no of posts
         let totalData = await PostsModel.find().count();
+
+        // Finding all posts with page number
         let explore = await PostsModel.find().sort({ createdAt: -1}).skip((page-1)*24).limit(24);
 
-        return res.status(201).send({
+        return res.status(200).send({
             success: true,
             message: 'Explore Data',
             data: explore,
@@ -86,7 +105,6 @@ async function getExploreData(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -95,15 +113,26 @@ async function getExploreData(req, res, next) {
 }
 
 
-async function getPosts(req, res, next) {
+async function getPosts(req, res) {
     try {
         const { username } = req.params;
         const { page } = req.query;
 
+        // If page is not specified
+        if(!page) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid query parameters'
+            })
+        }
+
+        // Finding user details
         let user = await userModel.findOne({ username: username });
 
+        // Finding total no of posts of particular user
         const totalPosts = await PostsModel.find({user_id: user._id}).count();
 
+        // Finding all posts of user
         const data = await PostsModel.find({user_id: user._id}).sort({ createdAt: -1}).skip((page-1)*24).limit(24);
 
         return res.status(200).send({
@@ -114,7 +143,6 @@ async function getPosts(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -123,10 +151,19 @@ async function getPosts(req, res, next) {
 }
 
 
-async function getSinglePost(req, res, next) {
+async function getSinglePost(req, res) {
     try {
         const {id} = req.params;
 
+        // If id is not specified
+        if(!id) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid params parameters'
+            })
+        }
+
+        // Finding all details of particular post
         const data = await PostsModel.findOne({_id: id}).populate({path: 'user_id', select: ['_id', 'image', 'username', 'full_name']});
 
         return res.status(200).send({
@@ -136,7 +173,6 @@ async function getSinglePost(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
@@ -145,10 +181,22 @@ async function getSinglePost(req, res, next) {
 }
 
 
-async function getRecentPosts(req, res, next) {
+async function getRecentPosts(req, res) {
     try {
         const {page} = req.query;
+
+        // If page is not specified
+        if(!page) {
+            return res.status(400).send({
+                success: false,
+                message: 'Invalid query parameters'
+            })
+        }
+
+        // Finding total no of posts
         let totalData = await PostsModel.find().count();
+
+        // Finding all posts 
         let recentPosts = await PostsModel.find().populate({path: 'user_id', select: ['id', 'image', 'full_name', 'username']}).sort({ createdAt: -1}).skip((page-1)*10).limit(10);
 
         return res.status(200).send({
@@ -159,7 +207,6 @@ async function getRecentPosts(req, res, next) {
         })
         
     } catch (error) {
-        // return next(new ErrorHandler(error, 500));
         return res.status(500).send({
             success: false,
             message: error.message
