@@ -6,3 +6,6 @@
 
 # private key
 /*.pem
+/*.txt
+/*.key
+/*.crt

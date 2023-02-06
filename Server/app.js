@@ -13,7 +13,6 @@ const savedPostsRouter = require('./routers/savedPostsRouter.js');
 const notificationsRouter = require('./routers/notificationsRouter.js');
 const storiesRouter = require('./routers/storiesRouter.js');
 
-
 const app = express();
 
 app.use(express.json());
