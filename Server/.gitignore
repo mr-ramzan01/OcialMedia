@@ -5,4 +5,4 @@
 .env
 
 # private key
-.pem
+** /.pem
