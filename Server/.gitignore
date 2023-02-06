@@ -5,7 +5,4 @@
 .env
 
 # private key
-./ocialmediassh.pem
 .pem
-/ocialmediassh.pem
-./pem
