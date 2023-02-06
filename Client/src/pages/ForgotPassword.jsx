@@ -45,7 +45,7 @@ export const ForgotPassword = () => {
         // Seding Email to registered user email
         emailjs.send("service_t8tkdmq","template_z78wv9c",{
           user_name: res.full_name,
-          link: `http://localhost:3000/accounts/forgot-password/create-new-password/${res.token}`,
+          link: `https://ocialmedia.netlify.app/accounts/forgot-password/create-new-password/${res.token}`,
           reply_to: data.email,
           },"CYyDb5GDuo6dEEiox")
           .then(() => {

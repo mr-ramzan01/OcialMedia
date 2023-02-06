@@ -29,7 +29,7 @@ import { UserMessages } from "../components/Messages/UserMessages";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
-const ENDPOINT = "http://localhost:3000";
+const ENDPOINT = "https://ocialmedia.netlify.app";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 

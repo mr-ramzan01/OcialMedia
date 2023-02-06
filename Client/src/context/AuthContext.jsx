@@ -132,7 +132,7 @@ export const AuthContextprovider = ({children}) => {
     const googleRequest = () => {
 
         const rootUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-        const redirect_uri = `http://localhost:3000/google_Oauth`
+        const redirect_uri = `https://ocialmedia.netlify.app/google_Oauth`
         const client_id = '200704460983-v8rd6imcnmpumhqijgormivb1nnsd05s.apps.googleusercontent.com'
         const access_type = 'offline'
         const response_type = 'code'
