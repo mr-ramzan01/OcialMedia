@@ -59,7 +59,7 @@ async function getGoogleOAuthTokens(code) {
     const oauth2Client = new google.auth.OAuth2(
         google_client_id,
         google_client_secret,
-      "http://localhost:3000/google_Oauth"
+      "https://ocialmedia.netlify.app/google_Oauth"
     );
     const scopes = [
       "https://www.googleapis.com/auth/userinfo.profile",

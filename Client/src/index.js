@@ -11,9 +11,7 @@ root.render(
   <BrowserRouter>
     <CookiesProvider>
       <AuthContextprovider>
-        {/* <React.StrictMode> */}
-          <App />
-        {/* </React.StrictMode> */}
+        <App />
       </AuthContextprovider>
     </CookiesProvider>
   </BrowserRouter>
