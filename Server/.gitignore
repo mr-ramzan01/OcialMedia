@@ -3,3 +3,6 @@
 
 # privacy
 .env
+
+# private key
+.pem
