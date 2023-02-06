@@ -1,4 +1,4 @@
-const LikesModel = require("../models/LikesModel");
+const LikesModel = require("../models/likesModel");
 const NofificationsModel = require("../models/notificationsModel");
 const PostsModel = require("../models/postsModel");
 
