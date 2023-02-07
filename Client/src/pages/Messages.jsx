@@ -29,7 +29,7 @@ import { UserMessages } from "../components/Messages/UserMessages";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
-const ENDPOINT = "https://ocialmedia.netlify.app";
+const ENDPOINT = "http://localhost:3000";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
@@ -152,7 +152,7 @@ export const Messages = () => {
   };
 
   const getChats = () => {
-    fetch(`/chats/allchats`)
+    fetch(`/api/chats/allchats`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -184,7 +184,7 @@ export const Messages = () => {
     if (msg === "") {
       return;
     }
-    fetch(`/messages/send`, {
+    fetch(`/api/messages/send`, {
       method: "POST",
       body: JSON.stringify({ message: msg, chat_id: currentSelectedChat._id }),
       headers: {
@@ -206,7 +206,7 @@ export const Messages = () => {
   };
 
   const searchUsers = debounce(() => {
-    fetch(`/users/search?q=${searchRef.current.value}`)
+    fetch(`/api/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
         setSearchData(res.data);
@@ -243,7 +243,7 @@ export const Messages = () => {
   };
 
   const getAllMessages = (chat) => {
-    fetch(`/messages/get/${chat._id}`)
+    fetch(`/api/messages/get/${chat._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -259,7 +259,7 @@ export const Messages = () => {
   };
 
   const handleAccessChat = (user_id) => {
-    fetch(`/chats/create`, {
+    fetch(`/api/chats/create`, {
       method: "POST",
       body: JSON.stringify({ userId: user_id }),
       headers: {
@@ -665,15 +665,12 @@ export const Messages = () => {
                       p="0 10px"
                     >
                       <IoCallOutline
-                        fontSize= "20px"
+                        fontSize="20px"
                         style={{ cursor: "pointer" }}
                       />
-                      <BiVideo
-                        fontSize= "20px"
-                        style={{ cursor: "pointer" }}
-                      />
+                      <BiVideo fontSize="20px" style={{ cursor: "pointer" }} />
                       <BsInfoCircle
-                        fontSize= "20px"
+                        fontSize="20px"
                         style={{ cursor: "pointer" }}
                       />
                     </Stack>
@@ -714,12 +711,17 @@ export const Messages = () => {
                           color="gray"
                         />
                       )}
-                      <Box position="absolute" width='calc(100% - 20px)' bottom="80px" left="10px">
+                      <Box
+                        position="absolute"
+                        width="calc(100% - 20px)"
+                        bottom="80px"
+                        left="10px"
+                      >
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}
                             theme="light"
-                            width={'100%'}
+                            width={"100%"}
                             height={400}
                             emojiStyle="google"
                           />

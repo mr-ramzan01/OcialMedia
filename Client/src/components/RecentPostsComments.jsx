@@ -20,7 +20,7 @@ export const RecentPostsComments = ({ el }) => {
 
   const getComments = () => {
     setIsLoading(true);
-    fetch(`/comments/recent/get/${el._id}`)
+    fetch(`/api/comments/recent/get/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -92,7 +92,12 @@ export const RecentPostsComments = ({ el }) => {
         </Box>
       ) : (
         <Box>
-          <Typography textAlign="center" fontSize={"20px"} p='10px 0' color="#a1a1a1">
+          <Typography
+            textAlign="center"
+            fontSize={"20px"}
+            p="10px 0"
+            color="#a1a1a1"
+          >
             Be the first to make a comment
           </Typography>
         </Box>

@@ -33,7 +33,7 @@ export const Explore = () => {
   const fetchExploreData = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`/posts/explore/data?page=${page}`)
+    fetch(`/api/posts/explore/data?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

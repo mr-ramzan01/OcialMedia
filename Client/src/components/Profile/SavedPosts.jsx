@@ -20,7 +20,7 @@ export const SavedPosts = ({ id }) => {
 
   const getSavedPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`/savedposts/get/all/${id}?page=${page}`)
+    fetch(`/api/savedposts/get/all/${id}?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

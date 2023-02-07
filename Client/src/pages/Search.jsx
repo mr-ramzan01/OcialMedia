@@ -24,7 +24,7 @@ export const Search = () => {
     SearchInput();
   };
   const SearchInput = debounce(() => {
-    fetch(`/users/search?q=${searchRef.current.value}`)
+    fetch(`/api/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
         setUsers(res.data);

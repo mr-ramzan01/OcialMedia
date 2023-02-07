@@ -46,7 +46,7 @@ export const ResetPassword = () => {
   };
 
   const resetPassword = () => {
-    fetch(`/users/reset-password`, {
+    fetch(`/api/users/reset-password`, {
       method: "PATCH",
       body: JSON.stringify(data),
       headers: {
@@ -92,8 +92,13 @@ export const ResetPassword = () => {
           setAlertOpen={setShowAlert}
         />
       )}
-      <Box mt="20px" pb='20px'>
-        <Box component="form" width={{ xs: "calc(100% - 40px)", sm: "85%", md: "70%", lg: "60%" }} m="auto" onSubmit={handleSubmit}>
+      <Box mt="20px" pb="20px">
+        <Box
+          component="form"
+          width={{ xs: "calc(100% - 40px)", sm: "85%", md: "70%", lg: "60%" }}
+          m="auto"
+          onSubmit={handleSubmit}
+        >
           <Stack
             m={"40px 0"}
             gap="20px"

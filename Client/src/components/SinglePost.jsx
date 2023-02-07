@@ -44,7 +44,7 @@ export const SinglePost = ({
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`/posts/single/${id}`)
+    fetch(`/api/posts/single/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -76,7 +76,7 @@ export const SinglePost = ({
   };
 
   const followRequest = () => {
-    fetch(`/follows/followRequest`, {
+    fetch(`/api/follows/followRequest`, {
       method: "POST",
       body: JSON.stringify({
         following_Id: userData._id,
@@ -97,7 +97,7 @@ export const SinglePost = ({
   };
 
   const unFollowRequest = () => {
-    fetch(`/follows/unfollowRequest`, {
+    fetch(`/api/follows/unfollowRequest`, {
       method: "DELETE",
       body: JSON.stringify({
         following_Id: userData._id,
@@ -118,7 +118,9 @@ export const SinglePost = ({
   };
 
   const isFollowingUser = (id) => {
-    fetch(`/follows/isfollowing?followerID=${id}&followingID=${userData._id}`)
+    fetch(
+      `/api/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
+    )
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -142,7 +144,7 @@ export const SinglePost = ({
   const handleLikes = (val) => {
     setActionsOpen(false);
     setIsLoading(true);
-    fetch("/likes/createlike", {
+    fetch(`api/likes/createlike`, {
       method: "POST",
       body: JSON.stringify({
         post_Id: data._id,
@@ -171,7 +173,7 @@ export const SinglePost = ({
 
   const handleRemoveLikes = () => {
     setIsLoading(true);
-    fetch(`/likes/removelike/${hasLiked.id}`, {
+    fetch(`/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
     })
       .then((res) => res.json())
@@ -191,7 +193,7 @@ export const SinglePost = ({
   };
 
   const hasLikedByUser = (id) => {
-    fetch(`/likes/hasliked/${id}`)
+    fetch(`/api/likes/hasliked/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -212,7 +214,7 @@ export const SinglePost = ({
   };
 
   const getComments = (id) => {
-    fetch(`/comments/get/${id}`)
+    fetch(`/api/comments/get/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -228,7 +230,7 @@ export const SinglePost = ({
     if (comment === "") return;
     setShowEmojiPicker(false);
     setIsLoading(true);
-    fetch(`/comments/create`, {
+    fetch(`/api/comments/create`, {
       method: "POST",
       body: JSON.stringify({ post_Id: data._id, title: comment }),
       headers: {
@@ -251,7 +253,7 @@ export const SinglePost = ({
   };
 
   const getLikesOnpost = () => {
-    fetch(`/likes/get/${data._id}`)
+    fetch(`/api/likes/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -382,7 +384,7 @@ export const SinglePost = ({
                         </Typography>
                       </Stack>
                     </Stack>
-                    <Box height="100%" width='100%' position="relative">
+                    <Box height="100%" width="100%" position="relative">
                       <Stack mt={{ xs: "0", md: "10px" }} direction="column">
                         <Typography
                           fontSize={{ xs: "10px", sm: "13px", md: "15px" }}
@@ -674,7 +676,7 @@ export const SinglePost = ({
                           }}
                         />
                       </Box>
-                      <Box position="absolute" width='100%' bottom="60px">
+                      <Box position="absolute" width="100%" bottom="60px">
                         {showEmojiPicker && (
                           <EmojiPicker
                             onEmojiClick={(e) => handleSelectEmoji(e)}

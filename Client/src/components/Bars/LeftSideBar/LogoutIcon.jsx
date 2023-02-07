@@ -15,7 +15,7 @@ export const LogoutIcon = () => {
 
   const logout = () => {
     setOpen(false);
-    fetch("/users/loggedOutUser")
+    fetch(`api/users/loggedOutUser`)
       .then((res) => res.json())
       .then((res) => {
         window.location.reload();

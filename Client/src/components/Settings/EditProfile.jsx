@@ -37,7 +37,7 @@ export const EditProfile = () => {
     }
     setProfileOpen(false);
     setLoading(true);
-    fetch("/users/remove-profile-photo", {
+    fetch(`api/users/remove-profile-photo`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export const EditProfile = () => {
     data.append("profile", file);
     setProfileOpen(false);
     setLoading(true);
-    fetch(`/users/upload-profile-photo/`, {
+    fetch(`/api/users/upload-profile-photo/`, {
       method: "PATCH",
       body: data,
     })
@@ -142,7 +142,7 @@ export const EditProfile = () => {
     const validation = editDataValidation();
     if (validation) {
       setLoading(true);
-      fetch(`/users/udpate-user-profile`, {
+      fetch(`/api/users/udpate-user-profile`, {
         method: "PATCH",
         body: JSON.stringify(editData),
         headers: {
@@ -194,11 +194,7 @@ export const EditProfile = () => {
         mt="20px"
         pb="40px"
       >
-        <Stack
-          direction={"row"}
-          gap="20px"
-          alignItems={"center"}
-        >
+        <Stack direction={"row"} gap="20px" alignItems={"center"}>
           <Box>
             <Avatar
               sx={{

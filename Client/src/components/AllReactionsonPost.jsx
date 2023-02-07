@@ -19,7 +19,7 @@ export const AllReactionsonPost = ({
   }, []);
 
   const getLikesOnpost = () => {
-    fetch(`/likes/get/${data._id}`)
+    fetch(`/api/likes/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
         console.log(res, "res");

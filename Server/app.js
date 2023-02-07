@@ -26,17 +26,17 @@ app.get('/', (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 })
-app.use('/users', userRouter);
-app.use('/follows', followRouter);
-app.use('/posts', postsRouter);
-app.use('/likes', likesRouter);
-app.use('/comments', commentsRouter);
-app.use('/chats', chatsRouter);
-app.use('/messages', messagesRouter);
-app.use('/messages/notifications', messagesNotificationRouter);
-app.use('/savedposts', savedPostsRouter);
-app.use('/notifications', notificationsRouter);
-app.use('/stories', storiesRouter);
+app.use('/api/users', userRouter);
+app.use('/api/follows', followRouter);
+app.use('/api/posts', postsRouter);
+app.use('/api/likes', likesRouter);
+app.use('/api/comments', commentsRouter);
+app.use('/api/chats', chatsRouter);
+app.use('/api/messages', messagesRouter);
+app.use('/api/messages/notifications', messagesNotificationRouter);
+app.use('/api/savedposts', savedPostsRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use('/api/stories', storiesRouter);
 
 
 

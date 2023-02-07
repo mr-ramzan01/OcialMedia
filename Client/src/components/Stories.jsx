@@ -40,7 +40,7 @@ export const Stories = () => {
     setIsLoading(true);
     var data = new FormData();
     data.append("story", file);
-    fetch(`/stories/upload`, {
+    fetch(`/api/stories/upload`, {
       method: "POST",
       body: data,
     })
@@ -80,7 +80,7 @@ export const Stories = () => {
         <Paper
           sx={{ height: "100%", display: "flex", border: "1px solid #d1d1d1" }}
         >
-          <Stack direction="row"  width="83px">
+          <Stack direction="row" width="83px">
             <Grid width="100%" height="100%">
               <InputLabel
                 htmlFor="storycreate"
@@ -101,7 +101,12 @@ export const Stories = () => {
                   <Avatar
                     src={userData.image}
                     alt=""
-                    sx={{ position: "absolute", width: '50px', height: '50px', left: "12px" }}
+                    sx={{
+                      position: "absolute",
+                      width: "50px",
+                      height: "50px",
+                      left: "12px",
+                    }}
                   />
                   <AiFillPlusCircle
                     style={{
@@ -135,7 +140,7 @@ export const Stories = () => {
               overflow: "scroll",
               "::-webkit-scrollbar": {
                 width: "5px",
-                height: "5px"
+                height: "5px",
               },
               "::-webkit-scrollbar-thumb": {
                 background: "#d1d1d1",
@@ -179,7 +184,7 @@ export const Stories = () => {
               border: "1px solid #d1d1d1",
               borderRadius: "5px",
               width: "calc(100% - 5px)",
-              height: {xs: '240px', sm: "300px"},
+              height: { xs: "240px", sm: "300px" },
             }}
             src={previewImage}
             alt=""

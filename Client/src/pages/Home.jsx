@@ -33,7 +33,7 @@ export const Home = () => {
   const fetchRecentPosts = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`/posts/recent/post?page=${page}`)
+    fetch(`/api/posts/recent/post?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -177,11 +177,7 @@ export const Home = () => {
                         ))}
                       </Carousel>
                       <PostsActions el={el} />
-                      <Stack
-                        direction="row"
-                        key={el._id}
-                        gap="10px"
-                      >
+                      <Stack direction="row" key={el._id} gap="10px">
                         <Link
                           href={`/${el.user_id.username}`}
                           underline="none"

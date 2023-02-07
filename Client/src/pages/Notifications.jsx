@@ -31,7 +31,7 @@ export const Notifications = () => {
 
   const getGeneralNotifications = () => {
     setPage((prev) => prev + 1);
-    fetch(`/notifications/get/all?page=${page}`)
+    fetch(`/api/notifications/get/all?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -45,7 +45,7 @@ export const Notifications = () => {
   };
 
   const hasSeenNotifications = () => {
-    fetch("/notifications/has/seen", {
+    fetch(`api/notifications/has/seen`, {
       method: "PATCH",
     })
       .then((res) => res.json())

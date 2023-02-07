@@ -45,7 +45,7 @@ export const User = () => {
   const navigate = useNavigate();
 
   const followRequest = () => {
-    fetch(`/follows/followRequest`, {
+    fetch(`/api/follows/followRequest`, {
       method: "POST",
       body: JSON.stringify({
         following_Id: loginUserData._id,
@@ -67,7 +67,7 @@ export const User = () => {
 
   const getPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`/posts/${username}?page=${page}`)
+    fetch(`/api/posts/${username}?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -83,9 +83,9 @@ export const User = () => {
     setIsLoading(true);
     setPage(1);
     Promise.all([
-      fetch("/users/loggedInUser"),
-      fetch(`/users/${username}`),
-      fetch(`/posts/${username}?page=${1}`),
+      fetch(`api/users/loggedInUser`),
+      fetch(`/api/users/${username}`),
+      fetch(`/api/posts/${username}?page=${1}`),
     ])
       .then((res) => {
         return Promise.all(
@@ -142,7 +142,7 @@ export const User = () => {
   };
 
   const handleUnFollow = () => {
-    fetch(`/follows/unfollowRequest`, {
+    fetch(`/api/follows/unfollowRequest`, {
       method: "DELETE",
       body: JSON.stringify({
         following_Id: loginUserData._id,
@@ -170,7 +170,7 @@ export const User = () => {
   };
 
   const getFollowers = () => {
-    fetch(`/follows/getFollowers?userID=${oneUserData._id}`)
+    fetch(`/api/follows/getFollowers?userID=${oneUserData._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -187,7 +187,7 @@ export const User = () => {
   };
 
   const getFollowing = () => {
-    fetch(`/follows/getFollowing?userID=${oneUserData._id}`)
+    fetch(`/api/follows/getFollowing?userID=${oneUserData._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -204,7 +204,7 @@ export const User = () => {
   };
 
   const handleMessageClick = (user_id) => {
-    fetch(`/chats/create`, {
+    fetch(`/api/chats/create`, {
       method: "POST",
       body: JSON.stringify({ userId: user_id }),
       headers: {

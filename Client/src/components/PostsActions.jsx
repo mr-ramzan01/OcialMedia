@@ -33,7 +33,7 @@ export const PostsActions = ({ el }) => {
 
   const handleLikes = (val) => {
     setActionsOpen(false);
-    fetch("/likes/createlike", {
+    fetch(`apilikes/createlike`, {
       method: "POST",
       body: JSON.stringify({
         post_Id: el._id,
@@ -58,7 +58,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const handleRemoveLikes = () => {
-    fetch(`/likes/removelike/${hasLiked.id}`, {
+    fetch(`/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
     })
       .then((res) => res.json())
@@ -75,7 +75,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasLikedByUser = () => {
-    fetch(`/likes/hasliked/${el._id}`)
+    fetch(`/api/likes/hasliked/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -96,7 +96,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasSaved = () => {
-    fetch(`/savedposts/issaved/${el._id}`)
+    fetch(`/api/savedposts/issaved/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -109,7 +109,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const handleSaved = () => {
-    fetch("/savedposts/save", {
+    fetch(`api/savedposts/save`, {
       method: "POST",
       body: JSON.stringify({ post_id: el._id }),
       headers: {
@@ -118,7 +118,7 @@ export const PostsActions = ({ el }) => {
     })
       .then((res) => res.json())
       .then((res) => {
-        if(res.success) {
+        if (res.success) {
           setIsSaved(true);
         }
       })

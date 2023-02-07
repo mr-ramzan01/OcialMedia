@@ -11,7 +11,7 @@ export const AllStories = () => {
   }, []);
 
   const getStories = () => {
-    fetch(`/stories/get`)
+    fetch(`/api/stories/get`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
