@@ -29,7 +29,8 @@ import { UserMessages } from "../components/Messages/UserMessages";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
-const ENDPOINT = "http://localhost:3000";
+import { root_url } from "../utils/url";
+const ENDPOINT = "https://ocialmedia.netlify.app";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
@@ -152,7 +153,7 @@ export const Messages = () => {
   };
 
   const getChats = () => {
-    fetch(`/api/chats/allchats`)
+    fetch(`${root_url}/api/chats/allchats`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -184,7 +185,7 @@ export const Messages = () => {
     if (msg === "") {
       return;
     }
-    fetch(`/api/messages/send`, {
+    fetch(`${root_url}/api/messages/send`, {
       method: "POST",
       body: JSON.stringify({ message: msg, chat_id: currentSelectedChat._id }),
       headers: {
@@ -206,7 +207,7 @@ export const Messages = () => {
   };
 
   const searchUsers = debounce(() => {
-    fetch(`/api/users/search?q=${searchRef.current.value}`)
+    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
         setSearchData(res.data);
@@ -243,7 +244,7 @@ export const Messages = () => {
   };
 
   const getAllMessages = (chat) => {
-    fetch(`/api/messages/get/${chat._id}`)
+    fetch(`${root_url}/api/messages/get/${chat._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -259,7 +260,7 @@ export const Messages = () => {
   };
 
   const handleAccessChat = (user_id) => {
-    fetch(`/api/chats/create`, {
+    fetch(`${root_url}/api/chats/create`, {
       method: "POST",
       body: JSON.stringify({ userId: user_id }),
       headers: {

@@ -2,6 +2,7 @@ import { useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { Loader } from "./Loader";
+import { root_url } from "../utils/url";
 
 export const GoogleOauth = () => {
   const navigate = useNavigate();
@@ -9,7 +10,7 @@ export const GoogleOauth = () => {
   const { setIsAuth } = useContext(AuthContext);
 
   useEffect(() => {
-    fetch(`/api/users/google_Oauth?code=${params.get("code")}`)
+    fetch(`${root_url}/api/users/google_Oauth?code=${params.get("code")}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

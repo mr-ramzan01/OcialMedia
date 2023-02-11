@@ -19,8 +19,8 @@ import validator from "validator";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-// import GoogleButton from 'react-google-button'
 import { FcGoogle } from "react-icons/fc";
+import { root_url } from "../utils/url";
 
 // Bottom Copyright
 function Copyright(props) {
@@ -149,7 +149,7 @@ export const Signup = () => {
 
     // If all input fields are valid
     if (validate) {
-      fetch(`/api/users/signup`, {
+      fetch(`${root_url}/api/users/signup`, {
         method: "POST",
         body: JSON.stringify(data),
         headers: {

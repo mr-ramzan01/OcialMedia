@@ -9,13 +9,14 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { IoLogOutOutline } from "react-icons/io5";
+import { root_url } from "../../../utils/url";
 
 export const LogoutIcon = () => {
   const [open, setOpen] = useState(false);
 
   const logout = () => {
     setOpen(false);
-    fetch(`api/users/loggedOutUser`)
+    fetch(`${root_url}/api/users/loggedOutUser`)
       .then((res) => res.json())
       .then((res) => {
         window.location.reload();

@@ -18,6 +18,7 @@ import { Stories } from "../components/Stories";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { root_url } from "../utils/url";
 
 export const Home = () => {
   const [recentPosts, setRecentPosts] = useState([]);
@@ -33,7 +34,7 @@ export const Home = () => {
   const fetchRecentPosts = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`/api/posts/recent/post?page=${page}`)
+    fetch(`${root_url}/api/posts/recent/post?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

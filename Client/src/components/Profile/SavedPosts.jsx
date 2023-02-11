@@ -5,6 +5,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { HiRectangleStack } from "react-icons/hi2";
 import { AuthContext } from "../../context/AuthContext";
 import { Loader } from "../Loader";
+import { root_url } from "../../utils/url";
 
 export const SavedPosts = ({ id }) => {
   const [savedPosts, setSavedPosts] = useState([]);
@@ -20,7 +21,7 @@ export const SavedPosts = ({ id }) => {
 
   const getSavedPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`/api/savedposts/get/all/${id}?page=${page}`)
+    fetch(`${root_url}/api/savedposts/get/all/${id}?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

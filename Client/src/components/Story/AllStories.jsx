@@ -3,6 +3,7 @@ import { Stack } from "@mui/system";
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { StoryIcons } from "./StoryIcons";
+import { root_url } from "../../utils/url";
 
 export const AllStories = () => {
   const [stories, setStories] = useState([]);
@@ -11,7 +12,7 @@ export const AllStories = () => {
   }, []);
 
   const getStories = () => {
-    fetch(`/api/stories/get`)
+    fetch(`${root_url}/api/stories/get`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

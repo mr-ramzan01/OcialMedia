@@ -15,6 +15,8 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router";
 import { AuthContext } from "../context/AuthContext";
 import { FcGoogle } from "react-icons/fc";
+import { useCookies } from 'react-cookie';
+import { root_url } from "../utils/url";
 
 // Bottom copyright
 function Copyright(props) {
@@ -49,6 +51,7 @@ export const Login = () => {
   });
   const { setIsAuth, googleRequest } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [setCookie] = useCookies(['user']);
 
   // Storing the data on input change
   const handleChange = (e) => {
@@ -59,7 +62,7 @@ export const Login = () => {
   // Submitting the data of user
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetch(`/api/users/login`, {
+    fetch(`${root_url}/api/users/login`, {
       method: "POST",
       body: JSON.stringify(data),
       credentials: "same-origin",
@@ -69,10 +72,12 @@ export const Login = () => {
     })
       .then((res) => res.json())
       .then((res) => {
+        console.log(res, 'response');
         if (res.success) {
-          setIsAuth(true);
+          // setIsAuth(true);
           alert(res.message);
-          navigate("/");
+          setCookie('ocialMedia_token', res.token, { path: '/' });
+          // navigate("/");
         } else {
           setEmailOrUsername({
             ...emailOrUsername,

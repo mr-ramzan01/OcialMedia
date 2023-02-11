@@ -3,6 +3,7 @@ import { useContext, useState } from "react";
 import validator from "validator";
 import { AuthContext } from "../../context/AuthContext";
 import { ShowAlert } from "../Alert";
+import { root_url } from "../../utils/url";
 
 export const ResetPassword = () => {
   const [data, setData] = useState({
@@ -46,7 +47,7 @@ export const ResetPassword = () => {
   };
 
   const resetPassword = () => {
-    fetch(`/api/users/reset-password`, {
+    fetch(`${root_url}/api/users/reset-password`, {
       method: "PATCH",
       body: JSON.stringify(data),
       headers: {

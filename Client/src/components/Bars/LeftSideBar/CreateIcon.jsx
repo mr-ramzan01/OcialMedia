@@ -18,6 +18,7 @@ import { Carousel } from "react-responsive-carousel";
 import { AuthContext } from "../../../context/AuthContext";
 import { ShowAlert } from "../../Alert";
 import { Loader } from "../../Loader";
+import { root_url } from "../../../utils/url";
 
 export const CreateIcon = () => {
   const [postsOption, setPostsOption] = useState(false);
@@ -82,7 +83,7 @@ export const CreateIcon = () => {
     for (let i = 0; i < postFiles.length; i++) {
       var formDatafile = new FormData();
       formDatafile.append("posts", postFiles[i]);
-      await fetch(`api/posts/upload-poston-cloudinary`, {
+      await fetch(`${root_url}/api/posts/upload-poston-cloudinary`, {
         method: "POST",
         body: formDatafile,
       })
@@ -104,7 +105,7 @@ export const CreateIcon = () => {
     const data = { ...postData, tags: tags, post_images: postImages };
     // console.log(data, 'data');
 
-    fetch(`api/posts/create`, {
+    fetch(`${root_url}/api/posts/create`, {
       method: "POST",
       body: JSON.stringify(data),
       headers: {

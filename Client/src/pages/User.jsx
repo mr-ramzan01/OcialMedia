@@ -24,6 +24,7 @@ import { AiOutlineMessage } from "react-icons/ai";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { root_url } from "../utils/url";
 
 export const User = () => {
   const { username } = useParams();
@@ -45,7 +46,7 @@ export const User = () => {
   const navigate = useNavigate();
 
   const followRequest = () => {
-    fetch(`/api/follows/followRequest`, {
+    fetch(`${root_url}/api/follows/followRequest`, {
       method: "POST",
       body: JSON.stringify({
         following_Id: loginUserData._id,
@@ -67,7 +68,7 @@ export const User = () => {
 
   const getPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`/api/posts/${username}?page=${page}`)
+    fetch(`${root_url}/api/posts/${username}?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -83,9 +84,9 @@ export const User = () => {
     setIsLoading(true);
     setPage(1);
     Promise.all([
-      fetch(`api/users/loggedInUser`),
-      fetch(`/api/users/${username}`),
-      fetch(`/api/posts/${username}?page=${1}`),
+      fetch(`${root_url}/api/users/loggedInUser`),
+      fetch(`${root_url}/api/users/${username}`),
+      fetch(`${root_url}/api/posts/${username}?page=${1}`),
     ])
       .then((res) => {
         return Promise.all(
@@ -110,7 +111,7 @@ export const User = () => {
         }
 
         fetch(
-          `/follows/isfollowing?followerID=${res[1].data._id}&followingID=${res[0].data._id}`
+          `${root_url}/api/follows/isfollowing?followerID=${res[1].data._id}&followingID=${res[0].data._id}`
         )
           .then((res) => res.json())
           .then((res) => {
@@ -142,7 +143,7 @@ export const User = () => {
   };
 
   const handleUnFollow = () => {
-    fetch(`/api/follows/unfollowRequest`, {
+    fetch(`${root_url}/api/follows/unfollowRequest`, {
       method: "DELETE",
       body: JSON.stringify({
         following_Id: loginUserData._id,
@@ -170,7 +171,7 @@ export const User = () => {
   };
 
   const getFollowers = () => {
-    fetch(`/api/follows/getFollowers?userID=${oneUserData._id}`)
+    fetch(`${root_url}/api/follows/getFollowers?userID=${oneUserData._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -187,7 +188,7 @@ export const User = () => {
   };
 
   const getFollowing = () => {
-    fetch(`/api/follows/getFollowing?userID=${oneUserData._id}`)
+    fetch(`${root_url}/api/follows/getFollowing?userID=${oneUserData._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -204,7 +205,7 @@ export const User = () => {
   };
 
   const handleMessageClick = (user_id) => {
-    fetch(`/api/chats/create`, {
+    fetch(`${root_url}/api/chats/create`, {
       method: "POST",
       body: JSON.stringify({ userId: user_id }),
       headers: {

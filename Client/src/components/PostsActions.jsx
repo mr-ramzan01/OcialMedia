@@ -10,6 +10,7 @@ import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { AuthContext } from "../context/AuthContext";
 import { AllReactionsonPost } from "./AllReactionsonPost";
 import { SinglePost } from "./SinglePost";
+import { root_url } from "../utils/url";
 
 export const PostsActions = ({ el }) => {
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -33,7 +34,7 @@ export const PostsActions = ({ el }) => {
 
   const handleLikes = (val) => {
     setActionsOpen(false);
-    fetch(`apilikes/createlike`, {
+    fetch(`${root_url}/api/likes/createlike`, {
       method: "POST",
       body: JSON.stringify({
         post_Id: el._id,
@@ -58,7 +59,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const handleRemoveLikes = () => {
-    fetch(`/api/likes/removelike/${hasLiked.id}`, {
+    fetch(`${root_url}/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
     })
       .then((res) => res.json())
@@ -75,7 +76,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasLikedByUser = () => {
-    fetch(`/api/likes/hasliked/${el._id}`)
+    fetch(`${root_url}/api/likes/hasliked/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -96,7 +97,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasSaved = () => {
-    fetch(`/api/savedposts/issaved/${el._id}`)
+    fetch(`${root_url}/api/savedposts/issaved/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -109,7 +110,7 @@ export const PostsActions = ({ el }) => {
   };
 
   const handleSaved = () => {
-    fetch(`api/savedposts/save`, {
+    fetch(`${root_url}/api/savedposts/save`, {
       method: "POST",
       body: JSON.stringify({ post_id: el._id }),
       headers: {

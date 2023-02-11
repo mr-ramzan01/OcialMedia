@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
+import { root_url } from "../utils/url";
 
 // Bottom Copyright
 function Copyright(props) {
@@ -47,7 +48,7 @@ export const ForgotPassword = () => {
   // Submiting the email and checking the response
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetch(`/api/users/forgot-password`, {
+    fetch(`${root_url}/api/users/forgot-password`, {
       method: "POST",
       body: JSON.stringify(data),
       headers: {

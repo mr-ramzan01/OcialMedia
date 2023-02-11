@@ -17,6 +17,7 @@ import { AuthContext } from "../context/AuthContext";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { root_url } from "../utils/url";
 
 export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
@@ -31,7 +32,7 @@ export const Notifications = () => {
 
   const getGeneralNotifications = () => {
     setPage((prev) => prev + 1);
-    fetch(`/api/notifications/get/all?page=${page}`)
+    fetch(`${root_url}/api/notifications/get/all?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -45,7 +46,7 @@ export const Notifications = () => {
   };
 
   const hasSeenNotifications = () => {
-    fetch(`api/notifications/has/seen`, {
+    fetch(`${root_url}/api/notifications/has/seen`, {
       method: "PATCH",
     })
       .then((res) => res.json())

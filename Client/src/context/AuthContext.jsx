@@ -1,4 +1,6 @@
 import { createContext, useEffect, useState } from "react";
+import { root_url } from "../utils/url";
+import { useCookies } from "react-cookie";
 
 export const AuthContext = createContext();
 
@@ -18,8 +20,12 @@ export const AuthContextprovider = ({ children }) => {
   const [messagesNotification, setMessagesNotification] = useState([]);
   const [generalNotifications, setGeneralNotifications] = useState(true);
 
+  const [cookies] = useCookies(["user"]);
+  const userToken = cookies.ocialMedia_token;
+  console.log(userToken, "userToken");
+
   const hasGeneralNotifications = () => {
-    fetch(`/api/notifications/has`)
+    fetch(`${root_url}/api/notifications/has`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -32,7 +38,7 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const getAllNotifications = (id) => {
-    fetch(`/api/messages/notifications/get/${id}`)
+    fetch(`${root_url}/api/messages/notifications/get/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -45,7 +51,7 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const deleteNotifications = (id, userId) => {
-    fetch(`/api/messages/notifications/${id}`, {
+    fetch(`${root_url}/api/messages/notifications/${id}`, {
       method: "DELETE",
     })
       .then((res) => res.json())
@@ -60,7 +66,7 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const sendMessageNotification = (message_id, from) => {
-    fetch(`/api/messages/notifications/send`, {
+    fetch(`${root_url}/api/messages/notifications/send`, {
       method: "POST",
       body: JSON.stringify({
         message_id,
@@ -83,7 +89,7 @@ export const AuthContextprovider = ({ children }) => {
 
   const isLoggedIn = () => {
     setIsLoading(true);
-    fetch(`/api/users/loggedInUser`)
+    fetch(`${root_url}/api/users/loggedInUser`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -106,7 +112,7 @@ export const AuthContextprovider = ({ children }) => {
   }, []);
 
   const getUser = () => {
-    fetch(`/api/users/loggedInUser`)
+    fetch(`${root_url}/api/users/loggedInUser`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -120,7 +126,7 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const handleClick = async (id) => {
-    await fetch(`/api/posts/single/${id}`)
+    await fetch(`${root_url}/api/posts/single/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

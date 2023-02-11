@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import validator from "validator";
 import { MdVisibilityOff } from "react-icons/md";
 import { MdVisibility } from "react-icons/md";
+import { root_url } from "../utils/url";
 
 export const CreateNewPassword = () => {
   const [data, setData] = useState({ password1: "", password2: "" });
@@ -38,7 +39,7 @@ export const CreateNewPassword = () => {
   };
 
   const changePassword = () => {
-    fetch(`/api/users/forgot-password/set-new-password`, {
+    fetch(`${root_url}/api/users/forgot-password/set-new-password`, {
       method: "POST",
       body: JSON.stringify({ password: data.password1 }),
       headers: {

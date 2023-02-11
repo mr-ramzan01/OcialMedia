@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   CircularProgress,
   Link,
@@ -8,7 +7,7 @@ import {
 } from "@mui/material";
 import React, { useEffect } from "react";
 import { useState } from "react";
-import moment from "moment";
+import { root_url } from "../utils/url";
 import { SinglePost } from "./SinglePost";
 
 export const RecentPostsComments = ({ el }) => {
@@ -20,7 +19,7 @@ export const RecentPostsComments = ({ el }) => {
 
   const getComments = () => {
     setIsLoading(true);
-    fetch(`/api/comments/recent/get/${el._id}`)
+    fetch(`${root_url}/api/comments/recent/get/${el._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

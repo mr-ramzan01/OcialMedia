@@ -17,6 +17,7 @@ import { AuthContext } from "../context/AuthContext";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { root_url } from "../utils/url";
 
 export const Explore = () => {
   const [exploreData, setExploreData] = useState([]);
@@ -33,7 +34,7 @@ export const Explore = () => {
   const fetchExploreData = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`/api/posts/explore/data?page=${page}`)
+    fetch(`${root_url}/api/posts/explore/data?page=${page}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

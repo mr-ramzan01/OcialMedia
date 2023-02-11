@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { BsSuitHeartFill } from "react-icons/bs";
 import { FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { Loader } from "./Loader";
+import { root_url } from "../utils/url";
 
 export const AllReactionsonPost = ({
   data,
@@ -19,7 +20,7 @@ export const AllReactionsonPost = ({
   }, []);
 
   const getLikesOnpost = () => {
-    fetch(`/api/likes/get/${data._id}`)
+    fetch(`${root_url}/api/likes/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
         console.log(res, "res");

@@ -17,6 +17,7 @@ import { AuthContext } from "../context/AuthContext";
 import { ShowAlert } from "./Alert";
 import { Loader } from "./Loader";
 import { AllStories } from "./Story/AllStories";
+import { root_url } from "../utils/url";
 
 export const Stories = () => {
   const [previewImage, setPreviewImage] = useState(null);
@@ -40,7 +41,7 @@ export const Stories = () => {
     setIsLoading(true);
     var data = new FormData();
     data.append("story", file);
-    fetch(`/api/stories/upload`, {
+    fetch(`${root_url}/api/stories/upload`, {
       method: "POST",
       body: data,
     })

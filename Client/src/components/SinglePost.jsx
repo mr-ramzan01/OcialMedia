@@ -21,6 +21,7 @@ import moment from "moment";
 import { MdOutlineEmojiEmotions } from "react-icons/md";
 import EmojiPicker from "emoji-picker-react";
 import { RxCross2 } from "react-icons/rx";
+import { root_url } from "../utils/url";
 
 export const SinglePost = ({
   id,
@@ -44,7 +45,7 @@ export const SinglePost = ({
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`/api/posts/single/${id}`)
+    fetch(`${root_url}/api/posts/single/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -76,7 +77,7 @@ export const SinglePost = ({
   };
 
   const followRequest = () => {
-    fetch(`/api/follows/followRequest`, {
+    fetch(`${root_url}/api/follows/followRequest`, {
       method: "POST",
       body: JSON.stringify({
         following_Id: userData._id,
@@ -97,7 +98,7 @@ export const SinglePost = ({
   };
 
   const unFollowRequest = () => {
-    fetch(`/api/follows/unfollowRequest`, {
+    fetch(`${root_url}/api/follows/unfollowRequest`, {
       method: "DELETE",
       body: JSON.stringify({
         following_Id: userData._id,
@@ -119,7 +120,7 @@ export const SinglePost = ({
 
   const isFollowingUser = (id) => {
     fetch(
-      `/api/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
+      `${root_url}/api/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
     )
       .then((res) => res.json())
       .then((res) => {
@@ -144,7 +145,7 @@ export const SinglePost = ({
   const handleLikes = (val) => {
     setActionsOpen(false);
     setIsLoading(true);
-    fetch(`api/likes/createlike`, {
+    fetch(`${root_url}/api/likes/createlike`, {
       method: "POST",
       body: JSON.stringify({
         post_Id: data._id,
@@ -173,7 +174,7 @@ export const SinglePost = ({
 
   const handleRemoveLikes = () => {
     setIsLoading(true);
-    fetch(`/api/likes/removelike/${hasLiked.id}`, {
+    fetch(`${root_url}/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
     })
       .then((res) => res.json())
@@ -193,7 +194,7 @@ export const SinglePost = ({
   };
 
   const hasLikedByUser = (id) => {
-    fetch(`/api/likes/hasliked/${id}`)
+    fetch(`${root_url}/api/likes/hasliked/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -214,7 +215,7 @@ export const SinglePost = ({
   };
 
   const getComments = (id) => {
-    fetch(`/api/comments/get/${id}`)
+    fetch(`${root_url}/api/comments/get/${id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -230,7 +231,7 @@ export const SinglePost = ({
     if (comment === "") return;
     setShowEmojiPicker(false);
     setIsLoading(true);
-    fetch(`/api/comments/create`, {
+    fetch(`${root_url}/api/comments/create`, {
       method: "POST",
       body: JSON.stringify({ post_Id: data._id, title: comment }),
       headers: {
@@ -253,7 +254,7 @@ export const SinglePost = ({
   };
 
   const getLikesOnpost = () => {
-    fetch(`/api/likes/get/${data._id}`)
+    fetch(`${root_url}/api/likes/get/${data._id}`)
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

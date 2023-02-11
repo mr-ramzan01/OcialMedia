@@ -17,6 +17,7 @@ import React, { useContext, useState } from "react";
 import { AuthContext } from "../../context/AuthContext";
 import { ShowAlert } from "../Alert";
 import { Loader } from "../Loader";
+import { root_url } from "../../utils/url";
 
 export const EditProfile = () => {
   const { getUser, userData, editData, setEditData } = useContext(AuthContext);
@@ -37,7 +38,7 @@ export const EditProfile = () => {
     }
     setProfileOpen(false);
     setLoading(true);
-    fetch(`api/users/remove-profile-photo`, {
+    fetch(`${root_url}/api/users/remove-profile-photo`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -69,7 +70,7 @@ export const EditProfile = () => {
     data.append("profile", file);
     setProfileOpen(false);
     setLoading(true);
-    fetch(`/api/users/upload-profile-photo/`, {
+    fetch(`${root_url}/api/users/upload-profile-photo/`, {
       method: "PATCH",
       body: data,
     })
@@ -142,7 +143,7 @@ export const EditProfile = () => {
     const validation = editDataValidation();
     if (validation) {
       setLoading(true);
-      fetch(`/api/users/udpate-user-profile`, {
+      fetch(`${root_url}/api/users/udpate-user-profile`, {
         method: "PATCH",
         body: JSON.stringify(editData),
         headers: {

@@ -14,6 +14,7 @@ import ClearIcon from "@mui/icons-material/Clear";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
+import { root_url } from "../utils/url";
 
 export const Search = () => {
   const searchRef = useRef(null);
@@ -24,7 +25,7 @@ export const Search = () => {
     SearchInput();
   };
   const SearchInput = debounce(() => {
-    fetch(`/api/users/search?q=${searchRef.current.value}`)
+    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`)
       .then((res) => res.json())
       .then((res) => {
         setUsers(res.data);
