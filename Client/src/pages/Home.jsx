@@ -107,7 +107,7 @@ export const Home = () => {
           <LeftSideBar />
           <Box marginLeft={{ xs: "0", sm: "80px", lg: "240px" }} width="100%">
             <Box
-              width={{ xs: "100%", sm: "450px", md: "600px" }}
+              width={{ xs: "calc(100% - 40px)", sm: "450px", md: "600px" }}
               sx={{ minHeight: "90vh", m: "40px auto" }}
               p={{ xs: "20px", sm: "0" }}
             >
