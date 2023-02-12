@@ -109,8 +109,9 @@ async function googleOAuth(req, res){
                 _id: existingUserWithGoogle._id,
             }, jwt_secret_key);
 
-            return res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+            return res.status(200).send({
                 success: true,
+                token,
                 message: 'Google account has already been signed up' 
             })
         }
@@ -131,8 +132,9 @@ async function googleOAuth(req, res){
         }, jwt_secret_key);
 
         
-        return res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+        return res.status(200).send({
             success: true,
+            token,
             message: 'Google account signed up successfully' 
         })
 
@@ -171,8 +173,9 @@ async function LoginUser(req, res) {
                 expires: new Date(Date.now() + 30*24*60*60*1000),
                 httpOnly: true,
             };
-            res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+            res.status(200).send({
                 success: true,
+                token,
                 message: 'Login Successfully',
             })
         }
@@ -236,8 +239,9 @@ async function SignUPUser(req, res) {
             expires: new Date(Date.now() + 30*24*60*60*1000),
             httpOnly: true,
         };
-        res.status(200).cookie("ocialMedia_token", token, {...options}).send({
+        res.status(200).send({
             success: true,
+            token,
             message: 'Signup successfully',
         })
     } catch (error) {

@@ -26,6 +26,14 @@ app.get('/', (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 })
+
+const val = (req, res, next) => {
+  console.log(req, 'url in home');
+  console.log(req.protocol + '://' + req.get('host') + req.originalUrl);
+  next();
+}
+
+// app.use(val);
 app.use('/api/users', userRouter);
 app.use('/api/follows', followRouter);
 app.use('/api/posts', postsRouter);

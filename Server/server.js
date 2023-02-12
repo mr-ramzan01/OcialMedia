@@ -3,6 +3,7 @@ const connection = require('./config/database');
 const cloudinary = require('cloudinary')
 const PORT = process.env.PORT || 8080;
 const https = require('https')
+const http = require('http')
 const fs = require('fs');
 
 
@@ -33,15 +34,19 @@ cloudinary.config({
 
 const { Server } = require("socket.io");
 
-const httpServer = https.createServer(options, app);
-const io = new Server(httpServer);
+const httpServer = http.createServer(options, app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: 'https://ocialmedia.netlify.app'
+  }
+});
 
 
 io.on("connection", (socket) => {
-
   socket.on('setup', (userData) => {
     socket.join(userData._id);
     socket.emit('connected')
+    console.log('socket connected')
   })
 
   socket.on('join chat', (room) => {
