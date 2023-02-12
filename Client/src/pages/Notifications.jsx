@@ -22,7 +22,7 @@ import { root_url } from "../utils/url";
 export const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [totalNotificationsLength, setTotalNotificationsLength] = useState(0);
-  const { setGeneralNotifications } = useContext(AuthContext);
+  const { setGeneralNotifications, userToken } = useContext(AuthContext);
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -32,7 +32,12 @@ export const Notifications = () => {
 
   const getGeneralNotifications = () => {
     setPage((prev) => prev + 1);
-    fetch(`${root_url}/api/notifications/get/all?page=${page}`)
+    fetch(`${root_url}/api/notifications/get/all?page=${page}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -48,6 +53,9 @@ export const Notifications = () => {
   const hasSeenNotifications = () => {
     fetch(`${root_url}/api/notifications/has/seen`, {
       method: "PATCH",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
     })
       .then((res) => res.json())
       .then((res) => {

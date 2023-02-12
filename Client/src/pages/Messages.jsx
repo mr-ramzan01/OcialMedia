@@ -30,7 +30,7 @@ import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { root_url } from "../utils/url";
-const ENDPOINT = "https://ocialmedia.netlify.app";
+const ENDPOINT = "https://13.231.8.81:8080";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
@@ -40,6 +40,7 @@ export const Messages = () => {
     sendMessageNotification,
     messagesNotification,
     deleteNotifications,
+    userToken
   } = useContext(AuthContext);
   const [chatsData, setChatsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -153,7 +154,12 @@ export const Messages = () => {
   };
 
   const getChats = () => {
-    fetch(`${root_url}/api/chats/allchats`)
+    fetch(`${root_url}/api/chats/allchats`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -163,7 +169,6 @@ export const Messages = () => {
             getAllMessages(res.data[0]);
           }
         } else {
-          console.log(res, "re");
           alert("Something went wrong");
         }
       })
@@ -190,6 +195,7 @@ export const Messages = () => {
       body: JSON.stringify({ message: msg, chat_id: currentSelectedChat._id }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -207,7 +213,12 @@ export const Messages = () => {
   };
 
   const searchUsers = debounce(() => {
-    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`)
+    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         setSearchData(res.data);
@@ -244,7 +255,12 @@ export const Messages = () => {
   };
 
   const getAllMessages = (chat) => {
-    fetch(`${root_url}/api/messages/get/${chat._id}`)
+    fetch(`${root_url}/api/messages/get/${chat._id}`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -265,6 +281,7 @@ export const Messages = () => {
       body: JSON.stringify({ userId: user_id }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

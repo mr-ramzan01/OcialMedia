@@ -10,9 +10,10 @@ import {
   Typography,
   createTheme,
 } from "@mui/material";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import emailjs from "@emailjs/browser";
 import { root_url } from "../utils/url";
+import { AuthContext } from "../context/AuthContext";
 
 // Bottom Copyright
 function Copyright(props) {
@@ -38,6 +39,7 @@ export const ForgotPassword = () => {
   const [data, setData] = useState({ email: "" });
   const [emailError, setEmailError] = useState({ error: false, text: "" });
   const [sentInvitationLink, setSentInvitationLink] = useState(false);
+  const {userToken} = useContext(AuthContext);
 
   // Storing email on very input change
   const handleChange = (e) => {
@@ -53,6 +55,7 @@ export const ForgotPassword = () => {
       body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

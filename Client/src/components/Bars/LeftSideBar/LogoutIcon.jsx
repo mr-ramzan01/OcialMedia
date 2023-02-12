@@ -7,21 +7,18 @@ import {
   Link,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { IoLogOutOutline } from "react-icons/io5";
-import { root_url } from "../../../utils/url";
+import { AuthContext } from "../../../context/AuthContext";
+import Cookies from 'universal-cookie';
 
 export const LogoutIcon = () => {
   const [open, setOpen] = useState(false);
-
+  const cookies = new Cookies();
   const logout = () => {
     setOpen(false);
-    fetch(`${root_url}/api/users/loggedOutUser`)
-      .then((res) => res.json())
-      .then((res) => {
-        window.location.reload();
-        console.log("res", res);
-      });
+    cookies.remove('ocialMedia_token', { path: '/' });
+    window.location.reload();
   };
   const handleLogout = () => {
     setOpen(true);

@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from "react";
 import { root_url } from "../utils/url";
-import { useCookies } from "react-cookie";
+// import { useCookies } from "react-cookie";
+import Cookies from 'universal-cookie';
 
 export const AuthContext = createContext();
 
@@ -20,12 +21,17 @@ export const AuthContextprovider = ({ children }) => {
   const [messagesNotification, setMessagesNotification] = useState([]);
   const [generalNotifications, setGeneralNotifications] = useState(true);
 
-  const [cookies] = useCookies(["user"]);
-  const userToken = cookies.ocialMedia_token;
-  console.log(userToken, "userToken");
+  // const [cookies, setCookies] = useCookies(["user"]);
+  const cookies = new Cookies();
+  const userToken = cookies.get('ocialMedia_token');
 
   const hasGeneralNotifications = () => {
-    fetch(`${root_url}/api/notifications/has`)
+    fetch(`${root_url}/api/notifications/has`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -38,7 +44,12 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const getAllNotifications = (id) => {
-    fetch(`${root_url}/api/messages/notifications/get/${id}`)
+    fetch(`${root_url}/api/messages/notifications/get/${id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -53,6 +64,9 @@ export const AuthContextprovider = ({ children }) => {
   const deleteNotifications = (id, userId) => {
     fetch(`${root_url}/api/messages/notifications/${id}`, {
       method: "DELETE",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
     })
       .then((res) => res.json())
       .then((res) => {
@@ -74,6 +88,7 @@ export const AuthContextprovider = ({ children }) => {
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -89,7 +104,12 @@ export const AuthContextprovider = ({ children }) => {
 
   const isLoggedIn = () => {
     setIsLoading(true);
-    fetch(`${root_url}/api/users/loggedInUser`)
+    fetch(`${root_url}/api/users/loggedInUser`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -112,7 +132,12 @@ export const AuthContextprovider = ({ children }) => {
   }, []);
 
   const getUser = () => {
-    fetch(`${root_url}/api/users/loggedInUser`)
+    fetch(`${root_url}/api/users/loggedInUser`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -126,7 +151,12 @@ export const AuthContextprovider = ({ children }) => {
   };
 
   const handleClick = async (id) => {
-    await fetch(`${root_url}/api/posts/single/${id}`)
+    await fetch(`${root_url}/api/posts/single/${id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -157,6 +187,7 @@ export const AuthContextprovider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
+        userToken,
         isAuth,
         isLoading,
         userData,
@@ -165,6 +196,7 @@ export const AuthContextprovider = ({ children }) => {
         postData,
         messagesNotification,
         generalNotifications,
+        isLoggedIn,
         hasGeneralNotifications,
         setGeneralNotifications,
         getAllNotifications,

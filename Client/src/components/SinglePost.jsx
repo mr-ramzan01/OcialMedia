@@ -29,7 +29,7 @@ export const SinglePost = ({
   setShowSinglePostFromNotifications,
 }) => {
   const [postOpen, setPostOpen] = useState(true);
-  const { setShowSinglePost, userData, handleClick } = useContext(AuthContext);
+  const { setShowSinglePost, userData, handleClick, userToken } = useContext(AuthContext);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const commentRef = useRef(null);
@@ -45,7 +45,12 @@ export const SinglePost = ({
 
   useEffect(() => {
     setIsLoading(true);
-    fetch(`${root_url}/api/posts/single/${id}`)
+    fetch(`${root_url}/api/posts/single/${id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -85,6 +90,7 @@ export const SinglePost = ({
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -106,6 +112,7 @@ export const SinglePost = ({
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -120,7 +127,12 @@ export const SinglePost = ({
 
   const isFollowingUser = (id) => {
     fetch(
-      `${root_url}/api/follows/isfollowing?followerID=${id}&followingID=${userData._id}`
+      `${root_url}/api/follows/isfollowing?followerID=${id}&followingID=${userData._id}`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${userToken}`
+        }
+      }
     )
       .then((res) => res.json())
       .then((res) => {
@@ -154,6 +166,7 @@ export const SinglePost = ({
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -176,6 +189,9 @@ export const SinglePost = ({
     setIsLoading(true);
     fetch(`${root_url}/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
     })
       .then((res) => res.json())
       .then((res) => {
@@ -194,7 +210,12 @@ export const SinglePost = ({
   };
 
   const hasLikedByUser = (id) => {
-    fetch(`${root_url}/api/likes/hasliked/${id}`)
+    fetch(`${root_url}/api/likes/hasliked/${id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -215,7 +236,12 @@ export const SinglePost = ({
   };
 
   const getComments = (id) => {
-    fetch(`${root_url}/api/comments/get/${id}`)
+    fetch(`${root_url}/api/comments/get/${id}`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -236,6 +262,7 @@ export const SinglePost = ({
       body: JSON.stringify({ post_Id: data._id, title: comment }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -254,7 +281,12 @@ export const SinglePost = ({
   };
 
   const getLikesOnpost = () => {
-    fetch(`${root_url}/api/likes/get/${data._id}`)
+    fetch(`${root_url}/api/likes/get/${data._id}`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

@@ -31,7 +31,7 @@ export const CreateIcon = () => {
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState("error");
   const [loading, setLoading] = useState(false);
-  const { userData, getUser } = useContext(AuthContext);
+  const { userData, getUser, userToken } = useContext(AuthContext);
   const [showAlert, setShowAlert] = useState(false);
 
   const handleCreatePost = (e) => {
@@ -85,6 +85,9 @@ export const CreateIcon = () => {
       formDatafile.append("posts", postFiles[i]);
       await fetch(`${root_url}/api/posts/upload-poston-cloudinary`, {
         method: "POST",
+        headers: {
+          authorization: `Bearer ${userToken}`
+        },
         body: formDatafile,
       })
         .then((res) => res.json())
@@ -110,6 +113,7 @@ export const CreateIcon = () => {
       body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

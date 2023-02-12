@@ -20,6 +20,7 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { FcGoogle } from "react-icons/fc";
+import Cookies from 'universal-cookie';
 import { root_url } from "../utils/url";
 
 // Bottom Copyright
@@ -70,6 +71,7 @@ export const Signup = () => {
   const [passwordVisibility, setPasswordVisibility] = useState(false);
   const { setIsAuth, googleRequest } = useContext(AuthContext);
   const navigate = useNavigate();
+  const cookies = new Cookies();
 
   // Storing the data on every input change
   const handleChange = (e) => {
@@ -160,7 +162,7 @@ export const Signup = () => {
         .then((res) => {
           if (res.success) {
             setIsAuth(true);
-            alert(res.message);
+            cookies.set('ocialMedia_token', res.token, { path: '/' });
             navigate("/");
           } else if (res.message === "Username already taken") {
             setUsernameError({

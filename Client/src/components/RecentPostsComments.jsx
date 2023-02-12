@@ -5,8 +5,9 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useState } from "react";
+import { AuthContext } from "../context/AuthContext";
 import { root_url } from "../utils/url";
 import { SinglePost } from "./SinglePost";
 
@@ -14,12 +15,17 @@ export const RecentPostsComments = ({ el }) => {
   const [commentsData, setCommentsData] = useState([]);
   const [totalComments, setTotalComments] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSinglePostFromRecent, setShowSinglePostFromRecent] =
-    useState(false);
+  const [showSinglePostFromRecent, setShowSinglePostFromRecent] = useState(false);
+  const {userToken} = useContext(AuthContext);
 
   const getComments = () => {
     setIsLoading(true);
-    fetch(`${root_url}/api/comments/recent/get/${el._id}`)
+    fetch(`${root_url}/api/comments/recent/get/${el._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

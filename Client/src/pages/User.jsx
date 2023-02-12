@@ -39,7 +39,7 @@ export const User = () => {
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
   const [userPosts, setUserPosts] = useState([]);
-  const { showSinglePost, postData, handleClick } = useContext(AuthContext);
+  const { showSinglePost, postData, handleClick, userToken } = useContext(AuthContext);
   const [selected, setSelected] = useState("post");
   const [page, setPage] = useState(1);
   const [totalPostsLength, setTotalPostsLength] = useState(0);
@@ -54,6 +54,7 @@ export const User = () => {
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -68,7 +69,12 @@ export const User = () => {
 
   const getPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`${root_url}/api/posts/${username}?page=${page}`)
+    fetch(`${root_url}/api/posts/${username}?page=${page}`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -84,9 +90,24 @@ export const User = () => {
     setIsLoading(true);
     setPage(1);
     Promise.all([
-      fetch(`${root_url}/api/users/loggedInUser`),
-      fetch(`${root_url}/api/users/${username}`),
-      fetch(`${root_url}/api/posts/${username}?page=${1}`),
+      fetch(`${root_url}/api/users/loggedInUser`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${userToken}`
+        }
+      }),
+      fetch(`${root_url}/api/users/${username}`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${userToken}`
+        }
+      }),
+      fetch(`${root_url}/api/posts/${username}?page=${1}`, {
+        method: 'GET',
+        headers: {
+          authorization: `Bearer ${userToken}`
+        }
+      }),
     ])
       .then((res) => {
         return Promise.all(
@@ -111,7 +132,12 @@ export const User = () => {
         }
 
         fetch(
-          `${root_url}/api/follows/isfollowing?followerID=${res[1].data._id}&followingID=${res[0].data._id}`
+          `${root_url}/api/follows/isfollowing?followerID=${res[1].data._id}&followingID=${res[0].data._id}`, {
+            method: 'GET',
+            headers: {
+              authorization: `Bearer ${userToken}`
+            }
+          }
         )
           .then((res) => res.json())
           .then((res) => {
@@ -151,6 +177,7 @@ export const User = () => {
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -171,7 +198,12 @@ export const User = () => {
   };
 
   const getFollowers = () => {
-    fetch(`${root_url}/api/follows/getFollowers?userID=${oneUserData._id}`)
+    fetch(`${root_url}/api/follows/getFollowers?userID=${oneUserData._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -188,7 +220,12 @@ export const User = () => {
   };
 
   const getFollowing = () => {
-    fetch(`${root_url}/api/follows/getFollowing?userID=${oneUserData._id}`)
+    fetch(`${root_url}/api/follows/getFollowing?userID=${oneUserData._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -210,6 +247,7 @@ export const User = () => {
       body: JSON.stringify({ userId: user_id }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

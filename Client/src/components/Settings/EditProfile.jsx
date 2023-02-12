@@ -20,7 +20,7 @@ import { Loader } from "../Loader";
 import { root_url } from "../../utils/url";
 
 export const EditProfile = () => {
-  const { getUser, userData, editData, setEditData } = useContext(AuthContext);
+  const { getUser, userData, editData, setEditData, userToken } = useContext(AuthContext);
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState("error");
   const [showAlert, setShowAlert] = useState(false);
@@ -42,6 +42,7 @@ export const EditProfile = () => {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -72,6 +73,9 @@ export const EditProfile = () => {
     setLoading(true);
     fetch(`${root_url}/api/users/upload-profile-photo/`, {
       method: "PATCH",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      },
       body: data,
     })
       .then((res) => res.json())
@@ -148,6 +152,7 @@ export const EditProfile = () => {
         body: JSON.stringify(editData),
         headers: {
           "Content-Type": "application/json",
+          authorization: `Bearer ${userToken}`
         },
       })
         .then((res) => res.json())

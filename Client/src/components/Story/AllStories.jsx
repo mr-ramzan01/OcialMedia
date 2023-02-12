@@ -1,18 +1,25 @@
 import { Box, Typography } from "@mui/material";
 import { Stack } from "@mui/system";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { StoryIcons } from "./StoryIcons";
 import { root_url } from "../../utils/url";
+import { AuthContext } from "../../context/AuthContext";
 
 export const AllStories = () => {
   const [stories, setStories] = useState([]);
+  const {userToken} = useContext(AuthContext);
   useEffect(() => {
     getStories();
   }, []);
 
   const getStories = () => {
-    fetch(`${root_url}/api/stories/get`)
+    fetch(`${root_url}/api/stories/get`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

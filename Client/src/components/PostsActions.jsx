@@ -18,7 +18,7 @@ export const PostsActions = ({ el }) => {
     useState(false);
   const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: "" });
   const [likeCount, setLikeCount] = useState(0);
-  const { userData } = useContext(AuthContext);
+  const { userData, userToken } = useContext(AuthContext);
   const [showAllReactions, setShowAllReactions] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
@@ -43,6 +43,7 @@ export const PostsActions = ({ el }) => {
       }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())
@@ -61,6 +62,9 @@ export const PostsActions = ({ el }) => {
   const handleRemoveLikes = () => {
     fetch(`${root_url}/api/likes/removelike/${hasLiked.id}`, {
       method: "DELETE",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
     })
       .then((res) => res.json())
       .then((res) => {
@@ -76,7 +80,12 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasLikedByUser = () => {
-    fetch(`${root_url}/api/likes/hasliked/${el._id}`)
+    fetch(`${root_url}/api/likes/hasliked/${el._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -97,7 +106,12 @@ export const PostsActions = ({ el }) => {
   };
 
   const hasSaved = () => {
-    fetch(`${root_url}/api/savedposts/issaved/${el._id}`)
+    fetch(`${root_url}/api/savedposts/issaved/${el._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {
@@ -115,6 +129,7 @@ export const PostsActions = ({ el }) => {
       body: JSON.stringify({ post_id: el._id }),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

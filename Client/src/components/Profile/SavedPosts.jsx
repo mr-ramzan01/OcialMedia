@@ -11,7 +11,7 @@ export const SavedPosts = ({ id }) => {
   const [savedPosts, setSavedPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalSavedPostsLength, setTotalSavedPostsLength] = useState(0);
-  const { handleClick } = useContext(AuthContext);
+  const { handleClick, userToken } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -21,7 +21,12 @@ export const SavedPosts = ({ id }) => {
 
   const getSavedPosts = () => {
     setPage((prev) => prev + 1);
-    fetch(`${root_url}/api/savedposts/get/all/${id}?page=${page}`)
+    fetch(`${root_url}/api/savedposts/get/all/${id}?page=${page}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

@@ -24,7 +24,7 @@ export const Explore = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalLength, setTotalLength] = useState(0);
-  const { showSinglePost, postData, handleClick } = useContext(AuthContext);
+  const { showSinglePost, postData, handleClick, userToken } = useContext(AuthContext);
 
   useEffect(() => {
     setIsLoading(true);
@@ -34,7 +34,12 @@ export const Explore = () => {
   const fetchExploreData = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`${root_url}/api/posts/explore/data?page=${page}`)
+    fetch(`${root_url}/api/posts/explore/data?page=${page}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

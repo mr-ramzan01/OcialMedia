@@ -7,7 +7,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import moment from "moment";
 import { Carousel } from "react-responsive-carousel";
@@ -19,12 +19,14 @@ import { BottomBar } from "../components/Bars/BottomBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { root_url } from "../utils/url";
+import { AuthContext } from "../context/AuthContext";
 
 export const Home = () => {
   const [recentPosts, setRecentPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalLength, setTotalLength] = useState(0);
+  const {userToken} = useContext(AuthContext);
 
   useEffect(() => {
     setIsLoading(true);
@@ -34,7 +36,12 @@ export const Home = () => {
   const fetchRecentPosts = () => {
     setPage((prev) => prev + 1);
 
-    fetch(`${root_url}/api/posts/recent/post?page=${page}`)
+    fetch(`${root_url}/api/posts/recent/post?page=${page}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.success) {

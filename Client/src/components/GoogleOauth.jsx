@@ -3,11 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { Loader } from "./Loader";
 import { root_url } from "../utils/url";
+import Cookies from 'universal-cookie';
 
 export const GoogleOauth = () => {
   const navigate = useNavigate();
   const params = new URLSearchParams(window.location.search);
   const { setIsAuth } = useContext(AuthContext);
+  const cookies = new Cookies();
 
   useEffect(() => {
     fetch(`${root_url}/api/users/google_Oauth?code=${params.get("code")}`)
@@ -15,6 +17,7 @@ export const GoogleOauth = () => {
       .then((res) => {
         if (res.success) {
           setIsAuth(true);
+          cookies.set('ocialMedia_token', res.token, { path: '/' });
           navigate("/");
         } else if (
           res.message === "User already exists with email and password"

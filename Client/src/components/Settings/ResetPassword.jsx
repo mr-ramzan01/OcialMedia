@@ -11,7 +11,7 @@ export const ResetPassword = () => {
     new_password: "",
     confirm_new_password: "",
   });
-  const { userData } = useContext(AuthContext);
+  const { userData, userToken } = useContext(AuthContext);
   const [showAlert, setShowAlert] = useState(false);
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState("error");
@@ -52,6 +52,7 @@ export const ResetPassword = () => {
       body: JSON.stringify(data),
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${userToken}`
       },
     })
       .then((res) => res.json())

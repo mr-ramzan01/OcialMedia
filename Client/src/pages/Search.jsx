@@ -8,24 +8,31 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import Avatar from "@mui/material/Avatar";
 import ClearIcon from "@mui/icons-material/Clear";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { root_url } from "../utils/url";
+import { AuthContext } from "../context/AuthContext";
 
 export const Search = () => {
   const searchRef = useRef(null);
   const [users, setUsers] = useState([]);
+  const {userToken} = useContext(AuthContext);
 
   const handleRemoveInput = () => {
     searchRef.current.value = "";
     SearchInput();
   };
   const SearchInput = debounce(() => {
-    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`)
+    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`, {
+      method: "GET",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         setUsers(res.data);

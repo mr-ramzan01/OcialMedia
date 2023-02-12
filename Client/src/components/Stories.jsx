@@ -23,7 +23,7 @@ export const Stories = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [showStoryPreview, setShowStoryPreview] = useState(false);
   const [file, setFile] = useState();
-  const { userData } = useContext(AuthContext);
+  const { userData, userToken } = useContext(AuthContext);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [severity, setSeverity] = useState("");
@@ -43,6 +43,9 @@ export const Stories = () => {
     data.append("story", file);
     fetch(`${root_url}/api/stories/upload`, {
       method: "POST",
+      headers: {
+        authorization: `Bearer ${userToken}`
+      },
       body: data,
     })
       .then((res) => res.json())

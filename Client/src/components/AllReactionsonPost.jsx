@@ -1,10 +1,11 @@
 import { Avatar, Box, Dialog, Link, Stack, Typography } from "@mui/material";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useEffect } from "react";
 import { BsSuitHeartFill } from "react-icons/bs";
 import { FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
 import { Loader } from "./Loader";
 import { root_url } from "../utils/url";
+import { AuthContext } from "../context/AuthContext";
 
 export const AllReactionsonPost = ({
   data,
@@ -13,6 +14,7 @@ export const AllReactionsonPost = ({
 }) => {
   const [reactionsData, setReactionsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const {userToken} = useContext(AuthContext);
 
   useEffect(() => {
     setIsLoading(true);
@@ -20,7 +22,12 @@ export const AllReactionsonPost = ({
   }, []);
 
   const getLikesOnpost = () => {
-    fetch(`${root_url}/api/likes/get/${data._id}`)
+    fetch(`${root_url}/api/likes/get/${data._id}`, {
+      method: 'GET',
+      headers: {
+        authorization: `Bearer ${userToken}`
+      }
+    })
       .then((res) => res.json())
       .then((res) => {
         console.log(res, "res");
