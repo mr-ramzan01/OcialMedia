@@ -2,18 +2,18 @@ const app = require('./app');
 const connection = require('./config/database');
 const cloudinary = require('cloudinary')
 const PORT = process.env.PORT || 8080;
-const https = require('https')
+// const https = require('https')
 const http = require('http')
-const fs = require('fs');
+// const fs = require('fs');
 
 
-const cert = fs.readFileSync('certificate.crt');
-const key = fs.readFileSync('private.key');
+// const cert = fs.readFileSync('certificate.crt');
+// const key = fs.readFileSync('private.key');
 
-const options = {
-  key,
-  cert
-}
+// const options = {
+//   key,
+//   cert
+// }
 
 // Uncaught Error Handler
 process.on('uncaughtException', (err) => {
@@ -34,7 +34,7 @@ cloudinary.config({
 
 const { Server } = require("socket.io");
 
-const httpServer = http.createServer(options, app);
+const httpServer = http.createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: 'https://ocialmedia.netlify.app'
