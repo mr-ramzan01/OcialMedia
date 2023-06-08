@@ -30,7 +30,7 @@ import { LeftSideBar } from "../components/Bars/LeftSideBar";
 import { Navbar } from "../components/Bars/Navbar";
 import { BottomBar } from "../components/Bars/BottomBar";
 import { root_url } from "../utils/url";
-const ENDPOINT = "https://13.231.8.81:8080";
+const ENDPOINT = "https://ocialmedia-backend.onrender.com";
 const socket = io(ENDPOINT);
 var selectedChatCompare;
 
