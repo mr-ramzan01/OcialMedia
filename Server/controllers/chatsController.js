@@ -1,68 +1,59 @@
 const ChatsModel = require("../models/chatsModel");
+const userModel = require("../models/userModel");
+const { isValidObjectId, sameId } = require("../utils/helpers");
+
+const USER_FIELDS = ["_id", "image", "username", "full_name"];
+
+function serverError(res, error) {
+  const status = error.statusCode || 500;
+  if (status >= 500) console.error(error);
+  return res.status(status).send({ success: false, message: error.message });
+}
 
 async function accessChat(req, res) {
   try {
     const { _id } = req.user;
-    const { userId } = req.body;
+    const { userId } = req.body || {};
 
-    // User id is not there
-    if (!userId) {
-      return res.status(400).send({
-        success: false,
-        message: 'UserId required'
-      })
+    if (!isValidObjectId(userId)) {
+      return res.status(400).send({ success: false, message: 'UserId required' });
+    }
+    if (sameId(userId, _id)) {
+      return res.status(400).send({ success: false, message: 'You cannot chat with yourself' });
+    }
+    if (!(await userModel.exists({ _id: userId }))) {
+      return res.status(404).send({ success: false, message: 'User not found' });
     }
 
-    // User id is there finding chat
-    var isChat = await ChatsModel.find({
+    const existing = await ChatsModel.findOne({
       isGroupChat: false,
-        $and: [
-          { users: { $elemMatch: { $eq: _id } } },
-          { users: { $elemMatch: { $eq: userId } } },
-        ],
+      users: { $all: [_id, userId] },
     })
-    .populate({
-      path: "users",
-      select: ["_id", "image", "username", "full_name"],
-    })
-    .populate("latestMessage");
+      .populate({ path: "users", select: USER_FIELDS })
+      .populate("latestMessage");
 
-    // If chat is already created
-    if (isChat.length > 0) {
+    if (existing) {
       return res.status(200).send({
-        success: false,
-        message: 'Chat has already created',
-        data: isChat[0]
+        success: true,
+        message: 'Chat already exists',
+        data: existing
       });
-
-    // Creating a new chat  
-    } else {
-      var chatData = {
-        chatName: "sender",
-        isGroupChat: false,
-        users: [req.user._id, userId],
-      };
-      try {
-        const createdChat = await ChatsModel.create(chatData);
-        const FullChat = await ChatsModel.findOne({ _id: createdChat._id }).populate({path: "users", select: ['_id', 'image', 'username', 'full_name']});
-        return res.status(201).send({
-          success: true,
-          message: "Chat created successfully",
-          data: FullChat,
-        });
-      } catch (error) {
-        return res.status(500).send({
-          success: false,
-          message: error.message,
-        });
-      }
     }
 
-  } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: error.message,
+    const createdChat = await ChatsModel.create({
+      chatName: "sender",
+      isGroupChat: false,
+      users: [_id, userId],
     });
+    const fullChat = await ChatsModel.findById(createdChat._id).populate({ path: "users", select: USER_FIELDS });
+
+    return res.status(201).send({
+      success: true,
+      message: "Chat created successfully",
+      data: fullChat,
+    });
+  } catch (error) {
+    return serverError(res, error);
   }
 }
 
@@ -71,26 +62,18 @@ async function getAllChats(req, res) {
   try {
     const { _id } = req.user;
 
-    // Finding all chats
-    const data = await ChatsModel.find({ users: { $elemMatch: { $eq: _id } } })
-      .populate({
-        path: "users",
-        select: ["_id", "image", "username", "full_name"],
-      })
-      .populate({path: "latestMessage", populate: {path: 'sender', select: ['_id', 'image', 'username', 'full_name'] }})
-      .sort({updatedAt: -1})
+    const data = await ChatsModel.find({ users: _id })
+      .populate({ path: "users", select: USER_FIELDS })
+      .populate({ path: "latestMessage", populate: { path: 'sender', select: USER_FIELDS } })
+      .sort({ updatedAt: -1 });
 
     return res.status(200).send({
       success: true,
       message: "Chat data",
-      data: data,
+      data,
     });
-
   } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return serverError(res, error);
   }
 }
 

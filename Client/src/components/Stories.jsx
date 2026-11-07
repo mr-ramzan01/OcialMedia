@@ -1,32 +1,31 @@
 import {
   Avatar,
   Box,
+  Button,
+  Card,
   Dialog,
   DialogActions,
   DialogContent,
-  Grid,
-  InputLabel,
-  Paper,
-  TextField,
+  DialogTitle,
+  Stack,
   Typography,
 } from "@mui/material";
-import { Stack } from "@mui/system";
 import { useContext, useState } from "react";
-import { AiFillPlusCircle } from "react-icons/ai";
+import { IoAdd } from "react-icons/io5";
 import { AuthContext } from "../context/AuthContext";
-import { ShowAlert } from "./Alert";
+import { useToast } from "../context/ToastContext";
 import { Loader } from "./Loader";
 import { AllStories } from "./Story/AllStories";
-import { root_url } from "../utils/url";
+import { api } from "../utils/api";
+import { emit, EVENTS } from "../utils/events";
+import { brand } from "../theme";
 
 export const Stories = () => {
   const [previewImage, setPreviewImage] = useState(null);
   const [showStoryPreview, setShowStoryPreview] = useState(false);
   const [file, setFile] = useState();
   const { userData, userToken } = useContext(AuthContext);
-  const [showAlert, setShowAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [severity, setSeverity] = useState("");
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleUploadStory = (e) => {
@@ -37,163 +36,157 @@ export const Stories = () => {
   };
 
   const addStory = () => {
-    setShowStoryPreview(false);
     setIsLoading(true);
     var data = new FormData();
     data.append("story", file);
-    fetch(`${root_url}/api/stories/upload`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${userToken}`
-      },
-      body: data,
-    })
-      .then((res) => res.json())
+    api("/api/stories/upload", { method: "POST", body: data, token: userToken })
       .then((res) => {
         if (res.success) {
-          setAlertMessage(res.message);
-          setSeverity("success");
-          setShowAlert(true);
+          setShowStoryPreview(false);
+          toast.success(res.message || "Story shared");
+          emit(EVENTS.STORY_CREATED);
+        } else {
+          toast.error(res.message || "Something went wrong please try later");
         }
       })
       .catch((err) => {
         console.log(err, "error");
-        setAlertMessage("Something went wrong please try later");
-        setSeverity("error");
+        toast.error("Something went wrong please try later");
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
   const handleClose = () => {
+    if (isLoading) return;
     setShowStoryPreview(false);
   };
 
   return (
     <>
-      {isLoading && <Loader />}
-      {showAlert && (
-        <ShowAlert
-          message={alertMessage}
-          severity={severity}
-          alertOpen={showAlert}
-          setAlertOpen={setShowAlert}
-        />
-      )}
-      <Box height="80px" mb="20px">
-        <Paper
-          sx={{ height: "100%", display: "flex", border: "1px solid #d1d1d1" }}
+      {isLoading && <Loader overlay label="Sharing your story…" />}
+      <Card sx={{ mb: 3, px: 1.5, py: 1.25 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{
+            alignItems: "flex-start",
+            overflowX: "auto",
+            overflowY: "hidden",
+            pb: 0.5,
+          }}
         >
-          <Stack direction="row" width="83px">
-            <Grid width="100%" height="100%">
-              <InputLabel
-                htmlFor="storycreate"
+          {/* Your story */}
+          <Stack
+            component="label"
+            htmlFor="storycreate"
+            spacing={0.5}
+            sx={{
+              alignItems: "center",
+              p: 0.5,
+              width: 72,
+              flexShrink: 0,
+              cursor: "pointer",
+              borderRadius: 3,
+              transition: "background-color 150ms",
+              "&:hover": { bgcolor: "action.hover" },
+            }}
+          >
+            <Box sx={{ position: "relative", p: "2.5px", lineHeight: 0 }}>
+              <Avatar
+                src={userData.image}
+                alt={userData.username}
                 sx={{
-                  margin: "auto",
-                  color: "#fff",
-                  textAlign: "center",
-                  "&:hover": { cursor: "pointer" },
+                  width: 54,
+                  height: 54,
+                  border: "2px solid",
+                  borderColor: "divider",
                 }}
               >
-                <Box
-                  position="relative"
-                  height="80px"
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Avatar
-                    src={userData.image}
-                    alt=""
-                    sx={{
-                      position: "absolute",
-                      width: "50px",
-                      height: "50px",
-                      left: "12px",
-                    }}
-                  />
-                  <AiFillPlusCircle
-                    style={{
-                      background: "#fff",
-                      borderRadius: "50%",
-                      left: "27px",
-                      position: "absolute",
-                      fontSize: "45px",
-                      color: "#000",
-                    }}
-                  />
-                </Box>
-              </InputLabel>
-              <TextField
-                onClick={(e) => (e.target.value = null)}
-                onChange={handleUploadStory}
-                id="storycreate"
-                type="file"
-                sx={{ display: "none" }}
-                inputProps={{
-                  accept: "image/png, image/jpg, image/jpeg",
+                {(userData.username || "?").slice(0, 1).toUpperCase()}
+              </Avatar>
+              <Box
+                sx={{
+                  position: "absolute",
+                  right: -2,
+                  bottom: -2,
+                  width: 22,
+                  height: 22,
+                  borderRadius: "50%",
+                  display: "grid",
+                  placeItems: "center",
+                  color: "primary.contrastText",
+                  background: brand.gradient,
+                  border: "2px solid",
+                  borderColor: "background.paper",
                 }}
-              ></TextField>
-            </Grid>
+              >
+                <IoAdd size={14} />
+              </Box>
+            </Box>
+            <Typography
+              variant="caption"
+              noWrap
+              sx={{ maxWidth: 72, color: "text.primary" }}
+            >
+              Your story
+            </Typography>
           </Stack>
-          <Box
-            padding="0 10px"
-            display="flex"
-            alignItems="center"
-            sx={{
-              overflow: "scroll",
-              "::-webkit-scrollbar": {
-                width: "5px",
-                height: "5px",
-              },
-              "::-webkit-scrollbar-thumb": {
-                background: "#d1d1d1",
-                borderRadius: "10px",
-              },
-            }}
-            width="calc(100% - 83px)"
-          >
-            <AllStories />
-          </Box>
-        </Paper>
-      </Box>
+          <input
+            id="storycreate"
+            type="file"
+            hidden
+            accept="image/png, image/jpg, image/jpeg"
+            onClick={(e) => (e.target.value = null)}
+            onChange={handleUploadStory}
+          />
+          <AllStories />
+        </Stack>
+      </Card>
+
       <Dialog
-        fullWidth
         maxWidth="sm"
+        fullWidth
         open={showStoryPreview}
         onClose={handleClose}
       >
-        <DialogActions
-          sx={{ padding: "10px 20px 5px 0", borderBottom: "1px solid gray" }}
-        >
-          <Typography
+        <DialogTitle>New story</DialogTitle>
+        <DialogContent sx={{ pt: 0 }}>
+          <Box
+            sx={{
+              borderRadius: 4,
+              overflow: "hidden",
+              bgcolor: "background.default",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Box
+              component="img"
+              src={previewImage || undefined}
+              alt=""
+              sx={{
+                display: "block",
+                width: "100%",
+                height: { xs: 260, sm: 360 },
+                objectFit: "contain",
+              }}
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button
+            variant="text"
+            color="inherit"
             onClick={handleClose}
-            color="gray"
-            sx={{ cursor: "pointer", mr: "20px" }}
+            disabled={isLoading}
           >
             Cancel
-          </Typography>
-          <Typography
-            onClick={addStory}
-            color="#0066ff"
-            sx={{ cursor: "pointer" }}
-          >
-            Add Story
-          </Typography>
+          </Button>
+          <Button variant="contained" onClick={addStory} loading={isLoading}>
+            Share story
+          </Button>
         </DialogActions>
-        <DialogContent>
-          <Avatar
-            sx={{
-              objectFit: "contain",
-              border: "1px solid #d1d1d1",
-              borderRadius: "5px",
-              width: "calc(100% - 5px)",
-              height: { xs: "240px", sm: "300px" },
-            }}
-            src={previewImage}
-            alt=""
-          />
-        </DialogContent>
       </Dialog>
     </>
   );

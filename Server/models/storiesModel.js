@@ -16,14 +16,12 @@ const storiesSchema = new mongoose.Schema({
     },
     date: {
         type: Number,
-        default: Date.now()
+        default: Date.now
     }
 },{
     timestamps: true,
-    versionKey: false,
-    ttl: 120
+    versionKey: false
 });
-
 
 const StoriesModel = mongoose.model('stories', storiesSchema);
 

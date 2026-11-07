@@ -17,6 +17,7 @@ const savedPostSchema = new mongoose.Schema({
     timestamps: true
 })
 
+savedPostSchema.index({ user_id: 1, post_id: 1 }, { unique: true });
 
 const SavedPostsModel = mongoose.model('savedPosts', savedPostSchema);
 

@@ -1,45 +1,22 @@
-import {
-  Box,
-  Button,
-  Container,
-  CssBaseline,
-  Grid,
-  Link,
-  TextField,
-  ThemeProvider,
-  Typography,
-  createTheme,
-} from "@mui/material";
-import { useContext, useState } from "react";
+import { Box, Button, Link, Stack, TextField, Typography } from "@mui/material";
+import { useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import emailjs from "@emailjs/browser";
-import { root_url } from "../utils/url";
-import { AuthContext } from "../context/AuthContext";
+import { IoMailOutline } from "react-icons/io5";
+import { client_url, emailjs_config } from "../utils/url";
+import { AuthLayout } from "../components/layout/AuthLayout";
+import { api } from "../utils/api";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { useToast } from "../context/ToastContext";
 
-// Bottom Copyright
-function Copyright(props) {
-  return (
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      align="center"
-      {...props}
-    >
-      {"Copyright © "}
-      <Link color="#000" href="/">
-        Ocial Media
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
-    </Typography>
-  );
-}
-
-const theme = createTheme();
 export const ForgotPassword = () => {
+  usePageTitle("Reset password");
+  const toast = useToast();
+  const [sending, setSending] = useState(false);
   const [data, setData] = useState({ email: "" });
   const [emailError, setEmailError] = useState({ error: false, text: "" });
   const [sentInvitationLink, setSentInvitationLink] = useState(false);
-  const {userToken} = useContext(AuthContext);
+  const [resetLink, setResetLink] = useState("");
 
   // Storing email on very input change
   const handleChange = (e) => {
@@ -50,154 +27,178 @@ export const ForgotPassword = () => {
   // Submiting the email and checking the response
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetch(`${root_url}/api/users/forgot-password`, {
+    setSending(true);
+    api("/api/users/forgot-password", {
       method: "POST",
-      body: JSON.stringify(data),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
+      body: data,
+      token: null,
     })
-      .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          // Seding Email to registered user email
+          const link = `${client_url}/accounts/forgot-password/create-new-password/${res.token}`;
+
+          // EmailJS is optional: without it (local development) the link is shown on screen.
+          if (
+            !emailjs_config.serviceId ||
+            !emailjs_config.templateId ||
+            !emailjs_config.publicKey
+          ) {
+            setResetLink(link);
+            setSentInvitationLink(true);
+            setSending(false);
+            return;
+          }
+
+          // Sending Email to registered user email
           emailjs
             .send(
-              "service_t8tkdmq",
-              "template_z78wv9c",
+              emailjs_config.serviceId,
+              emailjs_config.templateId,
               {
                 user_name: res.full_name,
-                link: `https://ocialmedia.netlify.app/accounts/forgot-password/create-new-password/${res.token}`,
+                link,
                 reply_to: data.email,
               },
-              "CYyDb5GDuo6dEEiox"
+              { publicKey: emailjs_config.publicKey },
             )
             .then(() => {
               setSentInvitationLink(true);
             })
             .catch(() => {
-              alert("Someting went wrong while sending email!");
-            });
+              toast.error("Something went wrong while sending email!");
+            })
+            .finally(() => setSending(false));
+          return;
         }
 
-        // if entered email does not present in the database
-        else if (res.message === "Invalid email") {
-          setEmailError({ ...emailError, error: true, text: res.message });
+        // account not found / Google account / any other server-side rejection
+        else {
+          setEmailError({
+            ...emailError,
+            error: true,
+            text: res.message || "Something went wrong, please try again.",
+          });
         }
+        setSending(false);
       })
       .catch((err) => {
         console.log(err, "error");
-        alert("Something went wrong! Internal server error");
+        toast.error("Something went wrong! Internal server error");
+        setSending(false);
       });
   };
+
   return (
-    <Box>
-      <ThemeProvider theme={theme}>
-        <Container component="main" maxWidth="xs">
-          <CssBaseline />
+    <AuthLayout
+      title="Reset your password"
+      subtitle={
+        sentInvitationLink
+          ? undefined
+          : "Enter the email you signed up with and we'll send you a link to set a new password."
+      }
+      footer={
+        <Typography variant="body2">
+          Don't have an account?{" "}
+          <Link component={RouterLink} to="/accounts/signup">
+            Sign up
+          </Link>
+        </Typography>
+      }
+    >
+      {sentInvitationLink ? (
+        <Stack spacing={1.5} sx={{ alignItems: "center", textAlign: "center" }}>
           <Box
             sx={{
-              padding: "20px",
-              bgcolor: "#fff",
-              borderRadius: "10px",
-              boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px;",
-              marginTop: 8,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+              width: 64,
+              height: 64,
+              borderRadius: "30%",
+              display: "grid",
+              placeItems: "center",
+              bgcolor: "action.selected",
+              color: "primary.main",
+              "& svg": { fontSize: 30 },
             }}
           >
-            <Typography
-              fontFamily="'Dancing Script', cursive"
-              component="h1"
-              variant="h3"
-            >
-              Ocial Media
-            </Typography>
-            <Typography sx={{ mt: 2 }} component="h1" variant="h5">
-              Change Password
-            </Typography>
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-              {sentInvitationLink ? (
-                <Box m="20px 0">
-                  <Typography textAlign="center" as="h6">
-                    An email has been sent to your registered email addresss,
-                    please confirm and set new password there.
-                  </Typography>
-                </Box>
-              ) : (
-                <>
-                  <TextField
-                    margin="normal"
-                    required
-                    fullWidth
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "&:hover fieldset": {
-                          borderColor: "#0066ff",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#129ffd",
-                        },
-                      },
-                    }}
-                    id="email"
-                    label="Enter email address"
-                    name="email"
-                    autoComplete="email"
-                    autoFocus
-                    InputProps={{
-                      style: {
-                        height: "50px",
-                      },
-                    }}
-                    onChange={handleChange}
-                    error={emailError.error}
-                    helperText={emailError.text}
-                  />
-                  <Button
-                    type="submit"
-                    fullWidth
-                    size="large"
-                    variant="contained"
-                    sx={{
-                      mt: 4,
-                      mb: 4,
-                      background: "#129ffd",
-                      "&:hover": {
-                        background: "#0066ff",
-                      },
-                    }}
-                  >
-                    Confirm
-                  </Button>
-                </>
-              )}
-              <Grid marginBottom={1} justifyContent="center" container>
-                <Grid item>
-                  <Link
-                    href="/accounts/signup"
-                    color="#000"
-                    underline="none"
-                    fontSize={13}
-                  >
-                    create new account
-                  </Link>
-                </Grid>
-              </Grid>
-              <Grid justifyContent="center" container>
-                <Grid item>
-                  <Link href="/accounts/login" underline="hover" fontSize={13}>
-                    {"Back to Login"}
-                  </Link>
-                </Grid>
-              </Grid>
-            </Box>
+            <IoMailOutline />
           </Box>
-          <Copyright sx={{ mt: 4, mb: 2 }} />
-        </Container>
-      </ThemeProvider>
-    </Box>
+          <Typography variant="h6">Check your inbox</Typography>
+          <Typography color="text.secondary">
+            An email has been sent to your registered email address. Open it and
+            follow the link to set a new password.
+          </Typography>
+          {resetLink && (
+            <Box
+              sx={{
+                width: "100%",
+                p: 1.5,
+                borderRadius: 3,
+                border: 1,
+                borderColor: "divider",
+                bgcolor: "background.default",
+                textAlign: "left",
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                component="p"
+              >
+                Email is not configured in this environment. Use this link
+                instead:
+              </Typography>
+              <Link
+                component={RouterLink}
+                to={resetLink}
+                variant="body2"
+                sx={{ wordBreak: "break-all" }}
+              >
+                {resetLink}
+              </Link>
+            </Box>
+          )}
+          <Button
+            component={RouterLink}
+            to="/accounts/login"
+            variant="text"
+            sx={{ mt: 1 }}
+          >
+            Back to log in
+          </Button>
+        </Stack>
+      ) : (
+        <Box component="form" onSubmit={handleSubmit} noValidate>
+          <Stack spacing={2}>
+            <TextField
+              required
+              fullWidth
+              id="email"
+              label="Email address"
+              name="email"
+              type="email"
+              autoComplete="email"
+              autoFocus
+              value={data.email}
+              onChange={handleChange}
+              error={emailError.error}
+              helperText={emailError.text}
+            />
+            <Button
+              type="submit"
+              fullWidth
+              size="large"
+              variant="contained"
+              loading={sending}
+            >
+              Send reset link
+            </Button>
+            <Box sx={{ textAlign: "center" }}>
+              <Link component={RouterLink} to="/accounts/login" variant="body2">
+                Back to log in
+              </Link>
+            </Box>
+          </Stack>
+        </Box>
+      )}
+    </AuthLayout>
   );
 };

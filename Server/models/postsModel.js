@@ -20,7 +20,8 @@ const postSchema = new mongoose.Schema({
     ],
     caption: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     tags: {
         type: [String],
@@ -44,6 +45,8 @@ const postSchema = new mongoose.Schema({
     timestamps: true
 })
 
+postSchema.index({ user_id: 1, createdAt: -1 });
+postSchema.index({ createdAt: -1 });
 
 const PostsModel = mongoose.model('posts', postSchema);
 

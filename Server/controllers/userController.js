@@ -1,451 +1,360 @@
-const userModel = require("../models/userModel.js");
-const jwt = require('jsonwebtoken')
-const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { google } = require('googleapis');
-const jwt_decode = require('jwt-decode');
-dotenv.config();
+const { jwtDecode } = require('jwt-decode');
+const userModel = require('../models/userModel.js');
+const { uploadBuffer, destroy } = require('../utils/cloudinary');
+const { escapeRegExp } = require('../utils/helpers');
+const { clientUrl } = require('../config/origins');
+
 const jwt_secret_key = process.env.JWT_SECRET_KEY;
 const google_client_id = process.env.GOOGLE_CLIENT_ID;
 const google_client_secret = process.env.GOOGLE_CLIENT_SECRET;
-const cloudinary = require('cloudinary');
-const streamifier = require('streamifier')
+const google_redirect_uri = process.env.GOOGLE_REDIRECT_URI || `${clientUrl}/google_Oauth`;
+
+const TOKEN_TTL = '30d';
+
+function signToken(user) {
+    return jwt.sign(
+        { email: user.email, username: user.username, _id: user._id },
+        jwt_secret_key,
+        { expiresIn: TOKEN_TTL }
+    );
+}
+
+function fail(res, status, message) {
+    return res.status(status).send({ success: false, message });
+}
+
+function serverError(res, error) {
+    const status = error.statusCode || 500;
+    if (status >= 500) console.error(error);
+    return res.status(status).send({ success: false, message: error.message });
+}
 
 
 async function LoggedOutUser(req, res) {
     try {
-
-        // Deleting cookies from browser
-        res.cookie('ocialMedia_token', null, {
-            expires: new Date(Date.now()),
-            httpOnly: true,
-        })
+        res.clearCookie('ocialMedia_token', { httpOnly: true });
         return res.status(200).send({
             success: true,
             message: 'user logged out successfully'
         })
-
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function LoggedInUser(req, res) {
     try {
+        const user = await userModel.findById(req.user._id);
+        if (!user) return fail(res, 404, 'User not found');
 
-        // Finding user data
-        let user = await userModel.findOne({_id: req.user._id});
-    
         return res.status(200).send({
             success: true,
             message: 'User logged in',
             data: user
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function getGoogleOAuthTokens(code) {
-    const oauth2Client = new google.auth.OAuth2(
-        google_client_id,
-        google_client_secret,
-      "https://ocialmedia.netlify.app/google_Oauth"
-    );
-    const scopes = [
-      "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/userinfo.email",
-    ];
-  
-    oauth2Client.generateAuthUrl({
-      access_type: "offline",
-      scope: scopes,
-    });
-  
+    const oauth2Client = new google.auth.OAuth2(google_client_id, google_client_secret, google_redirect_uri);
     const { tokens } = await oauth2Client.getToken(code);
-    oauth2Client.setCredentials(tokens);
-    return [
-      oauth2Client.credentials.access_token,
-      oauth2Client.credentials.id_token,
-    ];
+    return tokens.id_token;
 }
-  
 
-async function googleOAuth(req, res){
+
+async function googleOAuth(req, res) {
     try {
         const { code } = req.query;
-        const [access_token, id_token] = await getGoogleOAuthTokens(code);
-        const user = jwt_decode(id_token);
-        const options = {
-            expires: new Date(Date.now() + 30*24*60*60*1000),
-            httpOnly: true,
-        };
-
-        // Checking User
-        let existingUser = await userModel.findOne({ $and: [{ email: user.email},{authType: 'email-password'}] });
-        if(existingUser) {
-            return res.status(403).send({
-                success: false,
-                message: 'User already exists with email and password'
-            })
+        if (!code) return fail(res, 400, 'Missing authorization code');
+        if (!google_client_id || !google_client_secret) {
+            return fail(res, 503, 'Google sign-in is not configured on this server');
         }
 
-        // Checking if user has already signed up before
-        let existingUserWithGoogle = await userModel.findOne({email: user.email})
-        if(existingUserWithGoogle) {
+        const id_token = await getGoogleOAuthTokens(code);
+        const user = jwtDecode(id_token);
 
-            const token = jwt.sign({
-                email: existingUserWithGoogle.email,
-                username: existingUserWithGoogle.username,
-                _id: existingUserWithGoogle._id,
-            }, jwt_secret_key);
+        // Account already registered with email and password
+        const existingUser = await userModel.findOne({ email: user.email, authType: 'email-password' });
+        if (existingUser) {
+            return fail(res, 403, 'User already exists with email and password');
+        }
 
+        // Returning Google user
+        const existingUserWithGoogle = await userModel.findOne({ email: user.email });
+        if (existingUserWithGoogle) {
             return res.status(200).send({
                 success: true,
-                token,
-                message: 'Google account has already been signed up' 
+                token: signToken(existingUserWithGoogle),
+                message: 'Google account has already been signed up'
             })
         }
-        // Creating User
+
+        // New Google user: pick a free username based on the email
+        const base = user.email.split('@')[0].replace(/[^a-zA-Z0-9._-]/g, '') || 'user';
+        let username = base;
+        let suffix = 0;
+        while (await userModel.exists({ username })) {
+            suffix += 1;
+            username = `${base}${suffix}`;
+        }
+
         const newUser = await userModel.create({
-            full_name: user.name,
+            full_name: user.name || base,
             email: user.email,
-            image: user.picture,
+            image: user.picture || '',
             authType: 'google',
-            username: user.email.split('@')[0]
+            username
         });
 
-        // Generating token
-        const token = jwt.sign({
-            email: newUser.email,
-            username: newUser.username,
-            _id: newUser._id,
-        }, jwt_secret_key);
-
-        
-        return res.status(200).send({
+        return res.status(201).send({
             success: true,
-            token,
-            message: 'Google account signed up successfully' 
+            token: signToken(newUser),
+            message: 'Google account signed up successfully'
         })
 
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        })
+        return serverError(res, error);
     }
 };
 
 
 async function LoginUser(req, res) {
     try {
-        // Checking User email
-        let existingUser = await userModel.findOne({ $or: [{email: req.body.emailorusername}, {username: req.body.emailorusername} ] }).select("+password");
-        if(!existingUser) {
-            return res.status(401).send({
-                success: false,
-                message: 'Invalid Credentials'
-            })
-        }
-        
-        const passwordMatches = await bcrypt.compare(req.body.password, existingUser.password);
+        const { emailorusername, password } = req.body || {};
+        if (!emailorusername || !password) return fail(res, 400, 'Email/username and password are required');
 
-        if(passwordMatches) {
+        const identifier = String(emailorusername).trim();
+        const existingUser = await userModel
+            .findOne({ $or: [{ email: identifier.toLowerCase() }, { username: identifier }] })
+            .select('+password');
 
-            // Generating token
-            const token = jwt.sign({
-                email: existingUser.email,
-                username: existingUser.username,
-                _id: existingUser._id,
-            }, jwt_secret_key);
-            
-            const options = {
-                expires: new Date(Date.now() + 30*24*60*60*1000),
-                httpOnly: true,
-            };
-            res.status(200).send({
-                success: true,
-                token,
-                message: 'Login Successfully',
-            })
+        if (!existingUser || !existingUser.password) {
+            return fail(res, 401, 'Invalid Credentials');
         }
-        else {
-            return res.status(401).send({
-                success: false,
-                message: 'Invalid Credentials'
-            })
+
+        const passwordMatches = await bcrypt.compare(password, existingUser.password);
+        if (!passwordMatches) {
+            return fail(res, 401, 'Invalid Credentials');
         }
+
+        return res.status(200).send({
+            success: true,
+            token: signToken(existingUser),
+            message: 'Login Successfully',
+        })
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function SignUPUser(req, res) {
     try {
+        const { full_name, email, username, password } = req.body || {};
+        if (!full_name || !email || !username || !password) {
+            return fail(res, 400, 'full_name, email, username and password are required');
+        }
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const normalizedUsername = String(username).trim();
 
-        // Finding existing user with google auth
-        let existingUser = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'google'}] });
-        if(existingUser) {
-            return res.status(403).send({
-                success: false,
-                message: 'User has already signed up try to continue with google.'
-            })
+        if (!/^[a-zA-Z0-9._-]{3,30}$/.test(normalizedUsername)) {
+            return fail(res, 400, 'Username must be 3-30 characters: letters, numbers, dots, underscores or hyphens');
         }
 
-        // Checking User
-        let user = await userModel.findOne({ email: req.body.email });
-        if(user) {
-            return res.status(403).send({
-                success: false,
-                message: 'User already exists'
-            })
+        // Existing google account
+        const existingGoogle = await userModel.findOne({ email: normalizedEmail, authType: 'google' });
+        if (existingGoogle) {
+            return fail(res, 403, 'User has already signed up try to continue with google.');
         }
-        // Checking username
-        let username = await userModel.findOne({ username: req.body.username})
-        if(username) {
-            return res.status(400).send({
-                success: false,
-                message: 'Username already taken'
-            })
+
+        // Existing email
+        if (await userModel.exists({ email: normalizedEmail })) {
+            return fail(res, 403, 'User already exists');
         }
-        // Hashing Password
-        const hashPassword = await bcrypt.hash(req.body.password, 10);
-        
-        // Creating User
-        const newUser = await userModel.create({...req.body, password: hashPassword});
 
-        // Generating token
-        const token = jwt.sign({
-            email: newUser.email,
-            username: newUser.username,
-            _id: newUser._id,
-        }, jwt_secret_key);
+        // Existing username
+        if (await userModel.exists({ username: normalizedUsername })) {
+            return fail(res, 400, 'Username already taken');
+        }
 
-        const options = {
-            expires: new Date(Date.now() + 30*24*60*60*1000),
-            httpOnly: true,
-        };
-        res.status(200).send({
+        const hashPassword = await bcrypt.hash(String(password), 10);
+
+        const newUser = await userModel.create({
+            full_name: String(full_name).trim(),
+            email: normalizedEmail,
+            username: normalizedUsername,
+            authType: 'email-password',
+            password: hashPassword,
+        });
+
+        return res.status(201).send({
             success: true,
-            token,
+            token: signToken(newUser),
             message: 'Signup successfully',
         })
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        if (error.code === 11000) return fail(res, 409, 'User already exists');
+        return serverError(res, error);
     }
 }
 
 
 async function forgotPassword(req, res) {
     try {
-        // Checking user, is it present with that email or not
-        let user = await userModel.findOne({ $and: [{ email: req.body.email},{authType: 'email-password'}] });
-        if(user) {
-            const token = jwt.sign({
-                email: user.email,
-                username: user.username,
-                _id: user._id,
-            }, jwt_secret_key, {
-                expiresIn: 300
-            });
-            
-            return res.status(200).send({
-                success: true,
-                message: 'Authenticated user',
-                token: token
-            })
+        const email = String((req.body && req.body.email) || '').trim().toLowerCase();
+        if (!email) return fail(res, 400, 'Email is required');
+
+        const user = await userModel.findOne({ email });
+        if (!user) {
+            return fail(res, 404, 'No account found with this email');
         }
-        return res.status(403).send({
-            success: false,
-            message: 'Invalid email'
+        if (user.authType !== 'email-password') {
+            return fail(res, 400, 'This account uses Google sign-in. Log in with Google instead.');
+        }
+
+        const token = jwt.sign(
+            { email: user.email, username: user.username, _id: user._id, purpose: 'reset' },
+            jwt_secret_key,
+            { expiresIn: 300 }
+        );
+
+        return res.status(200).send({
+            success: true,
+            message: 'Authenticated user',
+            token,
+            full_name: user.full_name
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function setForgotPassword(req, res) {
     try {
-        const passwordHeader = req.headers.authorization;
+        const header = req.headers.authorization || '';
+        const token = header.startsWith('Bearer ') ? header.split(' ')[1] : null;
+        const { password } = req.body || {};
 
-        if (passwordHeader) {
-
-            // Getting token
-            const token = passwordHeader.split(" ")[1];
-            if(token) {
-                const decoded = jwt.verify(token, jwt_secret_key);
-                if(decoded) {
-                    // Hashing Password
-                    const hashPassword = await bcrypt.hash(req.body.password, 10);
-
-                    // updating password
-                    await userModel.findOneAndUpdate(
-                        { _id: decoded._id },
-                        { $set: { password: hashPassword } },
-                        { new: true }
-                    );
-                    return res.status(200).send({
-                        success: true,
-                        message: "Password updated successfully",
-                    });
-                }
-                
-            }
+        if (!token || !password) {
+            return fail(res, 403, 'Something went wrong, Please reset your password again.');
         }
-        return res.status(403).send({
-            success: false,
-            message: "Something went wrong, Please reset your password again.",
+
+        let decoded;
+        try {
+            decoded = jwt.verify(token, jwt_secret_key);
+        } catch (error) {
+            return fail(res, 401, error.name === 'TokenExpiredError' ? 'jwt expired' : 'Something went wrong, Please reset your password again.');
+        }
+
+        const hashPassword = await bcrypt.hash(String(password), 10);
+        const updated = await userModel.findByIdAndUpdate(decoded._id, { $set: { password: hashPassword } });
+        if (!updated) return fail(res, 404, 'User not found');
+
+        return res.status(200).send({
+            success: true,
+            message: 'Password updated successfully',
         });
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function resetPassword(req, res) {
     try {
-        const { _id, email } = req.user;
-        const { old_password, new_password } = req.body;
+        const { _id } = req.user;
+        const { old_password, new_password } = req.body || {};
+        if (!old_password || !new_password) return fail(res, 400, 'Old and new password are required');
 
-        // Finding user
-        const user = await userModel.findOne({ _id: _id }).select("+password");
-
-        const passwordMatches = await bcrypt.compare(old_password, user.password);
-
-        if(passwordMatches) {
-            // Hashing Password
-            const hashPassword = await bcrypt.hash(new_password, 10);
-
-            // updating password 
-            await userModel.findOneAndUpdate({email: email}, {$set: {password: hashPassword }}, {new: true})
-            return res.status(200).send({
-                success: true,
-                message: 'Password updated successfully'
-            })
+        const user = await userModel.findById(_id).select('+password');
+        if (!user || !user.password) {
+            return fail(res, 400, 'Password login is not enabled for this account');
         }
-        else {
-            return res.status(401).send({
-                success: false,
-                message: 'Old password does not match'
-            })
+
+        const passwordMatches = await bcrypt.compare(String(old_password), user.password);
+        if (!passwordMatches) {
+            return fail(res, 401, 'Old password does not match');
         }
-        
+
+        const hashPassword = await bcrypt.hash(String(new_password), 10);
+        await userModel.findByIdAndUpdate(_id, { $set: { password: hashPassword } });
+
+        return res.status(200).send({
+            success: true,
+            message: 'Password updated successfully'
+        })
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function searchUser(req, res) {
     try {
-        const {q} = req.query;
+        const q = String(req.query.q || '').trim();
+        if (!q) {
+            return res.send({ success: true, message: 'related users', data: [] });
+        }
 
-        // Finding all users
-        let users = await userModel.find({$or: [{full_name: {$regex: new RegExp(q, 'i')}},{username: {$regex: new RegExp(q, 'i')}}]}).limit(50);
-        
-        res.send({
+        const regex = new RegExp(escapeRegExp(q), 'i');
+        const users = await userModel
+            .find({ $or: [{ full_name: regex }, { username: regex }] })
+            .select(['_id', 'image', 'username', 'full_name'])
+            .limit(50);
+
+        return res.send({
             success: true,
             message: 'related users',
             data: users
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function getUser(req, res) {
     try {
-        let {username} = req.params;
+        const { username } = req.params;
+        if (!username) return fail(res, 400, 'Invalid params parameters');
 
-        // If q is not specified
-        if(!username) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
-        }
+        const user = await userModel.findOne({ username });
+        if (!user) return fail(res, 404, 'User not found');
 
-        // Finding user
-        let  user = await userModel.findOne({ username: username });
-
-        // If user not found
-        if(!user) {
-            return res.status(404).send({
-                success: false,
-                message: 'User not found'
-            })
-        }
         return res.send({
             success: true,
             message: 'User data',
             data: user
         })
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function removeProfile(req, res) {
     try {
-        const {_id} = req.user;
+        const { _id } = req.user;
+        const user = await userModel.findById(_id);
+        if (!user) return fail(res, 404, 'User not found');
 
-        // Finding user
-        const user = await userModel.findOne({_id: _id});
+        await destroy(user.image_public_id);
+        await userModel.findByIdAndUpdate(_id, { $set: { image: '', image_public_id: '' } });
 
-        // Deleting profile from cloudinary
-        await cloudinary.v2.uploader.destroy(user.image_public_id);
-
-        // Updating user data
-        await userModel.findByIdAndUpdate(_id, {image: ''});
-        
         return res.send({
             success: true,
             message: 'Profile photo successfully removed'
         })
-
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
@@ -453,105 +362,64 @@ async function removeProfile(req, res) {
 async function uploadProfile(req, res) {
     try {
         const { _id } = req.user;
+        if (!req.file) return fail(res, 400, 'No file uploaded');
 
-        // Finding user
-        const user = await userModel.findOne({_id: _id});
+        const user = await userModel.findById(_id);
+        if (!user) return fail(res, 404, 'User not found');
 
-        // Deleting profile from cloudinary
-        if(user.image_public_id !== '') {
-            await cloudinary.v2.uploader.destroy(user.image_public_id);
-        }
+        const result = await uploadBuffer(req.file.buffer, { folder: 'ocial_media/profiles' });
 
-        // Uploading image on cloudinary
-        let streamUpload = (req) => {
-            return new Promise((resolve, reject) => {
-                let stream = cloudinary.v2.uploader.upload_stream(
-                  (error, result) => {
-                    if (result) {
-                        resolve(result);
-                    } else {
-                        reject(error);
-                    }
-                  }
-                );
-    
-              streamifier.createReadStream(req.file.buffer).pipe(stream);
-            });
-        };
-    
-        async function upload(req) {
-            let result = await streamUpload(req);
+        // Remove the previous photo only after the new one succeeded
+        await destroy(user.image_public_id);
+        await userModel.findByIdAndUpdate(_id, { $set: { image: result.secure_url, image_public_id: result.public_id } });
 
-            // If uploaded success
-            if(result) {
-
-                // Updating user data
-                await userModel.findByIdAndUpdate(_id, {image: result.secure_url, $set: { image_public_id: result.public_id}});
-                return res.send({
-                    success: true,
-                    message: 'Profile updated successfully'
-                });
-            }
-
-            // If uploaded failed
-            else {
-                res.send({
-                    success: false,
-                    message: 'Could not upload'
-                })
-            }
-            
-        }
-        upload(req);
-        
-    } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
+        return res.send({
+            success: true,
+            message: 'Profile updated successfully'
         });
+    } catch (error) {
+        return serverError(res, error);
     }
 }
 
+
 async function editUserProfile(req, res) {
     try {
-        let { _id } = req.user;
+        const { _id } = req.user;
+        const body = req.body || {};
 
-        // Finding user
-        let user = await userModel.findById(_id);
+        const user = await userModel.findById(_id);
+        if (!user) return fail(res, 404, 'User not found');
 
-        // If usernames are different
-        if(user.username !== req.body.username) {
+        // Only these fields can be edited from the profile form
+        const update = {};
+        for (const field of ['full_name', 'username', 'bio', 'mobile_no']) {
+            if (body[field] !== undefined) update[field] = String(body[field]).trim();
+        }
+        if (body.email !== undefined && user.authType !== 'google') {
+            update.email = String(body.email).trim().toLowerCase();
+        }
 
-            // Checking if username already exists
-            let existingUsername = await userModel.findOne({username: req.body.username});
-
-            if(existingUsername) {
-                return res.status(400).send({
-                    success: false,
-                    message: 'Username already taken'
-                })
-            }
-            else {
-
-                // Updating user data
-                await userModel.findByIdAndUpdate(_id, req.body);
+        if (update.username && update.username !== user.username) {
+            if (await userModel.exists({ username: update.username, _id: { $ne: _id } })) {
+                return fail(res, 400, 'Username already taken');
             }
         }
-        else {
-
-            // Updating user data
-            await userModel.findByIdAndUpdate(_id, req.body);
+        if (update.email && update.email !== user.email) {
+            if (await userModel.exists({ email: update.email, _id: { $ne: _id } })) {
+                return fail(res, 400, 'Email already in use');
+            }
         }
+
+        await userModel.findByIdAndUpdate(_id, { $set: update }, { runValidators: true });
+
         return res.status(200).send({
             success: true,
-            message: "Profile updated successfully"
+            message: 'Profile updated successfully'
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        if (error.code === 11000) return fail(res, 400, 'Username or email already taken');
+        return serverError(res, error);
     }
 }
 

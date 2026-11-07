@@ -1,58 +1,84 @@
 import { Avatar, Box, Stack, Typography } from "@mui/material";
 import React, { useContext } from "react";
 import { AuthContext } from "../../context/AuthContext";
-import moment from "moment";
+import { EmptyState } from "../common/EmptyState";
+import { clockTime } from "../../utils/time";
+import { brand } from "../../theme";
 
 export const UserMessages = ({ messages }) => {
   const { userData } = useContext(AuthContext);
 
+  if (messages.length === 0) {
+    return (
+      <EmptyState
+        compact
+        image="/Images/sendMessage.png"
+        title="Say hello"
+        subtitle="Send the first message."
+        sx={{ height: "100%" }}
+      />
+    );
+  }
+
   return (
-    <>
-      {messages.length > 0 ? (
-        <Stack gap="10px">
-          {messages.map((el) => (
-            <Box
-              marginLeft={userData._id === el.sender._id && "30%"}
-              width="70%"
-              key={el._id}
-            >
-              <Stack
-                direction={
-                  userData._id === el.sender._id ? "row-reverse" : "row"
-                }
-                gap="10px"
+    <Stack spacing={1}>
+      {messages.map((el) => {
+        const mine = userData._id === el.sender._id;
+        return (
+          <Stack
+            key={el._id}
+            direction={mine ? "row-reverse" : "row"}
+            spacing={1}
+            sx={{
+              alignItems: "flex-end",
+              maxWidth: { xs: "88%", sm: "72%" },
+              alignSelf: mine ? "flex-end" : "flex-start",
+            }}
+          >
+            {!mine && (
+              <Avatar
+                src={el.sender.image}
+                alt={el.sender.username}
+                sx={{ width: 32, height: 32, fontSize: 14 }}
               >
-                <Avatar
-                  sx={{ h: "40px", w: "40px" }}
-                  src={el.sender.image}
-                  alt="userImage"
-                />
-                <Box
-                  sx={{
-                    p: "5px 8px",
-                    borderRadius: "10px",
-                    bgcolor: "#f1f1f1",
-                  }}
-                >
-                  <Typography>{el.message}</Typography>
-                  <Typography fontSize="12px" textAlign="right">
-                    {moment(el.createdAt).format().substring(11, 16)}
-                  </Typography>
-                </Box>
-              </Stack>
+                {(el.sender.username || "?").slice(0, 1).toUpperCase()}
+              </Avatar>
+            )}
+            <Box
+              sx={{
+                px: 1.75,
+                py: 1,
+                borderRadius: "18px",
+                borderBottomRightRadius: mine ? 4 : 18,
+                borderBottomLeftRadius: mine ? 18 : 4,
+                backgroundImage: mine ? brand.gradient : "none",
+                bgcolor: mine ? "primary.main" : "background.default",
+                color: mine ? "primary.contrastText" : "text.primary",
+                minWidth: 0,
+              }}
+            >
+              <Typography
+                variant="body1"
+                sx={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+              >
+                {el.message}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  display: "block",
+                  textAlign: "right",
+                  mt: 0.25,
+                  color: mine ? "inherit" : "text.secondary",
+                  opacity: mine ? 0.8 : 1,
+                }}
+              >
+                {clockTime(el.createdAt)}
+              </Typography>
             </Box>
-          ))}
-        </Stack>
-      ) : (
-        <Stack justifyContent="center" alignItems="center" height="100%">
-          <img
-            src="/Images/sendMessage.png"
-            style={{ height: "100px", width: "100px" }}
-            alt=""
-          />
-          <Typography>Type message to start the chat</Typography>
-        </Stack>
-      )}
-    </>
+          </Stack>
+        );
+      })}
+    </Stack>
   );
 };

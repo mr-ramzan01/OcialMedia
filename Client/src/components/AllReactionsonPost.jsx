@@ -1,11 +1,17 @@
-import { Avatar, Box, Dialog, Link, Stack, Typography } from "@mui/material";
-import React, { useContext, useState } from "react";
-import { useEffect } from "react";
-import { BsSuitHeartFill } from "react-icons/bs";
-import { FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
-import { Loader } from "./Loader";
-import { root_url } from "../utils/url";
-import { AuthContext } from "../context/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  IconButton,
+  Stack,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { IoClose } from "react-icons/io5";
+import { EmptyState } from "./common/EmptyState";
+import { UserRowSkeleton } from "./common/Skeletons";
+import { ReactionIcon } from "./common/ReactionIcon";
+import { UserListItem } from "./common/UserListItem";
+import { api } from "../utils/api";
 
 export const AllReactionsonPost = ({
   data,
@@ -14,117 +20,64 @@ export const AllReactionsonPost = ({
 }) => {
   const [reactionsData, setReactionsData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const {userToken} = useContext(AuthContext);
 
   useEffect(() => {
+    let ignore = false;
     setIsLoading(true);
-    getLikesOnpost();
-  }, []);
-
-  const getLikesOnpost = () => {
-    fetch(`${root_url}/api/likes/get/${data._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api(`/api/likes/get/${data._id}`)
       .then((res) => {
-        console.log(res, "res");
-        if (res.success) {
-          setReactionsData(res.data);
-        }
+        if (!ignore && res.success) setReactionsData(res.data);
       })
-      .catch((err) => {
-        console.log(err, "error");
-      })
+      .catch((err) => console.log(err, "error"))
       .finally(() => {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       });
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [data._id]);
 
   return (
-    <>
-      <Dialog open={showAllReactions} onClose={handelCloseShowReactions}>
+    <Dialog
+      maxWidth="xs"
+      open={showAllReactions}
+      onClose={handelCloseShowReactions}
+      fullWidth
+    >
+      <DialogTitle
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          pr: 1.5,
+        }}
+      >
+        Reactions
+        <IconButton onClick={handelCloseShowReactions} aria-label="Close">
+          <IoClose />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent dividers sx={{ p: 1, maxHeight: 420 }}>
         {isLoading ? (
-          <Loader />
+          <UserRowSkeleton count={4} dense />
+        ) : reactionsData.length > 0 ? (
+          <Stack spacing={0.25}>
+            {reactionsData.map((el) => (
+              <UserListItem
+                key={el._id}
+                user={el.like_by}
+                trailing={<ReactionIcon type={el.like_type} />}
+              />
+            ))}
+          </Stack>
         ) : (
-          <Box
-            maxHeight="200px"
-            overflow="scroll"
-            mt="20px"
-            sx={{ "&::-webkit-scrollbar": { width: "0" } }}
-          >
-            {reactionsData.length > 0 ? (
-              <Stack direction="column" gap="10px" padding="15px">
-                {reactionsData.map((el) => (
-                  <Stack
-                    key={el._id}
-                    direction="row"
-                    alignItems="center"
-                    gap="15px"
-                  >
-                    <Avatar src={el.like_by.image} />
-                    <Link
-                      href={`/${el.like_by.username}`}
-                      underline="none"
-                      color="#000"
-                    >
-                      <Typography
-                        fontFamily={"Dancing Script"}
-                        fontSize="22px"
-                        fontWeight="600"
-                      >
-                        {el.like_by.username}
-                      </Typography>
-                    </Link>
-                    <Box>
-                      {el.like_type === "love" && (
-                        <BsSuitHeartFill
-                          fontSize="25px"
-                          color="red"
-                          style={{ cursor: "pointer" }}
-                        />
-                      )}
-                      {el.like_type === "funny" && (
-                        <FaLaughSquint
-                          fontSize="25px"
-                          color="#eb9800"
-                          style={{ cursor: "pointer" }}
-                        />
-                      )}
-                      {el.like_type === "cry" && (
-                        <FaSadCry
-                          fontSize="25px"
-                          color="#00baff"
-                          style={{ cursor: "pointer" }}
-                        />
-                      )}
-                      {el.like_type === "angry" && (
-                        <FaAngry
-                          fontSize="25px"
-                          color="#c30909"
-                          style={{ cursor: "pointer" }}
-                        />
-                      )}
-                    </Box>
-                  </Stack>
-                ))}
-              </Stack>
-            ) : (
-              <Box
-                height="100%"
-                display="flex"
-                p="0 5px"
-                alignItems="center"
-                justifyContent="center"
-              >
-                <Typography>No Reactions to Show</Typography>
-              </Box>
-            )}
-          </Box>
+          <EmptyState
+            compact
+            title="No reactions yet"
+            subtitle="Be the first to react to this post."
+          />
         )}
-      </Dialog>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 };

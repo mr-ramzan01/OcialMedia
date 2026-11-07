@@ -4,33 +4,72 @@ import {
   Button,
   CircularProgress,
   Dialog,
+  DialogActions,
+  DialogContent,
   DialogTitle,
-  Grid,
-  Link,
   Stack,
+  Tab,
+  Tabs,
   Typography,
 } from "@mui/material";
-import { useContext, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router";
-import { Loader } from "../components/Loader";
-import { HiRectangleStack } from "react-icons/hi2";
-import { AuthContext } from "../context/AuthContext";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { IoChatbubbleEllipsesOutline, IoCopyOutline } from "react-icons/io5";
+import { AuthContext } from "../context/AuthContext";
 import { SinglePost } from "../components/SinglePost";
 import { SavedPosts } from "../components/Profile/SavedPosts";
 import { ShowFollowing } from "../components/Profile/ShowFollowing";
 import { ShowFollower } from "../components/Profile/ShowFollower";
-import { AiOutlineMessage } from "react-icons/ai";
-import { Navbar } from "../components/Bars/Navbar";
-import { BottomBar } from "../components/Bars/BottomBar";
-import { LeftSideBar } from "../components/Bars/LeftSideBar";
-import { root_url } from "../utils/url";
+import { AppShell } from "../components/layout/AppShell";
+import { EmptyState } from "../components/common/EmptyState";
+import { SectionCard } from "../components/common/SectionCard";
+import { SmartImage } from "../components/common/SmartImage";
+import {
+  ProfileHeaderSkeleton,
+  TileGridSkeleton,
+} from "../components/common/Skeletons";
+import { useToast } from "../context/ToastContext";
+import { api } from "../utils/api";
+import { EVENTS } from "../utils/events";
+import { useAppEvent } from "../hooks/useAppEvent";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { usePaginatedList } from "../hooks/usePaginatedList";
+
+const ProfileStat = ({ value, label, onClick }) => (
+  <Box
+    component={onClick ? "button" : "div"}
+    type={onClick ? "button" : undefined}
+    onClick={onClick}
+    sx={{
+      border: 0,
+      p: 0,
+      background: "none",
+      font: "inherit",
+      color: "inherit",
+      textAlign: { xs: "center", md: "left" },
+      cursor: onClick ? "pointer" : "default",
+      transition: "color 150ms",
+      "&:hover": onClick ? { color: "primary.main" } : undefined,
+    }}
+  >
+    <Typography
+      variant="h6"
+      component="span"
+      sx={{ display: "block", lineHeight: 1.2 }}
+    >
+      {value ?? 0}
+    </Typography>
+    <Typography variant="caption">{label}</Typography>
+  </Box>
+);
 
 export const User = () => {
   const { username } = useParams();
+  usePageTitle(username ? `@${username}` : "Profile");
+  const toast = useToast();
   const [oneUserData, setOneUserData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [loginUserData, setLoginUserData] = useState({});
   const [userNotFound, setUserNotFound] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [unfollowOpen, setUnfollowOpen] = useState(false);
@@ -38,127 +77,113 @@ export const User = () => {
   const [followingOpen, setFollowingOpen] = useState(false);
   const [followersData, setFollowersData] = useState([]);
   const [followingData, setFollowingData] = useState([]);
-  const [userPosts, setUserPosts] = useState([]);
-  const { showSinglePost, postData, handleClick, userToken } = useContext(AuthContext);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [unfollowLoading, setUnfollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
+  const {
+    showSinglePost,
+    postData,
+    handleClick,
+    userData: loginUserData,
+  } = useContext(AuthContext);
   const [selected, setSelected] = useState("post");
-  const [page, setPage] = useState(1);
-  const [totalPostsLength, setTotalPostsLength] = useState(0);
   const navigate = useNavigate();
 
-  const followRequest = () => {
-    fetch(`${root_url}/api/follows/followRequest`, {
-      method: "POST",
-      body: JSON.stringify({
-        following_Id: loginUserData._id,
-        follower_Id: oneUserData._id,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        fetchData();
-      })
-      .catch((err) => {
-        alert("Something went wrong");
-        console.log(err, "following error");
-      });
-  };
+  // Profile posts (paginated)
+  const fetchPostsPage = useCallback(
+    async (page) => {
+      const res = await api(
+        `/api/posts/${encodeURIComponent(username)}?page=${page}`,
+      );
+      return res.success
+        ? { items: res.data, total: res.totalPosts }
+        : { items: [], total: 0 };
+    },
+    [username],
+  );
+  const {
+    items: userPosts,
+    isLoading: postsLoading,
+    hasMore: hasMorePosts,
+    next: getPosts,
+    reload: reloadPosts,
+    setItems: setUserPosts,
+  } = usePaginatedList(fetchPostsPage);
 
-  const getPosts = () => {
-    setPage((prev) => prev + 1);
-    fetch(`${root_url}/api/posts/${username}?page=${page}`, {
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${userToken}`
+  // Profile header + follow state
+  const fetchData = useCallback(async () => {
+    if (!loginUserData._id) return;
+    try {
+      const user = await api(`/api/users/${encodeURIComponent(username)}`);
+      if (!user.success) {
+        setUserNotFound(true);
+        return;
       }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setUserPosts(() => [...userPosts, ...res.data]);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
+      setUserNotFound(false);
+      setOneUserData(user.data);
 
-  const fetchData = () => {
-    setIsLoading(true);
-    setPage(1);
-    Promise.all([
-      fetch(`${root_url}/api/users/loggedInUser`, {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${userToken}`
-        }
-      }),
-      fetch(`${root_url}/api/users/${username}`, {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${userToken}`
-        }
-      }),
-      fetch(`${root_url}/api/posts/${username}?page=${1}`, {
-        method: 'GET',
-        headers: {
-          authorization: `Bearer ${userToken}`
-        }
-      }),
-    ])
-      .then((res) => {
-        return Promise.all(
-          res.map(function (res) {
-            return res.json();
-          })
+      if (user.data._id !== loginUserData._id) {
+        const following = await api(
+          `/api/follows/isfollowing?followerID=${user.data._id}&followingID=${loginUserData._id}`,
         );
-      })
-      .then((res) => {
-        if (res[0].success) {
-          setLoginUserData(res[0].data);
-        }
-        if (res[2].success) {
-          setUserPosts(res[2].data);
-          setTotalPostsLength(res[2].totalPosts);
-          setPage((prev) => prev + 1);
-        }
-        if (res[1].success) {
-          setOneUserData(res[1].data);
-        } else {
-          setUserNotFound(true);
-        }
-
-        fetch(
-          `${root_url}/api/follows/isfollowing?followerID=${res[1].data._id}&followingID=${res[0].data._id}`, {
-            method: 'GET',
-            headers: {
-              authorization: `Bearer ${userToken}`
-            }
-          }
-        )
-          .then((res) => res.json())
-          .then((res) => {
-            if (res.success) {
-              setIsFollowing(true);
-            } else {
-              setIsFollowing(false);
-            }
-          });
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+        setIsFollowing(Boolean(following.success));
+      }
+    } catch (err) {
+      console.log(err, "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username, loginUserData._id]);
 
   useEffect(() => {
+    setSelected("post");
+    setIsLoading(true);
     fetchData();
-  }, []);
+  }, [fetchData]);
+
+  const isOwnProfile = loginUserData._id === oneUserData._id;
+
+  // Keep the profile in sync with app-wide changes (no page reloads)
+  const onPostDeleted = useCallback(
+    (detail) => {
+      const id = detail && detail.id;
+      if (!id) return;
+      setUserPosts((prev) => prev.filter((el) => el._id !== id));
+      if (isOwnProfile) {
+        setOneUserData((u) => ({
+          ...u,
+          postsCount: Math.max(0, (u.postsCount || 0) - 1),
+        }));
+      }
+    },
+    [setUserPosts, isOwnProfile],
+  );
+  useAppEvent(EVENTS.POST_DELETED, onPostDeleted);
+
+  const onPostCreated = useCallback(() => {
+    reloadPosts();
+    fetchData();
+  }, [reloadPosts, fetchData]);
+  useAppEvent(EVENTS.POST_CREATED, onPostCreated);
+
+  useAppEvent(EVENTS.PROFILE_UPDATED, fetchData);
+
+  const followRequest = () => {
+    setFollowLoading(true);
+    api("/api/follows/followRequest", {
+      method: "POST",
+      body: { following_Id: loginUserData._id, follower_Id: oneUserData._id },
+    })
+      .then((res) => {
+        if (!res.success) toast.error(res.message || "Something went wrong");
+        return fetchData();
+      })
+      .catch((err) => {
+        toast.error("Something went wrong");
+        console.log(err, "following error");
+      })
+      .finally(() => setFollowLoading(false));
+  };
 
   const handleFollow = () => {
     if (!isFollowing) {
@@ -169,26 +194,21 @@ export const User = () => {
   };
 
   const handleUnFollow = () => {
-    fetch(`${root_url}/api/follows/unfollowRequest`, {
+    setUnfollowOpen(false);
+    setUnfollowLoading(true);
+    api("/api/follows/unfollowRequest", {
       method: "DELETE",
-      body: JSON.stringify({
-        following_Id: loginUserData._id,
-        follower_Id: oneUserData._id,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
+      body: { following_Id: loginUserData._id, follower_Id: oneUserData._id },
     })
-      .then((res) => res.json())
       .then((res) => {
-        fetchData();
+        if (!res.success) toast.error(res.message || "Something went wrong");
+        return fetchData();
       })
       .catch((err) => {
-        alert("Something went wrong");
+        toast.error("Something went wrong");
         console.log(err, "unfollow error");
-      });
-    setUnfollowOpen(false);
+      })
+      .finally(() => setUnfollowLoading(false));
   };
 
   const handleClose = () => {
@@ -198,95 +218,81 @@ export const User = () => {
   };
 
   const getFollowers = () => {
-    fetch(`${root_url}/api/follows/getFollowers?userID=${oneUserData._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api(`/api/follows/getFollowers?userID=${oneUserData._id}`)
       .then((res) => {
         if (res.success) {
           setFollowersData(res.data);
           setFollowersOpen(true);
         } else {
-          alert("Something went wrong");
+          toast.error(res.message || "Something went wrong");
         }
       })
       .catch((err) => {
-        alert("Something went wrong");
+        toast.error("Something went wrong");
         console.log(err, "error");
       });
   };
 
   const getFollowing = () => {
-    fetch(`${root_url}/api/follows/getFollowing?userID=${oneUserData._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api(`/api/follows/getFollowing?userID=${oneUserData._id}`)
       .then((res) => {
         if (res.success) {
           setFollowingData(res.data);
           setFollowingOpen(true);
         } else {
-          alert("Something went wrong");
+          toast.error(res.message || "Something went wrong");
         }
       })
       .catch((err) => {
-        alert("Something went wrong");
+        toast.error("Something went wrong");
         console.log(err, "error");
       });
   };
 
   const handleMessageClick = (user_id) => {
-    fetch(`${root_url}/api/chats/create`, {
-      method: "POST",
-      body: JSON.stringify({ userId: user_id }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {})
-      .catch((err) => {
-        console.log(err, "error");
-      })
+    setMessageLoading(true);
+    api("/api/chats/create", { method: "POST", body: { userId: user_id } })
+      .catch((err) => console.log(err, "error"))
       .finally(() => {
+        setMessageLoading(false);
         navigate("/messages");
       });
   };
 
   if (isLoading) {
-    return <Loader />;
+    return (
+      <AppShell width="wide">
+        <Stack spacing={3}>
+          <SectionCard>
+            <ProfileHeaderSkeleton />
+          </SectionCard>
+          <SectionCard sx={{ p: { xs: 1, sm: 2 } }}>
+            <TileGridSkeleton count={6} />
+          </SectionCard>
+        </Stack>
+      </AppShell>
+    );
   }
 
   if (userNotFound) {
     return (
-      <Box
-        height="100vh"
-        display="flex"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Stack direction="column">
-          <img src="/Images/404user.gif" alt="404 user" />
-          <Typography
-            textAlign="center"
-            variant="h3"
-            fontFamily={"'Dancing Script', cursive"}
-          >
-            User Not Found
-          </Typography>
-        </Stack>
-      </Box>
+      <AppShell width="wide">
+        <EmptyState
+          image="/Images/404user.gif"
+          title="User not found"
+          subtitle="The profile you are looking for does not exist or may have been removed."
+          action={
+            <Button variant="contained" component={RouterLink} to="/">
+              Back to home
+            </Button>
+          }
+        />
+      </AppShell>
     );
   }
+
   return (
-    <>
+    <AppShell width="wide">
       {followingData && (
         <ShowFollowing
           followingOpen={followingOpen}
@@ -302,353 +308,246 @@ export const User = () => {
         />
       )}
       {showSinglePost && <SinglePost id={postData._id} />}
-      <Navbar />
-      <BottomBar />
-      <Stack direction={"row"}>
-        <LeftSideBar />
-        <Box
-          marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
-          width="100%"
-          display="grid"
-          justifyContent="center"
-        >
-          <Box width={{ xs: "100%", sm: "500px", md: "800px", lg: "900px" }}>
-            <Stack direction="column" m={{ xs: "60px 0", sm: "30px 0" }}>
-              <Stack direction="row">
-                <Grid
-                  display="grid"
-                  sx={{ placeContent: "center" }}
-                  width={{ xs: "120px", sm: "35%" }}
+
+      <Stack spacing={3}>
+        {/* Profile header */}
+        <SectionCard>
+          <Stack
+            sx={{ alignItems: { xs: "center", md: "flex-start" } }}
+            direction={{ xs: "column", md: "row" }}
+            spacing={{ xs: 2, md: 4 }}
+          >
+            <Avatar
+              src={oneUserData.image}
+              alt={oneUserData.username}
+              sx={{
+                width: { xs: 84, md: 140 },
+                height: { xs: 84, md: 140 },
+                fontSize: { xs: 34, md: 56 },
+                flexShrink: 0,
+              }}
+            >
+              {(oneUserData.username || "?")[0].toUpperCase()}
+            </Avatar>
+
+            <Stack
+              spacing={2}
+              sx={{
+                flex: 1,
+                minWidth: 0,
+                width: "100%",
+                alignItems: { xs: "center", md: "flex-start" },
+              }}
+            >
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                  justifyContent: { xs: "center", md: "flex-start" },
+                  width: "100%",
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography
+                  variant="h3"
+                  component="h1"
+                  noWrap
+                  sx={{ maxWidth: "100%" }}
                 >
-                  <Avatar
-                    sx={{
-                      height: {
-                        xs: "65px",
-                        sm: "100px",
-                        md: "120px",
-                        lg: "150px",
-                      },
-                      width: {
-                        xs: "65px",
-                        sm: "100px",
-                        md: "120px",
-                        lg: "150px",
-                      },
-                    }}
-                    src={oneUserData.image}
-                    alt={oneUserData.full_name}
-                  />
-                </Grid>
-                <Grid
-                  display="flex"
-                  flexDirection="column"
-                  gap="20px"
-                  width={{ xs: "100%", sm: "65%" }}
-                >
-                  <Stack
-                    direction="row"
-                    gap={{ xs: "8px", sm: "15px" }}
-                    alignItems="center"
-                  >
-                    <Typography
-                      fontFamily="'Petrona', serif"
-                      fontStyle={"italic"}
-                      fontWeight={400}
-                      fontSize={{ xs: "15px", sm: "20px", md: "25px" }}
-                      color="#303030"
-                      mr={{ xs: "5px", sm: "20px" }}
+                  {oneUserData.username}
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  {isOwnProfile ? (
+                    <Button
+                      variant="outlined"
+                      component={RouterLink}
+                      to="/settings"
                     >
-                      {oneUserData.username}
-                    </Typography>
-                    {loginUserData.username === oneUserData.username ? (
-                      <Link underline="none" href="/settings">
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#d3d3d3",
-                            color: "#000",
-                            letterSpacing: "0px",
-                            fontSize: { xs: "10px", sm: "13px" },
-                            padding: "5px 10px",
-                            boxShadow: "none",
-                            "&:hover": {
-                              backgroundColor: "#bbbbbb",
-                              boxShadow: "none",
-                            },
-                          }}
-                        >
-                          Edit Profile
-                        </Button>
-                      </Link>
-                    ) : (
-                      <>
-                        <Button
-                          variant="contained"
-                          onClick={handleFollow}
-                          sx={{
-                            backgroundColor: "#129ffd",
-                            letterSpacing: "0px",
-                            fontSize: { xs: "10px", md: "13px" },
-                            padding: "5px 10px",
-                            boxShadow: "none",
-                            "&:hover": {
-                              backgroundColor: "#0066ff",
-                              boxShadow: "none",
-                            },
-                            width: { xs: "70px", sm: "100px" },
-                          }}
-                        >
-                          {isFollowing ? "Following" : "Follow"}
-                        </Button>
-                        <Button
-                          variant="contained"
-                          sx={{
-                            backgroundColor: "#eee",
-                            color: "#000",
-                            display: { xs: "none", sm: "block" },
-                            letterSpacing: "0px",
-                            fontSize: { xs: "10px", md: "13px" },
-                            padding: "5px 10px",
-                            boxShadow: "none",
-                            "&:hover": {
-                              backgroundColor: "#d3d3d3",
-                              boxShadow: "none",
-                            },
-                          }}
-                          onClick={() => handleMessageClick(oneUserData._id)}
-                        >
-                          Message
-                        </Button>
-                        <Box
-                          onClick={() => handleMessageClick(oneUserData._id)}
-                          padding="2px 10px"
-                          borderRadius="5px"
-                          backgroundColor="#eee"
-                          display={{ xs: "block", sm: "none" }}
-                        >
-                          <AiOutlineMessage />
-                        </Box>
-                      </>
-                    )}
-                  </Stack>
-                  <Stack
-                    direction="row"
-                    gap={{ xs: "10px", sm: "30px" }}
-                    alignItems="center"
-                  >
-                    <Stack direction="row" alignItems="center">
-                      <Typography
-                        mr="5px"
-                        fontSize={{ xs: "15px", sm: "18px" }}
-                        marginBottom="2px"
+                      Edit profile
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        variant={isFollowing ? "outlined" : "contained"}
+                        onClick={handleFollow}
+                        loading={followLoading || unfollowLoading}
                       >
-                        {oneUserData.postsCount}
-                      </Typography>
-                      <Typography
-                        color="#363638"
-                        fontSize={{ xs: "12px", sm: "15px" }}
+                        {isFollowing ? "Following" : "Follow"}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        startIcon={<IoChatbubbleEllipsesOutline />}
+                        onClick={() => handleMessageClick(oneUserData._id)}
+                        loading={messageLoading}
                       >
-                        posts
-                      </Typography>
-                    </Stack>
-                    <Stack
-                      onClick={getFollowers}
-                      sx={{ cursor: "pointer" }}
-                      direction="row"
-                      alignItems="center"
-                    >
-                      <Typography
-                        mr="5px"
-                        fontSize={{ xs: "15px", sm: "18px" }}
-                        marginBottom="2px"
-                      >
-                        {oneUserData.followerCount}
-                      </Typography>
-                      <Typography
-                        color="#363638"
-                        fontSize={{ xs: "12px", sm: "15px" }}
-                      >
-                        followers
-                      </Typography>
-                    </Stack>
-                    <Stack
-                      onClick={getFollowing}
-                      sx={{ cursor: "pointer" }}
-                      direction="row"
-                      alignItems="center"
-                    >
-                      <Typography
-                        mr="5px"
-                        fontSize={{ xs: "15px", sm: "18px" }}
-                        marginBottom="2px"
-                      >
-                        {oneUserData.followingCount}
-                      </Typography>
-                      <Typography
-                        color="#363638"
-                        fontSize={{ xs: "12px", sm: "15px" }}
-                      >
-                        following
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  <Box width="50%" marginTop="20px">
-                    <Typography fontSize={{ xs: "17px", sm: "20px" }}>
-                      {oneUserData.full_name}
-                    </Typography>
-                  </Box>
-                  <Box width="50%" marginTop="-10px">
-                    <Typography fontSize={{ xs: "13px", sm: "15px" }}>
-                      {oneUserData.bio}
-                    </Typography>
-                  </Box>
-                </Grid>
-              </Stack>
-              <Stack row="column" mt="30px">
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="center"
-                  gap="20px"
-                  borderTop="1px solid gray"
-                >
-                  <Typography
-                    borderTop={
-                      selected === "post" ? "2px solid #000" : "2px solid #fff"
-                    }
-                    onClick={() => setSelected("post")}
-                    p="10px 0"
-                    textAlign="center"
-                    fontSize={{ xs: "15px", sm: "20px" }}
-                    sx={{ cursor: "pointer" }}
-                  >
-                    Post
-                  </Typography>
-                  {loginUserData._id === oneUserData._id && (
-                    <Typography
-                      borderTop={
-                        selected === "saved"
-                          ? "2px solid #000"
-                          : "2px solid #fff"
-                      }
-                      onClick={() => setSelected("saved")}
-                      p="10px 0"
-                      textAlign="center"
-                      fontSize={{ xs: "15px", sm: "20px" }}
-                      sx={{ cursor: "pointer" }}
-                    >
-                      Saved
-                    </Typography>
+                        Message
+                      </Button>
+                    </>
                   )}
                 </Stack>
-                {selected === "post" ? (
-                  <Box padding="0 30px 30px">
-                    {userPosts.length > 0 ? (
-                      <InfiniteScroll
-                        dataLength={userPosts.length}
-                        className={"scrollDiv"}
-                        next={getPosts}
-                        hasMore={totalPostsLength !== userPosts.length}
-                        loader={
-                          <div
-                            style={{
-                              display: "grid",
-                              placeContent: "center",
-                              padding: "30px 0",
+              </Stack>
+
+              <Stack direction="row" spacing={{ xs: 3, sm: 4 }}>
+                <ProfileStat value={oneUserData.postsCount} label="posts" />
+                <ProfileStat
+                  value={oneUserData.followerCount}
+                  label="followers"
+                  onClick={getFollowers}
+                />
+                <ProfileStat
+                  value={oneUserData.followingCount}
+                  label="following"
+                  onClick={getFollowing}
+                />
+              </Stack>
+
+              <Box
+                sx={{ textAlign: { xs: "center", md: "left" }, maxWidth: 480 }}
+              >
+                <Typography variant="subtitle1">
+                  {oneUserData.full_name}
+                </Typography>
+                {oneUserData.bio && (
+                  <Typography
+                    variant="body2"
+                    sx={{ mt: 0.5, whiteSpace: "pre-line" }}
+                  >
+                    {oneUserData.bio}
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </Stack>
+        </SectionCard>
+
+        {/* Posts / Saved */}
+        <SectionCard sx={{ p: 0, overflow: "hidden" }}>
+          <Tabs
+            value={selected}
+            onChange={(event, value) => setSelected(value)}
+            textColor="primary"
+            indicatorColor="primary"
+            centered
+            sx={{ borderBottom: "1px solid", borderColor: "divider" }}
+          >
+            <Tab value="post" label="Posts" />
+            {isOwnProfile && <Tab value="saved" label="Saved" />}
+          </Tabs>
+
+          <Box sx={{ p: { xs: 1, sm: 2 } }}>
+            {selected === "post" ? (
+              postsLoading ? (
+                <TileGridSkeleton count={6} />
+              ) : userPosts.length > 0 ? (
+                <InfiniteScroll
+                  dataLength={userPosts.length}
+                  className="scrollDiv"
+                  next={getPosts}
+                  hasMore={hasMorePosts}
+                  loader={
+                    <Box
+                      sx={{ display: "grid", placeContent: "center", py: 3 }}
+                    >
+                      <CircularProgress size={24} />
+                    </Box>
+                  }
+                >
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(3, 1fr)",
+                      gap: { xs: 1, md: 1.5 },
+                    }}
+                  >
+                    {userPosts.map((el) => (
+                      <Box
+                        key={el._id}
+                        onClick={() => handleClick(el._id)}
+                        role="button"
+                        tabIndex={0}
+                        sx={{
+                          position: "relative",
+                          aspectRatio: "1 / 1",
+                          borderRadius: 2,
+                          overflow: "hidden",
+                          cursor: "pointer",
+                          bgcolor: "action.hover",
+                          "&::after": {
+                            content: '""',
+                            position: "absolute",
+                            inset: 0,
+                            bgcolor: "common.black",
+                            opacity: 0,
+                            transition: "opacity 150ms",
+                          },
+                          "&:hover::after": { opacity: 0.18 },
+                        }}
+                      >
+                        <SmartImage
+                          src={el.post_images[0].url}
+                          alt=""
+                          ratio="1 / 1"
+                          sx={{ width: "100%", height: "100%" }}
+                        />
+                        {el.post_images.length > 1 && (
+                          <Box
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              zIndex: 1,
+                              display: "flex",
+                              color: "common.white",
                             }}
                           >
-                            <CircularProgress sx={{ color: "#bbbbbb" }} />
-                          </div>
-                        }
-                      >
-                        <Grid
-                          display="grid"
-                          gridTemplateColumns={"repeat(3,1fr)"}
-                          gap="10px"
-                        >
-                          {userPosts.map((el) => (
-                            <Box
-                              key={el._id}
-                              height={{ xs: "130px", sm: "170px", md: "280px" }}
-                              onClick={() => handleClick(el._id)}
-                              sx={{
-                                cursor: "pointer",
-                                position: "relative",
-                                "&:hover": {
-                                  opacity: "0.5",
-                                },
-                              }}
-                            >
-                              {el.post_images.length > 1 && (
-                                <HiRectangleStack
-                                  style={{
-                                    color: "#ffffff",
-                                    fontSize: "30px",
-                                    top: "2px",
-                                    position: "absolute",
-                                    right: "0",
-                                    transform: "rotate(90deg)",
-                                  }}
-                                />
-                              )}
-                              <img
-                                height="100%"
-                                width="100%"
-                                src={el.post_images[0].url}
-                                loading="lazy"
-                                alt=""
-                              />
-                            </Box>
-                          ))}
-                        </Grid>
-                      </InfiniteScroll>
-                    ) : (
-                      <Box
-                        padding="30px 0"
-                        display="grid"
-                        sx={{ placeContent: "center" }}
-                      >
-                        <Box>
-                          <Box width="200px" height="200px">
-                            <img
-                              width="100%"
-                              height="100%"
-                              style={{ objectFit: "contain" }}
-                              src="/Images/nopost.png"
-                              alt=""
-                            />
+                            <IoCopyOutline size={18} />
                           </Box>
-                          <Typography
-                            textAlign="center"
-                            fontSize={"30px"}
-                            color="#a1a1a1"
-                          >
-                            No Posts Yet
-                          </Typography>
-                        </Box>
+                        )}
                       </Box>
-                    )}
+                    ))}
                   </Box>
-                ) : (
-                  <Box padding="0 30px 30px">
-                    <SavedPosts id={oneUserData._id} />
-                  </Box>
-                )}
-              </Stack>
-            </Stack>
+                </InfiniteScroll>
+              ) : (
+                <EmptyState
+                  image="/Images/nopost.png"
+                  title="No posts yet"
+                  subtitle={
+                    isOwnProfile
+                      ? "Share your first moment from the Create menu."
+                      : "This user hasn't posted anything yet."
+                  }
+                  compact
+                />
+              )
+            ) : (
+              <SavedPosts id={oneUserData._id} />
+            )}
           </Box>
-        </Box>
+        </SectionCard>
       </Stack>
 
-      {/* It will show unfollow dialog */}
-      <Dialog onClose={handleClose} open={unfollowOpen}>
-        <DialogTitle
-          onClick={handleUnFollow}
-          sx={{ fontSize: "15px", "&:hover": { cursor: "pointer" } }}
-        >
-          UnFollow
-        </DialogTitle>
+      {/* Unfollow confirmation */}
+      <Dialog maxWidth="xs" onClose={handleClose} open={unfollowOpen} fullWidth>
+        <DialogTitle>Unfollow @{oneUserData.username}?</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            Their posts will no longer appear in your feed. You can follow them
+            again at any time.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleUnFollow}
+            loading={unfollowLoading}
+          >
+            Unfollow
+          </Button>
+        </DialogActions>
       </Dialog>
-    </>
+    </AppShell>
   );
 };

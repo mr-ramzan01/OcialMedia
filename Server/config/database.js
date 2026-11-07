@@ -1,22 +1,25 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
 
-dotenv.config();
-const db_username = process.env.DB_USERNAME;
-const db_password = process.env.DB_PASSWORD;
-const db_url = process.env.DB_URL;
+/**
+ * Builds the connection string from the environment.
+ *  - MONGO_URI          full connection string (preferred, e.g. mongodb://127.0.0.1:27017/ocial_media_data)
+ *  - DB_USERNAME/DB_PASSWORD/DB_URL   legacy Atlas pieces, kept for existing deployments
+ */
+function getMongoUri() {
+  if (process.env.MONGO_URI) return process.env.MONGO_URI;
 
-const connection = async () => {
-    mongoose.set('strictQuery', false);
-    await mongoose.connect(`mongodb+srv://${db_username}:${db_password}@${db_url}/ocial_media_data?retryWrites=true&w=majority`, (err) => {
-        if(err) {
-            console.log("db not connected");
-        }
-        else {
-            console.log("db connected")
-        }
-    });
+  const { DB_USERNAME, DB_PASSWORD, DB_URL } = process.env;
+  if (DB_USERNAME && DB_PASSWORD && DB_URL) {
+    return `mongodb+srv://${encodeURIComponent(DB_USERNAME)}:${encodeURIComponent(DB_PASSWORD)}@${DB_URL}/ocial_media_data?retryWrites=true&w=majority`;
+  }
+
+  throw new Error('Database is not configured. Set MONGO_URI (or DB_USERNAME, DB_PASSWORD and DB_URL) in .env');
+}
+
+async function connection() {
+  mongoose.set('strictQuery', false);
+  await mongoose.connect(getMongoUri());
+  console.log('db connected');
 }
 
 module.exports = connection;
-

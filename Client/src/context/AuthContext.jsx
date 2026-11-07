@@ -1,121 +1,111 @@
-import { createContext, useEffect, useState } from "react";
-import { root_url } from "../utils/url";
-// import { useCookies } from "react-cookie";
-import Cookies from 'universal-cookie';
+import {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import {
+  api,
+  getToken,
+  setToken as storeToken,
+  clearToken,
+} from "../utils/api";
+import { client_url, google_client_id } from "../utils/url";
+import { useToast } from "./ToastContext";
 
 export const AuthContext = createContext();
 
+const EMPTY_EDIT = {
+  full_name: "",
+  bio: "",
+  username: "",
+  email: "",
+  mobile_no: "",
+};
+
 export const AuthContextprovider = ({ children }) => {
+  const toast = useToast();
+  const [userToken, setUserToken] = useState(() => getToken());
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState({});
   const [showSinglePost, setShowSinglePost] = useState(false);
-  const [postData, setPostData] = useState([]);
-  const [editData, setEditData] = useState({
-    full_name: "dfa",
-    bio: ``,
-    username: "",
-    email: "",
-    mobile_no: "",
-  });
+  const [postData, setPostData] = useState({});
+  const [editData, setEditData] = useState(EMPTY_EDIT);
   const [messagesNotification, setMessagesNotification] = useState([]);
+  // true = no unread notifications (drives the "invisible" prop of the badge)
   const [generalNotifications, setGeneralNotifications] = useState(true);
 
-  // const [cookies, setCookies] = useCookies(["user"]);
-  const cookies = new Cookies();
-  const userToken = cookies.get('ocialMedia_token');
+  const hasGeneralNotifications = useCallback(() => {
+    api("/api/notifications/has")
+      .then((res) => setGeneralNotifications(!res.success))
+      .catch((err) => console.log(err, "error"));
+  }, []);
 
-  const hasGeneralNotifications = () => {
-    fetch(`${root_url}/api/notifications/has`, {
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+  const getAllNotifications = useCallback((id) => {
+    if (!id) return;
+    api(`/api/messages/notifications/get/${id}`)
       .then((res) => {
-        if (res.success) {
-          setGeneralNotifications(false);
-        }
+        if (res.success) setMessagesNotification(res.data);
       })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
+      .catch((err) => console.log(err, "error"));
+  }, []);
 
-  const getAllNotifications = (id) => {
-    fetch(`${root_url}/api/messages/notifications/get/${id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setMessagesNotification(res.data);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
+  const deleteNotifications = useCallback(
+    (fromUserId, userId) => {
+      api(`/api/messages/notifications/${fromUserId}`, { method: "DELETE" })
+        .then((res) => {
+          if (res.success) getAllNotifications(userId);
+        })
+        .catch((err) => console.log(err, "error"));
+    },
+    [getAllNotifications],
+  );
 
-  const deleteNotifications = (id, userId) => {
-    fetch(`${root_url}/api/messages/notifications/${id}`, {
-      method: "DELETE",
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          getAllNotifications(userId);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
-
-  const sendMessageNotification = (message_id, from) => {
-    fetch(`${root_url}/api/messages/notifications/send`, {
+  const sendMessageNotification = useCallback((message_id, from) => {
+    api("/api/messages/notifications/send", {
       method: "POST",
-      body: JSON.stringify({
-        message_id,
-        from,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
+      body: { message_id, from },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.success) setMessagesNotification((prev) => [res.data, ...prev]);
+      })
+      .catch((err) => console.log(err, "error"));
+  }, []);
+
+  /** Loads the logged-in user's profile into context. */
+  const getUser = useCallback(() => {
+    api("/api/users/loggedInUser")
       .then((res) => {
         if (res.success) {
-          setMessagesNotification([res.data, ...messagesNotification]);
+          setUserData(res.data);
+          setEditData({ ...EMPTY_EDIT, ...res.data });
         }
       })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
+      .catch((err) => console.log(err, "err"));
+  }, []);
 
-  const isLoggedIn = () => {
+  /** Validates the stored token and loads the session. */
+  const isLoggedIn = useCallback(() => {
+    const token = getToken();
+    setUserToken(token);
+    if (!token) {
+      setIsAuth(false);
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
-    fetch(`${root_url}/api/users/loggedInUser`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api("/api/users/loggedInUser", { token })
       .then((res) => {
         if (res.success) {
+          setUserData(res.data);
+          setEditData({ ...EMPTY_EDIT, ...res.data });
           getAllNotifications(res.data._id);
           setIsAuth(true);
         } else {
+          clearToken();
+          setUserToken(undefined);
           setIsAuth(false);
         }
       })
@@ -123,95 +113,116 @@ export const AuthContextprovider = ({ children }) => {
         console.log(err, "err");
         setIsAuth(false);
       })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+      .finally(() => setIsLoading(false));
+  }, [getAllNotifications]);
+
   useEffect(() => {
     isLoggedIn();
+  }, [isLoggedIn]);
+
+  /** Called after login / signup / OAuth with a fresh token. */
+  const login = useCallback(
+    (token) => {
+      storeToken(token);
+      setUserToken(token);
+      setIsAuth(true);
+      isLoggedIn();
+    },
+    [isLoggedIn],
+  );
+
+  const logout = useCallback(() => {
+    clearToken();
+    setUserToken(undefined);
+    setIsAuth(false);
+    setUserData({});
+    setMessagesNotification([]);
   }, []);
 
-  const getUser = () => {
-    fetch(`${root_url}/api/users/loggedInUser`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
+  /** Opens the single-post dialog for a post id. */
+  const handleClick = useCallback(async (id) => {
+    try {
+      const res = await api(`/api/posts/single/${id}`);
+      if (res.success) {
+        setPostData(res.data);
+        setShowSinglePost(true);
       }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setUserData(res.data);
-          setEditData(res.data);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "err");
-      });
-  };
+    } catch (err) {
+      console.log(err, "error");
+    }
+  }, []);
 
-  const handleClick = async (id) => {
-    await fetch(`${root_url}/api/posts/single/${id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setPostData(res.data);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-    setShowSinglePost(true);
-  };
+  const googleRequest = useCallback(() => {
+    if (!google_client_id) {
+      toast.error("Google sign-in is not configured for this deployment.");
+      return;
+    }
+    const params = new URLSearchParams({
+      redirect_uri: `${client_url}/google_Oauth`,
+      client_id: google_client_id,
+      access_type: "offline",
+      response_type: "code",
+      prompt: "consent",
+      scope: [
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+      ].join(" "),
+    });
+    window.location.assign(
+      `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+    );
+  }, [toast]);
 
-  const googleRequest = () => {
-    const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
-    const redirect_uri = `https://ocialmedia.netlify.app/google_Oauth`;
-    const client_id =
-      "200704460983-v8rd6imcnmpumhqijgormivb1nnsd05s.apps.googleusercontent.com";
-    const access_type = "offline";
-    const response_type = "code";
-    const prompt = "consent";
-    const scope = [
-      "https://www.googleapis.com/auth/userinfo.profile",
-      "https://www.googleapis.com/auth/userinfo.email",
-    ].join(" ");
-
-    window.location = `${rootUrl}?redirect_uri=${redirect_uri}&client_id=${client_id}&access_type=${access_type}&response_type=${response_type}&prompt=${prompt}&scope=${scope}`;
-  };
-  return (
-    <AuthContext.Provider
-      value={{
-        userToken,
-        isAuth,
-        isLoading,
-        userData,
-        editData,
-        showSinglePost,
-        postData,
-        messagesNotification,
-        generalNotifications,
-        isLoggedIn,
-        hasGeneralNotifications,
-        setGeneralNotifications,
-        getAllNotifications,
-        deleteNotifications,
-        setMessagesNotification,
-        sendMessageNotification,
-        handleClick,
-        setShowSinglePost,
-        setEditData,
-        getUser,
-        setIsAuth,
-        googleRequest,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo(
+    () => ({
+      userToken,
+      isAuth,
+      isLoading,
+      userData,
+      editData,
+      showSinglePost,
+      postData,
+      messagesNotification,
+      generalNotifications,
+      googleEnabled: Boolean(google_client_id),
+      isLoggedIn,
+      login,
+      logout,
+      hasGeneralNotifications,
+      setGeneralNotifications,
+      getAllNotifications,
+      deleteNotifications,
+      setMessagesNotification,
+      sendMessageNotification,
+      handleClick,
+      setShowSinglePost,
+      setEditData,
+      getUser,
+      setIsAuth,
+      googleRequest,
+    }),
+    [
+      userToken,
+      isAuth,
+      isLoading,
+      userData,
+      editData,
+      showSinglePost,
+      postData,
+      messagesNotification,
+      generalNotifications,
+      isLoggedIn,
+      login,
+      logout,
+      hasGeneralNotifications,
+      getAllNotifications,
+      deleteNotifications,
+      sendMessageNotification,
+      handleClick,
+      getUser,
+      googleRequest,
+    ],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

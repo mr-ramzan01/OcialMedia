@@ -1,90 +1,70 @@
-import { Avatar, Box, Link, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Button, Stack, Typography } from "@mui/material";
 import React from "react";
-import moment from "moment";
+import { Link as RouterLink } from "react-router-dom";
+import { timeAgo } from "../../utils/time";
 
-export const NotificationMessage = ({el, type, likeCount, commentCount}) => {
-
-    const DateConvert = ({ date }) => {
-        let newDate = moment(date).fromNow();
-        const all = newDate.split(" ");
-        all.splice(all.length - 1, 1);
-        if (all[0] === "a" || all[0] === "an") {
-          all[0] = 1;
-        }
-        if (all[1] === "few") {
-          all[0] = "now";
-          all.splice(1, 2);
-        }
-        if (all[1] === "second" || all[1] === "seconds") {
-          all[1] = "s";
-        }
-        if (all[1] === "minute" || all[1] === "minutes") {
-          all[1] = "m";
-        }
-        if (all[1] === "hour" || all[1] === "hours") {
-          all[1] = "h";
-        }
-        if (all[1] === "day" || all[1] === "days") {
-          all[1] = "d";
-        }
-        if (all[1] === "month" || all[1] === "months") {
-          all[1] = "m";
-        }
-        if (all[1] === "year" || all[1] === "years") {
-          all[1] = "y";
-        }
-    
-        const updatedDate = all.join("");
-        return (
-          <Typography component="span" ml="5px" fontSize="13px">
-            {" "}
-            {updatedDate}
-          </Typography>
-        );
-      };
+export const NotificationMessage = ({ el, type, likeCount, commentCount }) => {
+  const DateConvert = ({ date }) => (
+    <Typography
+      component="span"
+      variant="caption"
+      sx={{ ml: 0.75, whiteSpace: "nowrap" }}
+    >
+      · {timeAgo(date)}
+    </Typography>
+  );
   return (
-    <>
-      <Stack
-        direction="row"
-        alignItems="center"
-        gap="10px"
+    <Stack
+      direction="row"
+      spacing={1.5}
+      sx={{ alignItems: "center", px: 1, py: 1.25, minWidth: 0, flex: 1 }}
+    >
+      <Avatar
+        component={RouterLink}
+        to={`/${el.from.username}`}
+        src={el.from.image}
+        alt={el.from.username}
+        sx={{ textDecoration: "none" }}
       >
-        <Avatar src={el.from.image} alt="" />
-        <Box
-          direction="row"
-          gap="10px"
-          alignItems="center"
-        >
-          <Link
-            component="span"
-            href={`/${el.from.username}`}
-            underline="none"
-            color="#000"
+        {(el.from.username || "?").slice(0, 1).toUpperCase()}
+      </Avatar>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Typography variant="body2" sx={{ color: "text.primary" }}>
+          <Typography
+            component={RouterLink}
+            to={`/${el.from.username}`}
+            variant="subtitle1"
+            sx={{
+              textDecoration: "none",
+              color: "text.primary",
+              "&:hover": { color: "primary.main" },
+            }}
           >
-            <Typography
-              component="span"
-              fontFamily={"Dancing Script"}
-              fontSize="20px"
-              fontWeight="600"
-            >
-              {el.from.username}
-            </Typography>
-          </Link>
-          <Typography component="span" mt="5px" ml="5px" fontSize="15px">
-           {type === 'like' && (
-            likeCount > 1 ? `and ${likeCount -1} others has reacted on your post` : `has reacted on your post`
-           )}
-           {type === 'follow' && ' is started following you'}
-           {type === 'comment' && (
-            commentCount > 1 ? `and ${commentCount} others has commented on your post`: `has commented on your post`
-           )}
-
-            <Box component="span" mt="5px">
-              <DateConvert date={el.createdAt} />
-            </Box>
-          </Typography>
-        </Box>
-      </Stack>
-    </>
+            {el.from.username}
+          </Typography>{" "}
+          {type === "like" &&
+            (likeCount > 1
+              ? `and ${likeCount - 1} others reacted to your post`
+              : "reacted to your post")}
+          {type === "follow" && "started following you"}
+          {type === "comment" &&
+            (commentCount > 1
+              ? `and ${commentCount} others commented on your post`
+              : "commented on your post")}
+          <DateConvert date={el.createdAt} />
+        </Typography>
+      </Box>
+      {type === "follow" && (
+        <Button
+          component={RouterLink}
+          to={`/${el.from.username}`}
+          variant="outlined"
+          size="small"
+          sx={{ flexShrink: 0 }}
+        >
+          View
+        </Button>
+      )}
+    </Stack>
   );
 };

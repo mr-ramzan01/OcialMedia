@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
-const nofificationsSchema = new mongoose.Schema({
+const notificationsSchema = new mongoose.Schema({
     type: {
         type: String,
-        emun: ['like', 'follow', 'comment'],
+        enum: ['like', 'follow', 'comment'],
         required: true
     },
     from: {
@@ -16,7 +16,7 @@ const nofificationsSchema = new mongoose.Schema({
         ref: "users",
         required: true
     },
-    comment_id: { 
+    comment_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "comments"
     },
@@ -37,7 +37,9 @@ const nofificationsSchema = new mongoose.Schema({
     versionKey: false
 });
 
+notificationsSchema.index({ to: 1, createdAt: -1 });
 
-const NofificationsModel = mongoose.model('nofifications', nofificationsSchema);
+// Collection name is kept as "nofifications" so existing production data keeps working.
+const NotificationsModel = mongoose.model('nofifications', notificationsSchema);
 
-module.exports = NofificationsModel;
+module.exports = NotificationsModel;

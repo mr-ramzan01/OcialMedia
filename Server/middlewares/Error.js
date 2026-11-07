@@ -1,37 +1,33 @@
 const ErrorHandler = require('./ErrorHandler.js');
 
-module.exports = (err,req,res,next) => {
-    // err.statusCode = err.statusCode || 500;
-    // err.message = err.message || "Internal Server"
-    console.log("inside");
-    console.log(err.statusCode, 'err');
-    // Mongodb cast Error
-    if (err.name === "CastError"){
-        console.log("here")
-        const message = `Resource not found. Invalid ${err.path}`;
-        err = new ErrorHandler(message,404);
-    }
+// eslint-disable-next-line no-unused-vars
+module.exports = (err, req, res, next) => {
+  let error = err;
 
-    // Duplicate Key error
-    if (err.code === 11000){
-        const message = `Duplicate ${Object.keys(err.keyValue)} Entered`;
-        err = new ErrorHandler(message, 404);
-    }
+  // Mongodb cast Error
+  if (err.name === 'CastError') {
+    error = new ErrorHandler(`Resource not found. Invalid ${err.path}`, 404);
+  }
 
-    // JWT error 
-    if (err.name === 'JsonWebTokenError'){
-        const message = 'Jwt token is Invalid. Please try again later';
-        err = new ErrorHandler(message,404);
-    }
+  // Duplicate Key error
+  if (err.code === 11000) {
+    error = new ErrorHandler(`Duplicate ${Object.keys(err.keyValue || {})} Entered`, 409);
+  }
 
-    // JWT expire Error
-    if (err.name === 'TokenExpiredError'){
-        const message = `JWT token is expired. Try again`;
-        err = new ErrorHandler(message,404);
-    }
+  // JWT errors
+  if (err.name === 'JsonWebTokenError') {
+    error = new ErrorHandler('Jwt token is Invalid. Please try again later', 401);
+  }
+  if (err.name === 'TokenExpiredError') {
+    error = new ErrorHandler('JWT token is expired. Try again', 401);
+  }
 
-    return res.status(err.statusCode).send({
-        error: err.message,
-        success: false
-    });
-}
+  // Multer / body parser errors carry their own status
+  const statusCode = error.statusCode || error.status || 500;
+  if (statusCode >= 500) console.error(err);
+
+  return res.status(statusCode).send({
+    success: false,
+    message: error.message || 'Internal Server Error',
+  });
+};

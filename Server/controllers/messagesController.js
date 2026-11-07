@@ -1,58 +1,67 @@
 const ChatsModel = require("../models/chatsModel");
 const MessagesModel = require("../models/messagesModel");
+const { isValidObjectId } = require("../utils/helpers");
+
+const USER_FIELDS = ['_id', 'image', 'username', 'full_name'];
+
+function serverError(res, error) {
+    const status = error.statusCode || 500;
+    if (status >= 500) console.error(error);
+    return res.status(status).send({ success: false, message: error.message });
+}
 
 async function sendMessage(req, res) {
     try {
         const { _id } = req.user;
-        req.body.sender = _id;
+        const { message, chat_id } = req.body || {};
 
-        // if message or chat_id is not specified
-        if(!req.body.message || !req.body.chat_id) {
-            return res.status(400).send({
-                success: false,
-                message: 'Missing some data on body'
-            })
+        if (!message || !String(message).trim() || !isValidObjectId(chat_id)) {
+            return res.status(400).send({ success: false, message: 'Missing some data on body' });
         }
 
-        // Creating a new message
-        let message = await MessagesModel.create(req.body);
-        let messages = await MessagesModel.findOne({_id: message._id}).populate({path: 'sender', select: ['_id', 'image', 'username', 'full_name']}).populate('chat_id');
+        // Only members of the chat can post into it
+        const chat = await ChatsModel.findOne({ _id: chat_id, users: _id });
+        if (!chat) {
+            return res.status(403).send({ success: false, message: 'You are not part of this chat' });
+        }
 
-        // Updating the latest message in chat
-        await ChatsModel.findByIdAndUpdate(req.body.chat_id, {latestMessage : message._id});
+        const created = await MessagesModel.create({ message: String(message).trim(), chat_id, sender: _id });
+        const populated = await MessagesModel.findById(created._id)
+            .populate({ path: 'sender', select: USER_FIELDS })
+            .populate('chat_id');
 
-        return res.status(200).send({
+        await ChatsModel.findByIdAndUpdate(chat_id, { latestMessage: created._id });
+
+        return res.status(201).send({
             success: true,
             message: "Message sent successfully",
-            data: messages
+            data: populated
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function getAllMessages(req, res) {
     try {
-        const {chatId} = req.params;
-
-        // If chatId is not specified
-        if(!chatId) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
+        const { _id } = req.user;
+        const { chatId } = req.params;
+        if (!isValidObjectId(chatId)) {
+            return res.status(400).send({ success: false, message: 'Invalid params parameters' });
         }
 
-        // Finding total no of messages
-        const messagesCount = await MessagesModel.find({chat_id: chatId}).count();
+        const chat = await ChatsModel.findOne({ _id: chatId, users: _id });
+        if (!chat) {
+            return res.status(403).send({ success: false, message: 'You are not part of this chat' });
+        }
 
-        // Finding all messages
-        let messages = await MessagesModel.find({chat_id: chatId}).populate({path: 'sender', select: ['_id', 'image', 'username', 'full_name']});
+        const [messagesCount, messages] = await Promise.all([
+            MessagesModel.countDocuments({ chat_id: chatId }),
+            MessagesModel.find({ chat_id: chatId })
+                .populate({ path: 'sender', select: USER_FIELDS })
+                .sort({ createdAt: 1 }),
+        ]);
 
         return res.status(200).send({
             success: true,
@@ -60,15 +69,9 @@ async function getAllMessages(req, res) {
             data: messages,
             messagesLength: messagesCount
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
-
-
 
 module.exports = { sendMessage, getAllMessages };

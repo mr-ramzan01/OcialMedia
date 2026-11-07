@@ -1,15 +1,25 @@
 .scrollDiv::-webkit-scrollbar {
-  width: 0px;
+  width: 0;
 }
-
 .messageDiv {
-  padding: 10px 10px 0 10px;
+  padding: 16px 16px 8px;
 }
-.messageDiv::-webkit-scrollbar {
-  width: 5px;
+.infinite-scroll-component__outerdiv {
+  width: 100%;
 }
-
-.messageDiv::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: #d1d1d1;
+/* react-responsive-carousel tweaks */
+.carousel .control-dots .dot {
+  box-shadow: none;
+  background: #ffffff;
+  opacity: 0.6;
+}
+.carousel .control-dots .dot.selected {
+  opacity: 1;
+}
+.carousel .control-arrow {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.carousel:hover .control-arrow {
+  opacity: 0.8;
 }

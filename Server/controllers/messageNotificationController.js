@@ -1,101 +1,81 @@
 const MessagesNotificationModel = require("../models/messageNotificationModel");
+const { isValidObjectId, sameId } = require("../utils/helpers");
+
+function serverError(res, error) {
+    const status = error.statusCode || 500;
+    if (status >= 500) console.error(error);
+    return res.status(status).send({ success: false, message: error.message });
+}
 
 async function getAllMessagesNotification(req, res) {
     try {
-
-        const {user_id} = req.params;
-
-        // If user_id is not specified
-        if(!user_id) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
+        const { _id } = req.user;
+        const { user_id } = req.params;
+        if (!isValidObjectId(user_id)) {
+            return res.status(400).send({ success: false, message: 'Invalid params parameters' });
+        }
+        if (!sameId(user_id, _id)) {
+            return res.status(403).send({ success: false, message: 'Not allowed' });
         }
 
-        // Finding all the messages notifications
-        let messagesNotification = await MessagesNotificationModel.find({to: user_id});
+        const messagesNotification = await MessagesNotificationModel.find({ to: _id }).sort({ createdAt: -1 });
 
         return res.status(200).send({
             success: true,
             message: "Messages notification data",
             data: messagesNotification
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function sendMessagesNotification(req, res) {
     try {
-        req.body.to = req.user._id;
+        const { _id } = req.user;
+        const { message_id, from } = req.body || {};
+        if (!isValidObjectId(message_id) || !isValidObjectId(from)) {
+            return res.status(400).send({ success: false, message: 'message_id and from are required' });
+        }
 
-        // Finding if message notification is already present
-        let presentAlready = await MessagesNotificationModel.findOne({message_id: req.body.message_id});
-
-        // If already present
-        if(presentAlready) {
+        const presentAlready = await MessagesNotificationModel.findOne({ message_id, to: _id });
+        if (presentAlready) {
             return res.status(200).send({
                 success: false,
                 message: "Messages notification already exists",
             })
         }
 
-        // Creating a message notification
-        let notification = await MessagesNotificationModel.create(req.body);
+        const notification = await MessagesNotificationModel.create({ message_id, from, to: _id });
 
-        return res.status(200).send({
+        return res.status(201).send({
             success: true,
             message: "Messages notification added successfully",
             data: notification
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 
 async function deleteMessagesNotification(req, res) {
     try {
-        const {user_id} = req.params;
-
-        // If user_id is not specified
-        if(!user_id) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
+        const { _id } = req.user;
+        const { user_id } = req.params;
+        if (!isValidObjectId(user_id)) {
+            return res.status(400).send({ success: false, message: 'Invalid params parameters' });
         }
 
-        // Deleting all the messages notificaions
-        let deletedNotifications = await MessagesNotificationModel.deleteMany({from: user_id, to: req.user._id});
+        await MessagesNotificationModel.deleteMany({ from: user_id, to: _id });
 
-        // if not messages to delete
-        if(!deletedNotifications) {
-            return res.status(200).send({
-                success: false,
-                message: "NO notifications to delete",
-            })
-        }
         return res.status(200).send({
             success: true,
             message: "Messages notification deleted successfully",
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 

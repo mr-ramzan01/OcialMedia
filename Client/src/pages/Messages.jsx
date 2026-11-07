@@ -1,49 +1,70 @@
 import {
   Avatar,
   Box,
-  Grid,
+  CircularProgress,
+  IconButton,
   InputAdornment,
-  Link,
   Paper,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
-import React, { useRef, useState } from "react";
-import { useEffect } from "react";
-import { useContext } from "react";
-import { Loader } from "../components/Loader";
-import { AuthContext } from "../context/AuthContext";
-import { CiSearch } from "react-icons/ci";
-import { IoCallOutline, IoChevronBack } from "react-icons/io5";
-import { BiVideo } from "react-icons/bi";
-import { BsInfoCircle } from "react-icons/bs";
-import { MdOutlineEmojiEmotions } from "react-icons/md";
-import { AiOutlineSend } from "react-icons/ai";
-import { RxCross2 } from "react-icons/rx";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { Link as RouterLink } from "react-router-dom";
+import {
+  IoChevronBack,
+  IoClose,
+  IoHappyOutline,
+  IoSearchOutline,
+  IoSend,
+} from "react-icons/io5";
 import EmojiPicker from "emoji-picker-react";
-import moment from "moment";
 import ScrollableFeed from "react-scrollable-feed";
 import { io } from "socket.io-client";
+import { AuthContext } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
+import { AppShell } from "../components/layout/AppShell";
+import { EmptyState } from "../components/common/EmptyState";
+import { UserListItem } from "../components/common/UserListItem";
+import {
+  MessagesSkeleton,
+  UserRowSkeleton,
+} from "../components/common/Skeletons";
 import { UserMessages } from "../components/Messages/UserMessages";
-import { LeftSideBar } from "../components/Bars/LeftSideBar";
-import { Navbar } from "../components/Bars/Navbar";
-import { BottomBar } from "../components/Bars/BottomBar";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { root_url } from "../utils/url";
-const ENDPOINT = "https://ocialmedia-backend.onrender.com";
-const socket = io(ENDPOINT);
-var selectedChatCompare;
+import { api } from "../utils/api";
+import { timeAgo } from "../utils/time";
+const TYPING_TIMEOUT_MS = 2000;
+
+/** Returns the other participant of a 1:1 chat. */
+const otherUser = (chat, me) =>
+  chat && chat.users
+    ? chat.users.find((u) => u._id !== me._id) || chat.users[0]
+    : undefined;
 
 export const Messages = () => {
+  usePageTitle("Messages");
+  const toast = useToast();
   const {
     userData,
     sendMessageNotification,
     messagesNotification,
     deleteNotifications,
-    userToken
+    userToken,
   } = useContext(AuthContext);
   const [chatsData, setChatsData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingChats, setLoadingChats] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [currentSelectedChat, setCurrentSelectedChat] = useState(undefined);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [msg, setMsg] = useState("");
@@ -51,134 +72,147 @@ export const Messages = () => {
   const searchRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [typing, setTyping] = useState(false);
   const [istyping, setIsTyping] = useState(false);
-  const [notify, setNotify] = useState([]);
   const [displayMessage, setDisplayMessage] = useState("none");
   const [displayChats, setDisplayChats] = useState("block");
 
-  useEffect(() => {
-    setIsLoading(true);
-    if (Object.keys(userData).length > 0) {
-      getChats();
-    }
-  }, [userData]);
+  // One socket per page visit, disconnected on unmount.
+  const socketRef = useRef(null);
+  const selectedChatRef = useRef(undefined);
+  const typingRef = useRef(false);
+  const typingTimerRef = useRef(null);
+  const searchTimerRef = useRef(null);
+
+  const hasUser = Boolean(userData && userData._id);
 
   useEffect(() => {
-    if (Object.keys(userData).length > 0) {
-      socket.emit("setup", userData);
-      socket.on("connected", () => setSocketConnected(true));
-      socket.on("typing", () => setIsTyping(true));
-      socket.on("stop typing", () => setIsTyping(false));
-    }
-  }, [userData]);
-
-  useEffect(() => {
-    if (Object.keys(userData).length > 0) {
-      selectedChatCompare = currentSelectedChat;
-      if (messagesNotification) {
-        let haveNotifications = false;
-        for (let i = 0; i < messagesNotification.length; i++) {
-          if (
-            messagesNotification[i].from === currentSelectedChat.users[1]._id ||
-            messagesNotification[i].from === currentSelectedChat.users[0]._id
-          ) {
-            haveNotifications = true;
-            break;
-          }
-        }
-        if (haveNotifications) {
-          {
-            currentSelectedChat.users[0]._id === userData._id
-              ? deleteNotifications(
-                  currentSelectedChat.users[1]._id,
-                  currentSelectedChat.users[0]._id
-                )
-              : deleteNotifications(
-                  currentSelectedChat.users[0]._id,
-                  currentSelectedChat.users[1]._id
-                );
-          }
-        }
-      }
-    }
+    selectedChatRef.current = currentSelectedChat;
   }, [currentSelectedChat]);
 
-  useEffect(() => {
-    if (notify.length > 0) {
-      sendMessageNotification(
-        notify[notify.length - 1]._id,
-        notify[notify.length - 1].sender._id
-      );
-    }
-  }, [notify]);
-
-  useEffect(() => {
-    if (Object.keys(userData).length > 0) {
-      socket.on("message received", (newMessageReceived) => {
-        if (
-          !selectedChatCompare ||
-          selectedChatCompare._id !== newMessageReceived.chat_id._id
-        ) {
-          //give Notification
-          if (!notify.includes(newMessageReceived)) {
-            setNotify([...notify, newMessageReceived]);
-          }
-        } else {
-          setMessages([...messages, newMessageReceived]);
+  const getAllMessages = useCallback((chat) => {
+    setLoadingMessages(true);
+    api(`/api/messages/get/${chat._id}`)
+      .then((res) => {
+        if (res.success) {
+          setDisplayChats("none");
+          setDisplayMessage("block");
+          setMessages(res.data);
+          if (socketRef.current) socketRef.current.emit("join chat", chat._id);
         }
-      });
-    }
-  });
+      })
+      .catch((err) => console.log(err, "error"))
+      .finally(() => setLoadingMessages(false));
+  }, []);
+
+  const getChats = useCallback(
+    (selectChatId) => {
+      api("/api/chats/allchats")
+        .then((res) => {
+          if (res.success) {
+            setChatsData(res.data);
+            if (res.data.length > 0) {
+              const chat =
+                (selectChatId &&
+                  res.data.find((c) => c._id === selectChatId)) ||
+                res.data[0];
+              setCurrentSelectedChat(chat);
+              getAllMessages(chat);
+            }
+          } else {
+            toast.error(res.message || "Something went wrong");
+          }
+        })
+        .catch((err) => {
+          toast.error("Something went wrong");
+          console.log(err, "error");
+        })
+        .finally(() => setLoadingChats(false));
+    },
+    [getAllMessages, toast],
+  );
+
+  // Load chats once the logged-in user is known
+  useEffect(() => {
+    if (!hasUser) return;
+    setLoadingChats(true);
+    getChats();
+  }, [hasUser, getChats]);
+
+  // Socket lifecycle
+  useEffect(() => {
+    if (!hasUser) return undefined;
+
+    const socket = io(root_url, { auth: { token: userToken } });
+    socketRef.current = socket;
+
+    socket.emit("setup", { _id: userData._id });
+    socket.on("connected", () => setSocketConnected(true));
+    socket.on("typing", () => setIsTyping(true));
+    socket.on("stop typing", () => setIsTyping(false));
+    socket.on("message received", (newMessageReceived) => {
+      const selected = selectedChatRef.current;
+      const chatId =
+        newMessageReceived.chat_id &&
+        (newMessageReceived.chat_id._id || newMessageReceived.chat_id);
+      if (!selected || selected._id !== chatId) {
+        sendMessageNotification(
+          newMessageReceived._id,
+          newMessageReceived.sender._id,
+        );
+      } else {
+        setMessages((prev) =>
+          prev.some((m) => m._id === newMessageReceived._id)
+            ? prev
+            : [...prev, newMessageReceived],
+        );
+      }
+      // Keep the chat list's "latest message" fresh
+      setChatsData((prev) =>
+        prev.map((c) =>
+          c._id === chatId ? { ...c, latestMessage: newMessageReceived } : c,
+        ),
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+      socketRef.current = null;
+      setSocketConnected(false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasUser, userData._id, userToken]);
+
+  // Clear message notifications from the user whose chat is open
+  useEffect(() => {
+    if (!hasUser || !currentSelectedChat) return;
+    const other = otherUser(currentSelectedChat, userData);
+    if (!other) return;
+    const hasNotifications = messagesNotification.some(
+      (n) => n.from === other._id,
+    );
+    if (hasNotifications) deleteNotifications(other._id, userData._id);
+  }, [
+    currentSelectedChat,
+    messagesNotification,
+    hasUser,
+    userData,
+    deleteNotifications,
+  ]);
 
   const typingHandler = (e) => {
     setMsg(e.target.value);
+    if (!socketConnected || !currentSelectedChat || !socketRef.current) return;
 
-    if (!socketConnected) return;
-
-    if (!typing) {
-      setTyping(true);
-      socket.emit("typing", currentSelectedChat._id);
+    if (!typingRef.current) {
+      typingRef.current = true;
+      socketRef.current.emit("typing", currentSelectedChat._id);
     }
-    let lastTypingTime = new Date().getTime();
-    var timerLength = 2000;
-
-    setTimeout(() => {
-      var timeNow = new Date().getTime();
-      var timeDiff = timeNow - lastTypingTime;
-      if (timeDiff >= timerLength && typing) {
-        socket.emit("stop typing", currentSelectedChat._id);
-        setTyping(false);
-      }
-    }, timerLength);
-  };
-
-  const getChats = () => {
-    fetch(`${root_url}/api/chats/allchats`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setChatsData(res.data);
-          if (res.data.length > 0) {
-            setCurrentSelectedChat(res.data[0]);
-            getAllMessages(res.data[0]);
-          }
-        } else {
-          alert("Something went wrong");
-        }
-      })
-      .catch((err) => {
-        alert("Something went wrong");
-        console.log(err, "error");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(() => {
+      if (socketRef.current)
+        socketRef.current.emit("stop typing", currentSelectedChat._id);
+      typingRef.current = false;
+    }, TYPING_TIMEOUT_MS);
   };
 
   const handleSelectEmoji = (e) => {
@@ -186,62 +220,70 @@ export const Messages = () => {
   };
 
   const handleSendMessage = () => {
-    socket.emit("stop typing", currentSelectedChat._id);
-    if (msg === "") {
-      return;
-    }
-    fetch(`${root_url}/api/messages/send`, {
-      method: "POST",
-      body: JSON.stringify({ message: msg, chat_id: currentSelectedChat._id }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        socket.emit("new message", res.data);
-        setMessages([...messages, res.data]);
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {
-        setShowEmojiPicker(false);
-      });
+    if (!currentSelectedChat) return;
+    const text = msg.trim();
+    if (text === "") return;
+
+    if (socketRef.current)
+      socketRef.current.emit("stop typing", currentSelectedChat._id);
+    typingRef.current = false;
     setMsg("");
+    setShowEmojiPicker(false);
+    setSending(true);
+
+    api("/api/messages/send", {
+      method: "POST",
+      body: { message: text, chat_id: currentSelectedChat._id },
+    })
+      .then((res) => {
+        if (!res.success || !res.data) {
+          toast.error(res.message || "Message could not be sent");
+          return;
+        }
+        if (socketRef.current) socketRef.current.emit("new message", res.data);
+        setMessages((prev) => [...prev, res.data]);
+        setChatsData((prev) =>
+          prev.map((c) =>
+            c._id === currentSelectedChat._id
+              ? { ...c, latestMessage: res.data }
+              : c,
+          ),
+        );
+      })
+      .catch((err) => console.log(err, "error"))
+      .finally(() => setSending(false));
   };
 
-  const searchUsers = debounce(() => {
-    fetch(`${root_url}/api/users/search?q=${searchRef.current.value}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
+  const searchUsers = () => {
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      const q = searchRef.current ? searchRef.current.value.trim() : "";
+      if (!q) {
+        setSearchData([]);
+        setSearching(false);
+        return;
       }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        setSearchData(res.data);
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  }, 500);
-
-  function debounce(fn, delay) {
-    let id;
-    return () => {
-      clearTimeout(id);
-      id = setTimeout(() => {
-        fn();
-      }, delay);
-    };
-  }
+      setSearching(true);
+      api(`/api/users/search?q=${encodeURIComponent(q)}`)
+        .then((res) =>
+          setSearchData(
+            res.success ? res.data.filter((u) => u._id !== userData._id) : [],
+          ),
+        )
+        .catch((err) => console.log(err, "error"))
+        .finally(() => setSearching(false));
+    }, 400);
+  };
 
   const handleSelectSearchChat = (id) => {
-    searchRef.current.value = "";
+    if (searchRef.current) searchRef.current.value = "";
     setSearchData([]);
-    handleAccessChat(id);
+    api("/api/chats/create", { method: "POST", body: { userId: id } })
+      .then((res) => getChats(res.data && res.data._id))
+      .catch((err) => {
+        console.log(err, "error");
+        getChats();
+      });
   };
 
   const handleChatClick = (chat) => {
@@ -254,578 +296,325 @@ export const Messages = () => {
     setDisplayMessage("none");
   };
 
-  const getAllMessages = (chat) => {
-    fetch(`${root_url}/api/messages/get/${chat._id}`, {
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setDisplayChats("none");
-          setDisplayMessage("block");
-          setMessages(res.data);
-          socket.emit("join chat", chat._id);
+  const DateConvert = ({ date }) => (
+    <Typography sx={{ fontSize: "13px" }}> {timeAgo(date)}</Typography>
+  );
+
+  // Avoid re-computing the search dropdown visibility on every keystroke render
+  const showSearchResults = useMemo(
+    () =>
+      searchData.length > 0 &&
+      searchRef.current &&
+      searchRef.current.value.length > 0,
+    [searchData],
+  );
+  const other = otherUser(currentSelectedChat, userData);
+  const profileLink = (sx) =>
+    other
+      ? {
+          component: RouterLink,
+          to: `/${other.username}`,
+          sx: { textDecoration: "none", ...sx },
         }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
-
-  const handleAccessChat = (user_id) => {
-    fetch(`${root_url}/api/chats/create`, {
-      method: "POST",
-      body: JSON.stringify({ userId: user_id }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {})
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {
-        getChats();
-      });
-  };
-
-  const DateConvert = ({ date }) => {
-    let newDate = moment(date).fromNow();
-    const all = newDate.split(" ");
-    all.splice(all.length - 1, 1);
-    if (all[0] === "a" || all[0] === "an") {
-      all[0] = 1;
-    }
-    if (all[1] === "few") {
-      all[0] = "now";
-      all.splice(1, 2);
-    }
-    if (all[1] === "second" || all[1] === "seconds") {
-      all[1] = "s";
-    }
-    if (all[1] === "minute" || all[1] === "minutes") {
-      all[1] = "m";
-    }
-    if (all[1] === "hour" || all[1] === "hours") {
-      all[1] = "h";
-    }
-    if (all[1] === "day" || all[1] === "days") {
-      all[1] = "d";
-    }
-    if (all[1] === "month" || all[1] === "months") {
-      all[1] = "m";
-    }
-    if (all[1] === "year" || all[1] === "years") {
-      all[1] = "y";
-    }
-
-    const updatedDate = all.join("");
-    return <Typography fontSize="13px"> {updatedDate}</Typography>;
-  };
+      : { sx };
 
   return (
-    <>
-      {isLoading && <Loader />}
-      <Navbar />
-      <BottomBar />
-      <Stack direction={"row"}>
-        <LeftSideBar />
+    <AppShell width="full">
+      <Paper
+        sx={{
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", md: "320px 1fr", lg: "360px 1fr" },
+          height: { xs: "calc(100vh - 160px)", sm: "calc(100vh - 120px)" },
+          overflow: "hidden",
+        }}
+      >
+        {/* Conversations */}
         <Box
-          marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
-          width="100%"
-          display="grid"
-          justifyContent="center"
+          sx={{
+            display: {
+              xs: displayChats === "none" ? "none" : "flex",
+              md: "flex",
+            },
+            flexDirection: "column",
+            height: "100%",
+            minHeight: 0,
+            minWidth: 0,
+            borderRight: { md: "1px solid" },
+            borderColor: { md: "divider" },
+          }}
         >
           <Box
-            m={{ xs: "60px 0", sm: "20px 0" }}
-            height={{ xs: "calc(100vh - 125px)", sm: "calc(100vh - 45px)" }}
-            display={"grid"}
-            gridTemplateColumns={{
-              xs: "calc(100vw - 40px) 100%",
-              sm: "100% 100%",
-              md: "40% 60%",
-            }}
-            width={{
-              xs: "100%",
-              sm: "500px",
-              md: "800px",
-              lg: "900px",
+            sx={{
+              px: 2,
+              pt: 2,
+              pb: 1.5,
+              position: "relative",
+              borderBottom: "1px solid",
+              borderColor: "divider",
             }}
           >
-            <Paper
-              sx={{
-                mr: { xs: "0", md: "20px" },
-                border: "1px solid #d2d2d2",
-                maxHeight: {
-                  xs: "calc(100vh - 125px)",
-                  sm: "calc(100vh - 45px)",
+            <Typography variant="h5" component="h1" sx={{ mb: 1.5 }}>
+              Messages
+            </Typography>
+            <TextField
+              fullWidth
+              size="small"
+              type="text"
+              id="search"
+              autoComplete="off"
+              placeholder="Search people"
+              onInput={searchUsers}
+              inputRef={searchRef}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <IoSearchOutline />
+                    </InputAdornment>
+                  ),
                 },
-                display: { xs: displayChats, md: "block" },
               }}
-            >
-              <Box height="100%" position="relative" zIndex="2">
-                <Box>
-                  <Stack
-                    borderBottom="1px solid #d2d2d2"
-                    p="20px 0"
-                    height="30px"
-                    direction="row"
-                    gap="20px"
-                    justifyContent="center"
-                    alignItems="center"
-                  >
-                    <Link
-                      href={`/${userData.username}`}
-                      underline="none"
-                      color="#000"
-                    >
-                      <Typography
-                        fontFamily={"Dancing Script"}
-                        fontSize="22px"
-                        fontWeight="600"
-                      >
-                        {userData.username}
-                      </Typography>
-                    </Link>
-                  </Stack>
-                  <TextField
-                    fullWidth
-                    onInput={searchUsers}
-                    inputRef={searchRef}
-                    placeholder="Search Users..."
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        "& fieldset": {
-                          borderColor: "transparent",
-                        },
-                        "&:hover fieldset": {
-                          border: "none",
-                        },
-                        "&.Mui-focused fieldset": {
-                          border: "none",
-                        },
-                      },
-                      bgcolor: "transparent",
-                      borderBottom: "1px solid #d2d2d2",
-                    }}
-                    type="text"
-                    id="search"
-                    autoComplete="off"
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <CiSearch
-                            fontSize="20px"
-                            style={{ cursor: "pointer" }}
-                            onClick={searchUsers}
-                          />
-                        </InputAdornment>
-                      ),
-                      style: {
-                        height: "40px",
-                      },
-                    }}
-                  />
-                  {searchData.length > 0 &&
-                    searchRef.current.value.length > 0 && (
-                      <Box
-                        bgcolor="#fff"
-                        zIndex="5"
-                        position="absolute"
-                        width="100%"
-                        maxHeight="400px"
-                      >
-                        <Paper
-                          sx={{
-                            maxHeight: "200px",
-                            overflowY: "scroll",
-                            borderRadius: "5px",
-                            mt: "10px",
-                            "::-webkit-scrollbar": {
-                              width: "5px",
-                            },
-                            "::-webkit-scrollbar-thumb": {
-                              background: "#d1d1d1",
-                              borderRadius: "10px",
-                            },
-                          }}
-                          mt="10px"
-                        >
-                          <Box sx={{ p: "5px 10px" }}>
-                            {searchData.map((el) => (
-                              <Box
-                                key={el._id}
-                                onClick={() => handleSelectSearchChat(el._id)}
-                                sx={{
-                                  borderRadius: "10px",
-                                  border: "1px solid #fff",
-                                  "&:hover": {
-                                    border: "1px solid #d2d2d2",
-                                  },
-                                }}
-                              >
-                                <Stack
-                                  padding="5px 10px"
-                                  sx={{ cursor: "pointer" }}
-                                  alignItems="center"
-                                  direction={"row"}
-                                >
-                                  <Avatar sx={{ mr: "30px" }} src={el.image} />
-                                  <Box>
-                                    <Typography
-                                      fontSize="20px"
-                                      fontWeight={600}
-                                      fontFamily={"'Dancing Script', cursive"}
-                                    >
-                                      {el.username}
-                                    </Typography>
-                                    <Typography color="#8d929b">
-                                      {el.full_name}
-                                    </Typography>
-                                  </Box>
-                                </Stack>
-                              </Box>
-                            ))}
-                          </Box>
-                        </Paper>
-                      </Box>
+            />
+            {(searching || showSearchResults) && (
+              <Paper
+                sx={{
+                  position: "absolute",
+                  left: 16,
+                  right: 16,
+                  top: "100%",
+                  zIndex: 5,
+                  maxHeight: 280,
+                  overflowY: "auto",
+                  p: 0.75,
+                  boxShadow: 4,
+                }}
+              >
+                {searching ? (
+                  <UserRowSkeleton count={3} dense />
+                ) : (
+                  searchData.map((el) => (
+                    <UserListItem
+                      key={el._id}
+                      user={el}
+                      dense
+                      onClick={() => handleSelectSearchChat(el._id)}
+                    />
+                  ))
+                )}
+              </Paper>
+            )}
+          </Box>
+
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: "auto", px: 1, py: 1 }}>
+            {loadingChats ? (
+              <UserRowSkeleton count={5} />
+            ) : chatsData.length > 0 ? (
+              <Stack spacing={0.25}>
+                {chatsData.map((el) => (
+                  <UserListItem
+                    key={el._id}
+                    user={otherUser(el, userData)}
+                    secondary={
+                      el.latestMessage ? el.latestMessage.message : "Say hello"
+                    }
+                    trailing={
+                      el.latestMessage ? (
+                        <Box sx={{ color: "text.secondary", flexShrink: 0 }}>
+                          <DateConvert date={el.latestMessage.createdAt} />
+                        </Box>
+                      ) : null
+                    }
+                    selected={Boolean(
+                      currentSelectedChat && el._id === currentSelectedChat._id,
                     )}
+                    onClick={() => handleChatClick(el)}
+                  />
+                ))}
+              </Stack>
+            ) : (
+              <EmptyState
+                compact
+                image="/Images/user.png"
+                title="No conversations yet"
+                subtitle="Search for someone to start chatting."
+              />
+            )}
+          </Box>
+        </Box>
+
+        {/* Conversation */}
+        <Box
+          sx={{
+            display: {
+              xs: displayMessage === "none" ? "none" : "flex",
+              md: "flex",
+            },
+            flexDirection: "column",
+            height: "100%",
+            minHeight: 0,
+            minWidth: 0,
+            position: "relative",
+          }}
+        >
+          {currentSelectedChat && other ? (
+            <>
+              <Stack
+                direction="row"
+                spacing={1.5}
+                sx={{
+                  alignItems: "center",
+                  px: { xs: 1.5, sm: 2 },
+                  py: 1.25,
+                  borderBottom: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <IconButton
+                  aria-label="Back to conversations"
+                  onClick={goBackToChat}
+                  edge="start"
+                  sx={{ display: { xs: "inline-flex", md: "none" } }}
+                >
+                  <IoChevronBack />
+                </IconButton>
+                <Avatar
+                  {...profileLink()}
+                  src={other.image}
+                  alt={other.username}
+                >
+                  {(other.username || "?").slice(0, 1).toUpperCase()}
+                </Avatar>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
+                    variant="subtitle1"
+                    noWrap
+                    {...profileLink({
+                      display: "block",
+                      color: "text.primary",
+                      "&:hover": { color: "primary.main" },
+                    })}
+                  >
+                    {other.full_name || other.username}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    noWrap
+                    sx={{
+                      display: "block",
+                      color: istyping ? "primary.main" : "text.secondary",
+                    }}
+                  >
+                    {istyping ? "typing…" : `@${other.username}`}
+                  </Typography>
                 </Box>
+              </Stack>
+
+              <Box
+                sx={{
+                  flex: 1,
+                  minHeight: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  "& > div": { flex: 1, minHeight: 0 },
+                }}
+              >
+                {loadingMessages ? (
+                  <MessagesSkeleton />
+                ) : (
+                  <ScrollableFeed className="messageDiv">
+                    <UserMessages messages={messages} />
+                  </ScrollableFeed>
+                )}
+              </Box>
+
+              {showEmojiPicker && (
                 <Box
-                  height="calc(100% - 135px)"
-                  p="10px"
                   sx={{
-                    overflowY: "scroll",
-                    "::-webkit-scrollbar": {
-                      width: "5px",
-                    },
-                    "::-webkit-scrollbar-thumb": {
-                      background: "#d1d1d1",
-                      borderRadius: "10px",
+                    position: "absolute",
+                    left: 16,
+                    right: 16,
+                    bottom: 76,
+                    zIndex: 5,
+                  }}
+                >
+                  <EmojiPicker
+                    onEmojiClick={(e) => handleSelectEmoji(e)}
+                    theme="light"
+                    width={"100%"}
+                    height={400}
+                    emojiStyle="google"
+                  />
+                </Box>
+              )}
+
+              <Stack
+                direction="row"
+                spacing={1}
+                sx={{
+                  alignItems: "center",
+                  px: { xs: 1.5, sm: 2 },
+                  py: 1.5,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <IconButton
+                  aria-label={
+                    showEmojiPicker ? "Close emoji picker" : "Add emoji"
+                  }
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  color={showEmojiPicker ? "primary" : "default"}
+                >
+                  {showEmojiPicker ? <IoClose /> : <IoHappyOutline />}
+                </IconButton>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="text"
+                  id="message"
+                  autoComplete="off"
+                  placeholder="Message…"
+                  value={msg}
+                  onChange={typingHandler}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSendMessage();
+                    }
+                  }}
+                />
+                <IconButton
+                  aria-label="Send message"
+                  onClick={handleSendMessage}
+                  disabled={msg.trim() === "" || sending}
+                  sx={{
+                    bgcolor: "primary.main",
+                    color: "primary.contrastText",
+                    "&:hover": { bgcolor: "primary.dark" },
+                    "&.Mui-disabled": {
+                      bgcolor: "action.selected",
+                      color: "text.secondary",
                     },
                   }}
                 >
-                  <Stack>
-                    {chatsData.length > 0 ? (
-                      <Stack gap="10px">
-                        {chatsData.map((el) => (
-                          <Stack
-                            border={
-                              el._id === currentSelectedChat._id
-                                ? "1px solid gray"
-                                : "1px solid #fff"
-                            }
-                            key={el._id}
-                            p="10px"
-                            bgcolor="#f3f3f3"
-                            direction="row"
-                            borderRadius="10px"
-                            boxSizing="border-box"
-                            gap="20px"
-                            alignItems="center"
-                            sx={{ cursor: "pointer" }}
-                            onClick={() => handleChatClick(el)}
-                          >
-                            <Avatar
-                              src={
-                                el.users[0]._id === userData._id
-                                  ? el.users[1].image
-                                  : el.users[0].image
-                              }
-                              alt="userImage"
-                              sx={{ height: "60px", width: "60px" }}
-                            />
-                            <Stack row="column" gap="5px" width="100%">
-                              <Typography
-                                fontFamily={"Dancing Script"}
-                                fontSize="18px"
-                                fontWeight="600"
-                              >
-                                {el.users[0]._id === userData._id
-                                  ? el.users[1].full_name
-                                  : el.users[0].full_name}
-                              </Typography>
-                              {el.latestMessage && (
-                                <Stack
-                                  fontSize="13px"
-                                  alignItems="center"
-                                  width="100%"
-                                  justifyContent="space-between"
-                                  direction="row"
-                                >
-                                  <Typography
-                                    height="20px"
-                                    width="100px"
-                                    sx={{
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      WebkitLineClamp: 1,
-                                      fontSize: "13px",
-                                      display: "-webkit-box",
-                                      width: "100px",
-                                      WebkitBoxOrient: "vertical",
-                                    }}
-                                  >
-                                    {el.latestMessage.message}
-                                  </Typography>
-                                  <DateConvert
-                                    date={el.latestMessage.createdAt}
-                                  />
-                                </Stack>
-                              )}
-                            </Stack>
-                          </Stack>
-                        ))}
-                      </Stack>
-                    ) : (
-                      <Box>
-                        <Box
-                          display={"flex"}
-                          justifyContent="center"
-                          alignItems="center"
-                          height="40vh"
-                        >
-                          <img
-                            width="140px"
-                            height="120px"
-                            src="/Images/user.png"
-                            alt=""
-                          />
-                        </Box>
-                        <Typography
-                          textAlign={"center"}
-                          color="#a1a1a1"
-                          fontSize="20px"
-                        >
-                          Search users to start the chat
-                        </Typography>
-                      </Box>
-                    )}
-                  </Stack>
-                </Box>
-              </Box>
-            </Paper>
-            <Paper
-              sx={{
-                border: "1px solid #d2d2d2",
-                maxHeight: {
-                  xs: "calc(100vh - 125px)",
-                  sm: "calc(100vh - 45px)",
-                },
-                display: { xs: displayMessage, md: "block" },
-              }}
-            >
-              {currentSelectedChat ? (
-                <Box height="100%" position="relative">
-                  <Stack
-                    direction="row"
-                    justifyContent="space-between"
-                    borderBottom="1px solid #d2d2d2"
-                  >
-                    <Stack
-                      direction="row"
-                      p="20px 10px"
-                      height="30px"
-                      gap={{ xs: "10px", md: "20px" }}
-                    >
-                      <Stack gap="5px" alignItems="center" direction="row">
-                        <Box display={{ xs: "block", md: "none" }}>
-                          <IoChevronBack
-                            onClick={goBackToChat}
-                            fontSize="20px"
-                            style={{ cursor: "pointer" }}
-                          />
-                        </Box>
-
-                        <Avatar
-                          sx={{ h: "40px", w: "40px" }}
-                          src={
-                            currentSelectedChat.users[0]._id === userData._id
-                              ? currentSelectedChat.users[1].image
-                              : currentSelectedChat.users[0].image
-                          }
-                          alt="userImage"
-                        />
-                      </Stack>
-                      <Stack direction="column">
-                        <Link
-                          href={
-                            currentSelectedChat.users[0]._id === userData._id
-                              ? currentSelectedChat.users[1].username
-                              : currentSelectedChat.users[0].username
-                          }
-                          underline="none"
-                          color="#000"
-                        >
-                          <Typography
-                            fontSize={{ xs: "15px", md: "20px" }}
-                            fontWeight="500"
-                          >
-                            {currentSelectedChat.users[0]._id === userData._id
-                              ? currentSelectedChat.users[1].full_name
-                              : currentSelectedChat.users[0].full_name}
-                          </Typography>
-                        </Link>
-                        <Typography height="25px" mt="-5px">
-                          {istyping && "typing..."}
-                        </Typography>
-                      </Stack>
-                    </Stack>
-                    <Stack
-                      direction="row"
-                      alignItems="center"
-                      gap="10px"
-                      p="0 10px"
-                    >
-                      <IoCallOutline
-                        fontSize="20px"
-                        style={{ cursor: "pointer" }}
-                      />
-                      <BiVideo fontSize="20px" style={{ cursor: "pointer" }} />
-                      <BsInfoCircle
-                        fontSize="20px"
-                        style={{ cursor: "pointer" }}
-                      />
-                    </Stack>
-                  </Stack>
-                  <Box
-                    height={{
-                      xs: "calc(100vh - 275px)",
-                      sm: "calc(100vh - 195px)",
-                    }}
-                  >
-                    <ScrollableFeed className="messageDiv">
-                      <UserMessages messages={messages} />
-                    </ScrollableFeed>
-                  </Box>
-                  <Box height="80px" display="flex" alignItems="center">
-                    <Stack
-                      direction="row"
-                      height="40px"
-                      border="1px solid gray"
-                      width="100%"
-                      m="0 20px"
-                      pl="15px"
-                      alignItems="center"
-                      borderRadius="20px"
-                    >
-                      {showEmojiPicker ? (
-                        <RxCross2
-                          onClick={() => setShowEmojiPicker(false)}
-                          style={{ cursor: "pointer" }}
-                          color="gray"
-                          fontSize="30px"
-                        />
-                      ) : (
-                        <MdOutlineEmojiEmotions
-                          fontSize="30px"
-                          onClick={() => setShowEmojiPicker(true)}
-                          style={{ cursor: "pointer" }}
-                          color="gray"
-                        />
-                      )}
-                      <Box
-                        position="absolute"
-                        width="calc(100% - 20px)"
-                        bottom="80px"
-                        left="10px"
-                      >
-                        {showEmojiPicker && (
-                          <EmojiPicker
-                            onEmojiClick={(e) => handleSelectEmoji(e)}
-                            theme="light"
-                            width={"100%"}
-                            height={400}
-                            emojiStyle="google"
-                          />
-                        )}
-                      </Box>
-                      <TextField
-                        fullWidth
-                        value={msg}
-                        onChange={typingHandler}
-                        placeholder="Message"
-                        sx={{
-                          "& .MuiOutlinedInput-root": {
-                            "& fieldset": {
-                              borderColor: "transparent",
-                            },
-                            "&:hover fieldset": {
-                              border: "none",
-                            },
-                            "&.Mui-focused fieldset": {
-                              border: "none",
-                            },
-                          },
-                          bgcolor: "transparent",
-                        }}
-                        type="text"
-                        id="message"
-                        autoComplete="off"
-                        InputProps={{
-                          style: {
-                            height: "40px",
-                          },
-                        }}
-                      />
-                      <Box
-                        onClick={handleSendMessage}
-                        sx={{
-                          width: "100px",
-                          height: "100%",
-                          display: "grid",
-                          placeContent: "center",
-                          borderRadius: "20px",
-                          cursor: "pointer",
-                          bgcolor: "#d2d2d2",
-                        }}
-                      >
-                        <AiOutlineSend fontSize="25px" color="#676767" />
-                      </Box>
-                    </Stack>
-                  </Box>
-                </Box>
-              ) : (
-                <Box
-                  display="flex"
-                  justifyContent="center"
-                  alignItems="center"
-                  height="100%"
-                >
-                  <Stack color="#a1a1a1">
-                    <Grid display="grid" sx={{ placeContent: "center" }}>
-                      <img
-                        width="130px"
-                        height="130px"
-                        src="/Images/sendMessage.png"
-                        alt=""
-                      />
-                    </Grid>
-                    <Typography fontSize="20px" textAlign="center">
-                      Welcome{" "}
-                      <Typography
-                        fontSize="25px"
-                        component="span"
-                        color="#0066ff"
-                      >
-                        {userData.full_name}
-                      </Typography>
-                    </Typography>
-                    <Typography fontSize="20px" textAlign="center">
-                      Please Select the user to show the chat
-                    </Typography>
-                  </Stack>
-                </Box>
-              )}
-            </Paper>
-          </Box>
+                  {sending ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <IoSend />
+                  )}
+                </IconButton>
+              </Stack>
+            </>
+          ) : (
+            <EmptyState
+              image="/Images/sendMessage.png"
+              title="Your messages"
+              subtitle="Pick a conversation or search for someone to start chatting"
+              sx={{ height: "100%" }}
+            />
+          )}
         </Box>
-      </Stack>
-    </>
+      </Paper>
+    </AppShell>
   );
 };

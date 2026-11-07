@@ -1,175 +1,132 @@
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  Grid,
-  Stack,
-  Typography,
-} from "@mui/material";
-import React, { useContext } from "react";
-import { useEffect } from "react";
-import { useState } from "react";
-import { HiRectangleStack } from "react-icons/hi2";
-import { Loader } from "../components/Loader";
+import { Box, CircularProgress } from "@mui/material";
+import { useCallback, useContext } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { IoCopyOutline } from "react-icons/io5";
+import { AppShell, PageHeader } from "../components/layout/AppShell";
+import { EmptyState } from "../components/common/EmptyState";
+import { SmartImage } from "../components/common/SmartImage";
+import { TileGridSkeleton } from "../components/common/Skeletons";
 import { SinglePost } from "../components/SinglePost";
 import { AuthContext } from "../context/AuthContext";
-import { Navbar } from "../components/Bars/Navbar";
-import { BottomBar } from "../components/Bars/BottomBar";
-import { LeftSideBar } from "../components/Bars/LeftSideBar";
-import { root_url } from "../utils/url";
+import { api } from "../utils/api";
+import { EVENTS } from "../utils/events";
+import { useAppEvent } from "../hooks/useAppEvent";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { usePaginatedList } from "../hooks/usePaginatedList";
 
 export const Explore = () => {
-  const [exploreData, setExploreData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalLength, setTotalLength] = useState(0);
-  const { showSinglePost, postData, handleClick, userToken } = useContext(AuthContext);
-
-  useEffect(() => {
-    setIsLoading(true);
-    fetchExploreData();
+  usePageTitle("Explore");
+  const { showSinglePost, postData, handleClick } = useContext(AuthContext);
+  const fetchPage = useCallback(async (page) => {
+    const res = await api(`/api/posts/explore/data?page=${page}`);
+    return res.success
+      ? { items: res.data, total: res.totalData }
+      : { items: [], total: 0 };
   }, []);
+  const {
+    items: exploreData,
+    isLoading,
+    hasMore,
+    next: fetchExploreData,
+    reload,
+    setItems,
+  } = usePaginatedList(fetchPage);
 
-  const fetchExploreData = () => {
-    setPage((prev) => prev + 1);
+  const onPostDeleted = useCallback(
+    (detail) => {
+      const id = detail && detail.id;
+      if (!id) return;
+      setItems((prev) => prev.filter((el) => el._id !== id));
+    },
+    [setItems],
+  );
+  useAppEvent(EVENTS.POST_DELETED, onPostDeleted);
 
-    fetch(`${root_url}/api/posts/explore/data?page=${page}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setExploreData(() => [...exploreData, ...res.data]);
-          setTotalLength(res.totalData);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+  const onPostCreated = useCallback(() => {
+    reload();
+  }, [reload]);
+  useAppEvent(EVENTS.POST_CREATED, onPostCreated);
 
   return (
-    <>
-      <Navbar />
-      <BottomBar />
+    <AppShell width="wide">
       {showSinglePost && <SinglePost id={postData._id} />}
+      <PageHeader title="Explore" subtitle="Discover what people are sharing" />
       {isLoading ? (
-        <Loader />
-      ) : (
-        <Stack direction={"row"}>
-          <LeftSideBar />
-          <Box
-            marginLeft={{ xs: "0", sm: "80px", lg: "240px" }}
-            width="100%"
-            display="grid"
-            justifyContent="center"
-          >
-            <Box
-              p={{ xs: "70px 20px", sm: "30px 0" }}
-              width={{
-                xs: "calc(100% - 40px)",
-                sm: "500px",
-                md: "800px",
-                lg: "900px",
-              }}
-            >
-              {exploreData.length > 0 ? (
-                <InfiniteScroll
-                  dataLength={exploreData.length}
-                  className={"scrollDiv"}
-                  next={fetchExploreData}
-                  hasMore={totalLength !== exploreData.length}
-                  loader={
-                    <div
-                      style={{
-                        display: "grid",
-                        placeContent: "center",
-                        padding: "30px 0",
-                      }}
-                    >
-                      <CircularProgress sx={{ color: "#bbbbbb" }} />
-                    </div>
-                  }
-                >
-                  <Grid
-                    display="grid"
-                    gridTemplateColumns={"repeat(3,1fr)"}
-                    gap="10px"
-                  >
-                    {exploreData.map((el) => (
-                      <Box
-                        key={el._id}
-                        height={{ xs: "130px", sm: "200px", md: "280px" }}
-                        onClick={() => handleClick(el._id)}
-                        sx={{
-                          cursor: "pointer",
-                          position: "relative",
-                          "&:hover": {
-                            opacity: "0.5",
-                          },
-                        }}
-                      >
-                        {el.post_images.length > 1 && (
-                          <HiRectangleStack
-                            style={{
-                              color: "#ffffff",
-                              fontSize: "30px",
-                              top: "2px",
-                              position: "absolute",
-                              right: "0",
-                              transform: "rotate(90deg)",
-                            }}
-                          />
-                        )}
-                        <img
-                          height="100%"
-                          width="100%"
-                          src={el.post_images[0].url}
-                          loading="lazy"
-                          alt=""
-                        />
-                      </Box>
-                    ))}
-                  </Grid>
-                </InfiniteScroll>
-              ) : (
-                <Box
-                  display="flex"
-                  alignItems="center"
-                  height="100vh"
-                  justifyContent="center"
-                >
-                  <Box>
-                    <Box width="200px" height="200px">
-                      <img
-                        width="100%"
-                        height="100%"
-                        style={{ objectFit: "contain" }}
-                        src="/Images/nopost.png"
-                        alt=""
-                      />
-                    </Box>
-                    <Typography
-                      textAlign="center"
-                      fontSize={"30px"}
-                      color="#a1a1a1"
-                    >
-                      Nothing here
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
+        <TileGridSkeleton count={9} />
+      ) : exploreData.length > 0 ? (
+        <InfiniteScroll
+          dataLength={exploreData.length}
+          className="scrollDiv"
+          next={fetchExploreData}
+          hasMore={hasMore}
+          loader={
+            <Box sx={{ display: "grid", placeContent: "center", py: 3 }}>
+              <CircularProgress size={24} />
             </Box>
+          }
+        >
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: { xs: 1, md: 1.5 },
+            }}
+          >
+            {exploreData.map((el) => (
+              <Box
+                key={el._id}
+                onClick={() => handleClick(el._id)}
+                role="button"
+                tabIndex={0}
+                sx={{
+                  position: "relative",
+                  aspectRatio: "1 / 1",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  bgcolor: "action.hover",
+                  "&::after": {
+                    content: '""',
+                    position: "absolute",
+                    inset: 0,
+                    bgcolor: "common.black",
+                    opacity: 0,
+                    transition: "opacity 150ms",
+                  },
+                  "&:hover::after": { opacity: 0.18 },
+                }}
+              >
+                <SmartImage
+                  src={el.post_images[0].url}
+                  alt=""
+                  ratio="1 / 1"
+                  sx={{ width: "100%", height: "100%" }}
+                />
+                {el.post_images.length > 1 && (
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      zIndex: 1,
+                      display: "flex",
+                      color: "common.white",
+                    }}
+                  >
+                    <IoCopyOutline size={18} />
+                  </Box>
+                )}
+              </Box>
+            ))}
           </Box>
-        </Stack>
+        </InfiniteScroll>
+      ) : (
+        <EmptyState
+          image="/Images/nopost.png"
+          title="Nothing here yet"
+          subtitle="New posts from the community will show up here."
+        />
       )}
-    </>
+    </AppShell>
   );
 };

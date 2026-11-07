@@ -1,145 +1,111 @@
-import { Box, Stack, Typography } from "@mui/material";
-import React, { useContext, useEffect, useState } from "react";
-import {
-  BsSuitHeartFill,
-  BsSuitHeart,
-  BsBookmark,
-  BsBookmarkFill,
-} from "react-icons/bs";
-import { FaRegComment, FaAngry, FaLaughSquint, FaSadCry } from "react-icons/fa";
-import { AuthContext } from "../context/AuthContext";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/material";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { BsBookmark, BsBookmarkFill, BsSuitHeart } from "react-icons/bs";
+import { FaRegComment } from "react-icons/fa";
 import { AllReactionsonPost } from "./AllReactionsonPost";
 import { SinglePost } from "./SinglePost";
-import { root_url } from "../utils/url";
+import { ReactionIcon, ReactionPicker } from "./common/ReactionIcon";
+import { useToast } from "../context/ToastContext";
+import { api } from "../utils/api";
 
+/**
+ * Reaction / comment / save row under a post.
+ */
 export const PostsActions = ({ el }) => {
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [showSinglePostFromRecent, setShowSinglePostFromRecent] =
     useState(false);
   const [hasLiked, setHasLiked] = useState({ liked: false, type: "", id: "" });
   const [likeCount, setLikeCount] = useState(0);
-  const { userData, userToken } = useContext(AuthContext);
   const [showAllReactions, setShowAllReactions] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const closeTimer = useRef(null);
+  const toast = useToast();
 
-  const handelCloseShowReactions = () => {
-    setShowAllReactions(false);
+  const openPicker = () => {
+    clearTimeout(closeTimer.current);
+    setPickerOpen(true);
+  };
+  const closePicker = () => {
+    closeTimer.current = setTimeout(() => setPickerOpen(false), 250);
   };
 
-  useEffect(() => {
-    hasLikedByUser();
-    setLikeCount(el.likeCount);
-    hasSaved();
-  }, []);
+  const hasLikedByUser = useCallback(() => {
+    api(`/api/likes/hasliked/${el._id}`)
+      .then((res) => {
+        setHasLiked(
+          res.success
+            ? { liked: true, type: res.like_type, id: res.id }
+            : { liked: false, type: "", id: "" },
+        );
+      })
+      .catch(() => setHasLiked({ liked: false, type: "", id: "" }));
+  }, [el._id]);
 
-  const handleLikes = (val) => {
-    setActionsOpen(false);
-    fetch(`${root_url}/api/likes/createlike`, {
+  const hasSaved = useCallback(() => {
+    api(`/api/savedposts/issaved/${el._id}`)
+      .then((res) => setIsSaved(Boolean(res.success)))
+      .catch((err) => console.log(err, "error"));
+  }, [el._id]);
+
+  useEffect(() => {
+    setLikeCount(el.likeCount);
+    hasLikedByUser();
+    hasSaved();
+    return () => clearTimeout(closeTimer.current);
+  }, [el._id, el.likeCount, hasLikedByUser, hasSaved]);
+
+  const handleLikes = (type) => {
+    setPickerOpen(false);
+    api("/api/likes/createlike", {
       method: "POST",
-      body: JSON.stringify({
-        post_Id: el._id,
-        like_type: val,
-        like_by: userData._id,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
+      body: { post_Id: el._id, like_type: type },
     })
-      .then((res) => res.json())
       .then((res) => {
         if (res.success) {
           setLikeCount((prev) => prev + 1);
           hasLikedByUser();
+        } else {
+          toast.error(res.message || "Something went wrong");
         }
       })
       .catch((err) => {
         console.log(err, "error");
-      })
-      .finally(() => {});
+        toast.error("Something went wrong");
+      });
   };
 
   const handleRemoveLikes = () => {
-    fetch(`${root_url}/api/likes/removelike/${hasLiked.id}`, {
-      method: "DELETE",
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api(`/api/likes/removelike/${hasLiked.id}`, { method: "DELETE" })
       .then((res) => {
         if (res.success) {
-          setLikeCount((prev) => prev - 1);
+          setLikeCount((prev) => Math.max(0, prev - 1));
           hasLikedByUser();
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {});
-  };
-
-  const hasLikedByUser = () => {
-    fetch(`${root_url}/api/likes/hasliked/${el._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setHasLiked({
-            ...hasLiked,
-            liked: true,
-            type: res.like_type,
-            id: res.id,
-          });
         } else {
-          setHasLiked({ liked: false, type: "", id: "" });
+          toast.error(res.message || "Something went wrong");
         }
       })
       .catch((err) => {
         console.log(err, "error");
-        setHasLiked({ liked: false, type: "", id: "" });
+        toast.error("Something went wrong");
       });
   };
 
-  const hasSaved = () => {
-    fetch(`${root_url}/api/savedposts/issaved/${el._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+  const toggleSaved = () => {
+    const req = isSaved
+      ? api(`/api/savedposts/unsave/${el._id}`, { method: "DELETE" })
+      : api("/api/savedposts/save", {
+          method: "POST",
+          body: { post_id: el._id },
+        });
+    req
       .then((res) => {
-        if (res.success) {
-          setIsSaved(true);
-        }
+        if (res.success) setIsSaved(!isSaved);
+        else toast.error(res.message || "Something went wrong");
       })
       .catch((err) => {
         console.log(err, "error");
-      });
-  };
-
-  const handleSaved = () => {
-    fetch(`${root_url}/api/savedposts/save`, {
-      method: "POST",
-      body: JSON.stringify({ post_id: el._id }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${userToken}`
-      },
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setIsSaved(true);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
+        toast.error("Something went wrong");
       });
   };
 
@@ -149,7 +115,7 @@ export const PostsActions = ({ el }) => {
         <AllReactionsonPost
           data={el}
           showAllReactions={showAllReactions}
-          handelCloseShowReactions={handelCloseShowReactions}
+          handelCloseShowReactions={() => setShowAllReactions(false)}
         />
       )}
       {showSinglePostFromRecent && (
@@ -158,130 +124,89 @@ export const PostsActions = ({ el }) => {
           setShowSinglePostFromRecent={setShowSinglePostFromRecent}
         />
       )}
+
       <Stack
         direction="row"
-        justifyContent="space-between"
-        position={"relative"}
-        gap="15px"
+        sx={{
+          alignItems: "center",
+          justifyContent: "space-between",
+          position: "relative",
+          ml: -1,
+        }}
       >
-        <Stack gap="15px" direction="row">
-          {hasLiked.liked ? (
-            <Box>
-              {hasLiked.type === "love" && (
-                <BsSuitHeartFill
+        <Stack sx={{ alignItems: "center" }} direction="row" spacing={0.5}>
+          <Box
+            onMouseEnter={openPicker}
+            onMouseLeave={closePicker}
+            sx={{ position: "relative" }}
+          >
+            {hasLiked.liked ? (
+              <Tooltip title="Remove reaction" arrow>
+                <IconButton
                   onClick={handleRemoveLikes}
-                  fontSize="25px"
-                  color="red"
-                  style={{ cursor: "pointer", padding: "10px 0" }}
-                />
-              )}
-              {hasLiked.type === "funny" && (
-                <FaLaughSquint
-                  onClick={handleRemoveLikes}
-                  fontSize="25px"
-                  color="#eb9800"
-                  style={{ cursor: "pointer", padding: "10px 0" }}
-                />
-              )}
-              {hasLiked.type === "cry" && (
-                <FaSadCry
-                  onClick={handleRemoveLikes}
-                  fontSize="25px"
-                  color="#00baff"
-                  style={{ cursor: "pointer", padding: "10px 0" }}
-                />
-              )}
-              {hasLiked.type === "angry" && (
-                <FaAngry
-                  onClick={handleRemoveLikes}
-                  fontSize="25px"
-                  color="#c30909"
-                  style={{ cursor: "pointer", padding: "10px 0" }}
-                />
-              )}
-            </Box>
-          ) : (
-            <Box>
-              <BsSuitHeart
-                fontSize="25px"
-                onMouseOver={() => setActionsOpen(true)}
-                onMouseOut={() => setActionsOpen(false)}
-                style={{ cursor: "pointer", padding: "10px 0" }}
+                  aria-label="Remove reaction"
+                >
+                  <ReactionIcon type={hasLiked.type} size={24} />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <IconButton
+                onClick={() => handleLikes("love")}
+                aria-label="React"
+              >
+                <BsSuitHeart size={22} />
+              </IconButton>
+            )}
+            {pickerOpen && !hasLiked.liked && (
+              <ReactionPicker
+                onPick={handleLikes}
+                sx={{
+                  position: "absolute",
+                  bottom: "100%",
+                  left: 0,
+                  mb: 0.5,
+                  zIndex: 2,
+                }}
               />
-            </Box>
-          )}
-          <FaRegComment
-            fontSize="25px"
+            )}
+          </Box>
+          <IconButton
             onClick={() => setShowSinglePostFromRecent(true)}
-            style={{ cursor: "pointer", padding: "10px 0" }}
-          />
+            aria-label="Comments"
+          >
+            <FaRegComment size={21} />
+          </IconButton>
         </Stack>
-        <Box>
-          {isSaved ? (
-            <BsBookmarkFill
-              fontSize="25px"
-              style={{ cursor: "pointer", padding: "10px 0" }}
-            />
-          ) : (
-            <BsBookmark
-              fontSize="25px"
-              style={{ cursor: "pointer", padding: "10px 0" }}
-              onClick={handleSaved}
-            />
-          )}
-        </Box>
-        {actionsOpen && (
-          <Stack
-            onMouseOver={() => setActionsOpen(true)}
-            onMouseOut={() => setActionsOpen(false)}
-            gap="15px"
-            borderRadius="10px"
-            bgcolor={"#eee"}
-            padding="10px 10px"
-            direction="row"
-            position="absolute"
-            bottom="45px"
+        <Tooltip title={isSaved ? "Unsave" : "Save"} arrow>
+          <IconButton
+            onClick={toggleSaved}
+            aria-label="Save post"
+            sx={{ color: isSaved ? "primary.main" : "inherit" }}
           >
-            <BsSuitHeartFill
-              fontSize="25px"
-              onClick={() => handleLikes("love")}
-              color="red"
-              style={{ cursor: "pointer" }}
-            />
-            <FaLaughSquint
-              fontSize="25px"
-              onClick={() => handleLikes("funny")}
-              color="#eb9800"
-              style={{ cursor: "pointer" }}
-            />
-            <FaAngry
-              fontSize="25px"
-              onClick={() => handleLikes("angry")}
-              color="#c30909"
-              style={{ cursor: "pointer" }}
-            />
-            <FaSadCry
-              fontSize="25px"
-              onClick={() => handleLikes("cry")}
-              color="#00baff"
-              style={{ cursor: "pointer" }}
-            />
-          </Stack>
-        )}
+            {isSaved ? <BsBookmarkFill size={20} /> : <BsBookmark size={20} />}
+          </IconButton>
+        </Tooltip>
       </Stack>
-      {likeCount === 0 ? (
-        <Typography>No Reactions</Typography>
-      ) : (
-        <Typography>
-          <Typography
-            onClick={() => setShowAllReactions(true)}
-            sx={{ cursor: "pointer" }}
-            component="span"
-          >
-            {likeCount} Reactions
-          </Typography>
-        </Typography>
-      )}
+
+      <Typography
+        variant="subtitle2"
+        component="button"
+        type="button"
+        onClick={() => likeCount > 0 && setShowAllReactions(true)}
+        sx={{
+          border: 0,
+          background: "none",
+          p: 0,
+          cursor: likeCount > 0 ? "pointer" : "default",
+          font: "inherit",
+          fontWeight: 600,
+          color: "text.secondary",
+        }}
+      >
+        {likeCount === 0
+          ? "No reactions yet"
+          : `${likeCount} ${likeCount === 1 ? "reaction" : "reactions"}`}
+      </Typography>
     </>
   );
 };

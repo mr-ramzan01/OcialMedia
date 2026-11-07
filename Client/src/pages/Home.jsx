@@ -1,242 +1,80 @@
-import {
-  Avatar,
-  Box,
-  CircularProgress,
-  Link,
-  Paper,
-  Stack,
-  Typography,
-} from "@mui/material";
-import { useContext, useEffect, useState } from "react";
+import { Box, CircularProgress, Stack } from "@mui/material";
+import { useCallback } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
-import moment from "moment";
-import { Carousel } from "react-responsive-carousel";
-import { RecentPostsComments } from "../components/RecentPostsComments";
-import { PostsActions } from "../components/PostsActions";
-import { Loader } from "../components/Loader";
+import { IoImagesOutline } from "react-icons/io5";
+import { AppShell } from "../components/layout/AppShell";
+import { EmptyState } from "../components/common/EmptyState";
+import { FeedSkeleton } from "../components/common/Skeletons";
+import { PostCard } from "../components/PostCard";
 import { Stories } from "../components/Stories";
-import { BottomBar } from "../components/Bars/BottomBar";
-import { Navbar } from "../components/Bars/Navbar";
-import { LeftSideBar } from "../components/Bars/LeftSideBar";
-import { root_url } from "../utils/url";
-import { AuthContext } from "../context/AuthContext";
+import { api } from "../utils/api";
+import { EVENTS } from "../utils/events";
+import { usePaginatedList } from "../hooks/usePaginatedList";
+import { useAppEvent } from "../hooks/useAppEvent";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export const Home = () => {
-  const [recentPosts, setRecentPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [totalLength, setTotalLength] = useState(0);
-  const {userToken} = useContext(AuthContext);
+  usePageTitle("Home");
 
-  useEffect(() => {
-    setIsLoading(true);
-    fetchRecentPosts();
+  const fetchPage = useCallback(async (page) => {
+    const res = await api(`/api/posts/recent/post?page=${page}`);
+    return res.success
+      ? { items: res.data, total: res.totalData }
+      : { items: [], total: 0 };
   }, []);
+  const {
+    items: recentPosts,
+    isLoading,
+    hasMore,
+    next: fetchRecentPosts,
+    reload,
+    setItems,
+  } = usePaginatedList(fetchPage);
 
-  const fetchRecentPosts = () => {
-    setPage((prev) => prev + 1);
+  // Keep the feed in sync with posts created / deleted elsewhere in the app
+  const onPostCreated = useCallback(() => {
+    reload();
+  }, [reload]);
+  useAppEvent(EVENTS.POST_CREATED, onPostCreated);
 
-    fetch(`${root_url}/api/posts/recent/post?page=${page}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setRecentPosts(() => [...recentPosts, ...res.data]);
-          setTotalLength(res.totalData);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
-
-  const DateConvert = ({ date }) => {
-    let newDate = moment(date).fromNow();
-    const all = newDate.split(" ");
-    all.splice(all.length - 1, 1);
-    if (all[0] === "a" || all[0] === "an") {
-      all[0] = 1;
-    }
-    if (all[1] === "few") {
-      all[0] = "now";
-      all.splice(1, 2);
-    }
-    if (all[1] === "second" || all[1] === "seconds") {
-      all[1] = "s";
-    }
-    if (all[1] === "minute" || all[1] === "minutes") {
-      all[1] = "m";
-    }
-    if (all[1] === "hour" || all[1] === "hours") {
-      all[1] = "h";
-    }
-    if (all[1] === "day" || all[1] === "days") {
-      all[1] = "d";
-    }
-    if (all[1] === "month" || all[1] === "months") {
-      all[1] = "m";
-    }
-    if (all[1] === "year" || all[1] === "years") {
-      all[1] = "y";
-    }
-
-    const updatedDate = all.join("");
-    return (
-      <Typography fontSize="15px" component="span">
-        {" "}
-        {updatedDate}
-      </Typography>
-    );
-  };
+  const onPostDeleted = useCallback(
+    ({ id } = {}) => {
+      setItems((prev) => prev.filter((p) => p._id !== id));
+    },
+    [setItems],
+  );
+  useAppEvent(EVENTS.POST_DELETED, onPostDeleted);
 
   return (
-    <>
-      <Navbar />
-      <BottomBar />
+    <AppShell width="feed">
+      <Stories />
       {isLoading ? (
-        <Loader />
-      ) : (
-        <Stack direction={"row"}>
-          <LeftSideBar />
-          <Box marginLeft={{ xs: "0", sm: "80px", lg: "240px" }} width="100%">
-            <Box
-              width={{ xs: "calc(100% - 40px)", sm: "450px", md: "600px" }}
-              sx={{ minHeight: "90vh", m: "40px auto" }}
-              p={{ xs: "20px", sm: "0" }}
-            >
-              <Stories />
-              {recentPosts.length > 0 ? (
-                <InfiniteScroll
-                  dataLength={recentPosts.length}
-                  className={"scrollDiv"}
-                  next={fetchRecentPosts}
-                  hasMore={totalLength !== recentPosts.length}
-                  loader={
-                    <div
-                      style={{
-                        display: "grid",
-                        placeContent: "center",
-                        padding: "30px 0",
-                      }}
-                    >
-                      <CircularProgress sx={{ color: "#bbbbbb" }} />
-                    </div>
-                  }
-                >
-                  {recentPosts.map((el) => (
-                    <Paper
-                      key={el._id}
-                      sx={{
-                        p: { xs: "5px 10px", sm: "15px 10px" },
-                        mb: "10px",
-                        border: "1px solid #d1d1d1",
-                      }}
-                    >
-                      <Stack direction="row" p="10px 0" alignItems="center">
-                        <Avatar
-                          sx={{ marginRight: "20px" }}
-                          src={el.user_id.image}
-                        />
-                        <Stack direction="row" gap="10px" alignItems="center">
-                          <Link
-                            href={`/${el.user_id.username}`}
-                            underline="none"
-                            color="#000"
-                          >
-                            <Typography
-                              fontFamily={"Dancing Script"}
-                              fontSize="22px"
-                              fontWeight="600"
-                            >
-                              {el.user_id.username}
-                            </Typography>
-                          </Link>
-                          <Typography mt="5px">
-                            <DateConvert date={el.createdAt} />
-                          </Typography>
-                        </Stack>
-                      </Stack>
-                      <Carousel
-                        showStatus={false}
-                        showIndicators={el.post_images.length > 1}
-                        showThumbs={false}
-                      >
-                        {el.post_images.map((el) => (
-                          <Avatar
-                            sx={{
-                              objectFit: "contain",
-                              borderRadius: "0",
-                              width: "100%",
-                              height: { xs: "350px", sm: "400px", md: "485px" },
-                            }}
-                            key={el}
-                            width="100%"
-                            height="485px"
-                            src={el.url}
-                            alt=""
-                          />
-                        ))}
-                      </Carousel>
-                      <PostsActions el={el} />
-                      <Stack direction="row" key={el._id} gap="10px">
-                        <Link
-                          href={`/${el.user_id.username}`}
-                          underline="none"
-                          color="#000"
-                        >
-                          <Typography
-                            fontFamily={"Dancing Script"}
-                            fontSize="22px"
-                            fontWeight="600"
-                          >
-                            {el.user_id.username}
-                          </Typography>
-                        </Link>
-                        <Typography mt="5px" fontSize="15px">
-                          <Typography component="span">
-                            {el.caption}{" "}
-                          </Typography>
-                          {el.tags.map((elem, ind) => (
-                            <Typography
-                              sx={{ cursor: "pointer" }}
-                              component="span"
-                              color="#0066ff"
-                              key={ind}
-                            >
-                              #{elem}{" "}
-                            </Typography>
-                          ))}
-                        </Typography>
-                      </Stack>
-                      <RecentPostsComments el={el} />
-                    </Paper>
-                  ))}
-                </InfiniteScroll>
-              ) : (
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    height: "90vh",
-                  }}
-                >
-                  <Typography color="#bbbbbb" fontSize="25px">
-                    Be the first to create a post
-                  </Typography>
-                </Box>
-              )}
+        <FeedSkeleton />
+      ) : recentPosts.length > 0 ? (
+        <InfiniteScroll
+          dataLength={recentPosts.length}
+          className="scrollDiv"
+          next={fetchRecentPosts}
+          hasMore={hasMore}
+          loader={
+            <Box sx={{ display: "grid", placeContent: "center", py: 3 }}>
+              <CircularProgress size={24} />
             </Box>
-          </Box>
-        </Stack>
+          }
+        >
+          <Stack spacing={3}>
+            {recentPosts.map((post) => (
+              <PostCard key={post._id} post={post} />
+            ))}
+          </Stack>
+        </InfiniteScroll>
+      ) : (
+        <EmptyState
+          icon={<IoImagesOutline />}
+          title="No posts yet"
+          subtitle="Be the first to share a moment. Use Create in the menu to post your first photo."
+        />
       )}
-    </>
+    </AppShell>
   );
 };

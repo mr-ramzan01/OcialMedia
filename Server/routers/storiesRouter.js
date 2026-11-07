@@ -1,8 +1,9 @@
 const express = require('express');
-var multer = require('multer');
+const multer = require('multer');
 const { uploadStory, getAllStories, getAllStoriesDate } = require('../controllers/storiesController');
 const isAuthenticated = require('../middlewares/auth');
-var uploader = multer().single('story')
+
+const uploader = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } }).single('story');
 
 const storiesRouter = express.Router();
 storiesRouter.post('/upload', isAuthenticated, uploader, uploadStory);

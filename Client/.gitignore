@@ -19,3 +19,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local env overrides (keep .env.example, .env.development, .env.production)
+.env
+.env.local

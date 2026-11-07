@@ -1,23 +1,25 @@
 import {
   Box,
   Button,
-  Container,
-  CssBaseline,
-  TextField,
-  ThemeProvider,
-  Typography,
-  createTheme,
-  InputAdornment,
   IconButton,
+  Link,
+  Stack,
+  TextField,
+  Typography,
 } from "@mui/material";
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import validator from "validator";
-import { MdVisibilityOff } from "react-icons/md";
-import { MdVisibility } from "react-icons/md";
-import { root_url } from "../utils/url";
+import { MdVisibility, MdVisibilityOff } from "react-icons/md";
+import { AuthLayout } from "../components/layout/AuthLayout";
+import { api } from "../utils/api";
+import { usePageTitle } from "../hooks/usePageTitle";
+import { useToast } from "../context/ToastContext";
 
 export const CreateNewPassword = () => {
+  usePageTitle("New password");
+  const toast = useToast();
+  const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState({ password1: "", password2: "" });
   const [passwordError1, setPasswordError1] = useState({
     error: false,
@@ -39,34 +41,38 @@ export const CreateNewPassword = () => {
   };
 
   const changePassword = () => {
-    fetch(`${root_url}/api/users/forgot-password/set-new-password`, {
+    setSubmitting(true);
+    api("/api/users/forgot-password/set-new-password", {
       method: "POST",
-      body: JSON.stringify({ password: data.password1 }),
-      headers: {
-        "Content-Type": "application/json",
-        authorization: `Bearer ${token}`,
-      },
+      body: { password: data.password1 },
+      token,
     })
-      .then((res) => res.json())
       .then((res) => {
         if (res.success) {
-          alert(res.message);
+          toast.success(res.message);
           navigate("/accounts/login");
         } else if (
           res.message ===
-          "Somthing went wrong, Please reset your password again."
+          "Something went wrong, Please reset your password again."
         ) {
-          alert(res.message);
+          toast.error(res.message);
           navigate("/accounts/forgot-password");
         } else if (res.message === "jwt expired") {
-          alert("Session has been expired try again");
-          navigate("/accounts/login");
+          toast.error("Session has been expired try again");
+          navigate("/accounts/forgot-password");
+        } else {
+          toast.error(
+            res.message ||
+              "Something went wrong, Please reset your password again.",
+          );
+          navigate("/accounts/forgot-password");
         }
       })
       .catch((err) => {
         console.log(err, "error");
-        alert("Something went wrong! Internal server error");
-      });
+        toast.error("Something went wrong! Internal server error");
+      })
+      .finally(() => setSubmitting(false));
   };
 
   const passwordValidation = (name, value) => {
@@ -130,152 +136,86 @@ export const CreateNewPassword = () => {
       changePassword();
     }
   };
-  const theme = createTheme();
+
+  const visibilityToggle = (visible, toggle, label) => (
+    <IconButton size="small" onClick={toggle} aria-label={label} edge="end">
+      {visible ? <MdVisibilityOff /> : <MdVisibility />}
+    </IconButton>
+  );
+
   return (
-    <Box>
-      <ThemeProvider theme={theme}>
-        <Container component="main" maxWidth="xs">
-          <CssBaseline />
-          <Box
-            sx={{
-              padding: "20px",
-              bgcolor: "#fff",
-              borderRadius: "10px",
-              boxShadow: "rgba(0, 0, 0, 0.24) 0px 3px 8px;",
-              marginTop: 8,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+    <AuthLayout
+      title="Set a new password"
+      subtitle="Choose a strong password you haven't used before."
+      footer={
+        <Typography variant="body2">
+          Remembered it?{" "}
+          <Link component={RouterLink} to="/accounts/login">
+            Back to log in
+          </Link>
+        </Typography>
+      }
+    >
+      <Box component="form" onSubmit={handleSubmit} noValidate>
+        <Stack spacing={2}>
+          <TextField
+            required
+            fullWidth
+            id="password1"
+            label="New password"
+            name="password1"
+            type={passwordVisibility1 ? "text" : "password"}
+            autoComplete="new-password"
+            autoFocus
+            value={data.password1}
+            onChange={handleChange}
+            error={passwordError1.error}
+            helperText={passwordError1.text}
+            slotProps={{
+              input: {
+                endAdornment: visibilityToggle(
+                  passwordVisibility1,
+                  () => setPasswordVisibility1((v) => !v),
+                  "Toggle new password visibility",
+                ),
+              },
+              htmlInput: { minLength: 8 },
             }}
+          />
+          <TextField
+            required
+            fullWidth
+            id="password2"
+            label="Confirm password"
+            name="password2"
+            type={passwordVisibility2 ? "text" : "password"}
+            autoComplete="new-password"
+            value={data.password2}
+            onChange={handleChange}
+            error={passwordError2.error}
+            helperText={passwordError2.text}
+            slotProps={{
+              input: {
+                endAdornment: visibilityToggle(
+                  passwordVisibility2,
+                  () => setPasswordVisibility2((v) => !v),
+                  "Toggle confirm password visibility",
+                ),
+              },
+              htmlInput: { minLength: 8 },
+            }}
+          />
+          <Button
+            type="submit"
+            fullWidth
+            size="large"
+            variant="contained"
+            loading={submitting}
           >
-            <Typography
-              fontFamily="'Dancing Script', cursive"
-              component="h1"
-              variant="h3"
-            >
-              Ocial Media
-            </Typography>
-            <Typography sx={{ mt: 2 }} component="h1" variant="h5">
-              Set New Password
-            </Typography>
-            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": {
-                      borderColor: "#0066ff",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#129ffd",
-                    },
-                  },
-                }}
-                name="password1"
-                label="Set Password"
-                type={passwordVisibility1 ? "text" : "password"}
-                id="password1"
-                autoComplete="current-password"
-                onChange={handleChange}
-                inputProps={{
-                  minLength: 8,
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        edge="end"
-                        color="primary"
-                        onClick={() =>
-                          setPasswordVisibility1(!passwordVisibility1)
-                        }
-                      >
-                        {passwordVisibility1 ? (
-                          <MdVisibility />
-                        ) : (
-                          <MdVisibilityOff />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                  style: {
-                    height: "50px",
-                  },
-                }}
-                error={passwordError1.error}
-                helperText={passwordError1.text}
-              />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    "&:hover fieldset": {
-                      borderColor: "#0066ff",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#129ffd",
-                    },
-                  },
-                }}
-                name="password2"
-                label="Confirm Password"
-                type={passwordVisibility2 ? "text" : "password"}
-                id="password2"
-                autoComplete="current-password"
-                onChange={handleChange}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        edge="end"
-                        color="primary"
-                        onClick={() =>
-                          setPasswordVisibility2(!passwordVisibility2)
-                        }
-                      >
-                        {passwordVisibility2 ? (
-                          <MdVisibility />
-                        ) : (
-                          <MdVisibilityOff />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                  style: {
-                    height: "50px",
-                  },
-                }}
-                inputProps={{
-                  minLength: 8,
-                }}
-                error={passwordError2.error}
-                helperText={passwordError2.text}
-              />
-              <Button
-                type="submit"
-                fullWidth
-                size="large"
-                variant="contained"
-                sx={{
-                  mt: 4,
-                  mb: 4,
-                  background: "#129ffd",
-                  "&:hover": {
-                    background: "#0066ff",
-                  },
-                }}
-              >
-                Change password
-              </Button>
-            </Box>
-          </Box>
-          {/* <Copyright sx={{ mt: 4, mb: 2 }} /> */}
-        </Container>
-      </ThemeProvider>
-    </Box>
+            Change password
+          </Button>
+        </Stack>
+      </Box>
+    </AuthLayout>
   );
 };

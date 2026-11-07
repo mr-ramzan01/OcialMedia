@@ -21,6 +21,8 @@ const likesSchema = new mongoose.Schema({
     versionKey: false
 });
 
+likesSchema.index({ post_Id: 1, like_by: 1 }, { unique: true });
+
 const LikesModel = mongoose.model('likes', likesSchema);
 
 module.exports = LikesModel;

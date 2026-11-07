@@ -1,58 +1,55 @@
-import { Box, Typography } from "@mui/material";
-import { Stack } from "@mui/system";
-import React, { useContext, useState } from "react";
-import { useEffect } from "react";
+import { Stack, Typography } from "@mui/material";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StoryIcons } from "./StoryIcons";
-import { root_url } from "../../utils/url";
-import { AuthContext } from "../../context/AuthContext";
+import { StoriesSkeleton } from "../common/Skeletons";
+import { api } from "../../utils/api";
+import { EVENTS } from "../../utils/events";
+import { useAppEvent } from "../../hooks/useAppEvent";
 
 export const AllStories = () => {
   const [stories, setStories] = useState([]);
-  const {userToken} = useContext(AuthContext);
-  useEffect(() => {
-    getStories();
+  const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
+
+  const fetchStories = useCallback(() => {
+    return api("/api/stories/get")
+      .then((res) => {
+        if (mountedRef.current && res.success) setStories(res.data);
+      })
+      .catch((err) => console.log(err, "error"))
+      .finally(() => {
+        if (mountedRef.current) setLoading(false);
+      });
   }, []);
 
-  const getStories = () => {
-    fetch(`${root_url}/api/stories/get`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success) {
-          setStories(res.data);
-        }
-      })
-      .catch((err) => {
-        console.log(err, "error");
-      });
-  };
+  useEffect(() => {
+    mountedRef.current = true;
+    fetchStories();
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [fetchStories]);
+
+  // Refresh when the user shares a new story
+  useAppEvent(EVENTS.STORY_CREATED, fetchStories);
+
+  if (loading) {
+    return <StoriesSkeleton count={4} />;
+  }
+
+  if (stories.length === 0) {
+    return (
+      <Typography variant="caption" sx={{ alignSelf: "center", pl: 1 }}>
+        No stories from people you follow yet
+      </Typography>
+    );
+  }
+
   return (
-    <>
-      {stories.length > 0 ? (
-        <Stack direction="row" gap="10px">
-          {stories.map((story) => (
-            <Stack key={story._id} justifyContent="center" alignItems="center">
-              <StoryIcons story={story} />
-            </Stack>
-          ))}
-        </Stack>
-      ) : (
-        <Box
-          height="100%"
-          width="100%"
-          alignItems="center"
-          display="flex"
-          justifyContent="center"
-        >
-          <Typography textAlign="center" color="#303030">
-            No stories to show
-          </Typography>
-        </Box>
-      )}
-    </>
+    <Stack sx={{ alignItems: "flex-start" }} direction="row" spacing={0.5}>
+      {stories.map((story) => (
+        <StoryIcons key={story._id} story={story} />
+      ))}
+    </Stack>
   );
 };

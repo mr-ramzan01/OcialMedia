@@ -1,35 +1,46 @@
 const CommentsModel = require("../models/commentsModel");
-const NofificationsModel = require("../models/notificationsModel");
+const NotificationsModel = require("../models/notificationsModel");
 const PostsModel = require("../models/postsModel");
+const { sameId, isValidObjectId } = require("../utils/helpers");
+
+const USER_FIELDS = ['_id', 'image', 'username', 'full_name'];
+
+function serverError(res, error) {
+    const status = error.statusCode || 500;
+    if (status >= 500) console.error(error);
+    return res.status(status).send({ success: false, message: error.message });
+}
 
 async function CreateComment(req, res) {
     try {
         const { _id } = req.user;
-        req.body.comment_by = _id;
+        const { post_Id, title } = req.body || {};
 
-        // Create a new comment
-        let comment = await CommentsModel.create(req.body);
-
-        // Finding the comment
-        let comments = await CommentsModel.findOne({ _id: comment._id}).populate({path: 'post_Id', select: ['user_id']});
-        
-        // Increment the no of comments in post
-        await PostsModel.findOneAndUpdate({_id: req.body.post_Id}, {$inc: {commentCount: +1}});
-
-        // Creating the comment notification on post
-        if(_id !== comments.post_Id.user_id) {
-            await NofificationsModel.create({type: 'comment', from: _id, to: comments.post_Id.user_id, comment_id: comments._id});
+        if (!isValidObjectId(post_Id) || !title || !String(title).trim()) {
+            return res.status(400).send({ success: false, message: 'post_Id and title are required' });
         }
-        return res.status(200).send({
+
+        const post = await PostsModel.findById(post_Id);
+        if (!post) {
+            return res.status(404).send({ success: false, message: 'Post not found' });
+        }
+
+        const comment = await CommentsModel.create({ post_Id, title: String(title).trim(), comment_by: _id });
+        await PostsModel.findByIdAndUpdate(post_Id, { $inc: { commentCount: 1 } });
+
+        if (!sameId(_id, post.user_id)) {
+            await NotificationsModel.create({ type: 'comment', from: _id, to: post.user_id, comment_id: comment._id });
+        }
+
+        const populated = await CommentsModel.findById(comment._id).populate({ path: 'comment_by', select: USER_FIELDS });
+
+        return res.status(201).send({
             success: true,
-            message: "Comment created successfully"
+            message: "Comment created successfully",
+            data: populated
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
@@ -37,47 +48,38 @@ async function CreateComment(req, res) {
 async function getComments(req, res) {
     try {
         const { postId } = req.params;
-
-        // If post id is not specified
-        if(!postId) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
+        if (!isValidObjectId(postId)) {
+            return res.status(400).send({ success: false, message: 'Invalid params parameters' });
         }
-        // Finding all comments
-        let comments = await CommentsModel.find({post_Id: postId}).populate({path: 'comment_by', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: -1});
-        
+
+        const comments = await CommentsModel.find({ post_Id: postId })
+            .populate({ path: 'comment_by', select: USER_FIELDS })
+            .sort({ createdAt: -1 });
+
         return res.status(200).send({
             success: true,
             message: "Comments data",
             data: comments
         })
-
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 
 async function getRecentPostsComments(req, res) {
     try {
         const { postId } = req.params;
-
-        // If post id is not specified
-        if(!postId) {
-            return res.status(400).send({
-                success: false,
-                message: 'Invalid params parameters'
-            })
+        if (!isValidObjectId(postId)) {
+            return res.status(400).send({ success: false, message: 'Invalid params parameters' });
         }
-        // Getting total no of comments on post 
-        let totalComments = await CommentsModel.find({post_Id: postId}).count();
 
-        // Finding a comment on post
-        let comments = await CommentsModel.find({post_Id: postId}).populate({path: 'comment_by', select: ['_id', 'image', 'username', 'full_name']}).sort({createdAt: -1}).limit(1);
+        const [totalComments, comments] = await Promise.all([
+            CommentsModel.countDocuments({ post_Id: postId }),
+            CommentsModel.find({ post_Id: postId })
+                .populate({ path: 'comment_by', select: USER_FIELDS })
+                .sort({ createdAt: -1 })
+                .limit(1),
+        ]);
 
         return res.status(200).send({
             success: true,
@@ -85,12 +87,8 @@ async function getRecentPostsComments(req, res) {
             data: comments,
             totalComments
         })
-        
     } catch (error) {
-        return res.status(500).send({
-            success: false,
-            message: error.message
-        });
+        return serverError(res, error);
     }
 }
 

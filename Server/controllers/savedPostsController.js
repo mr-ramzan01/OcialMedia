@@ -1,23 +1,56 @@
 const SavedPostsModel = require("../models/savedPostsModel");
+const PostsModel = require("../models/postsModel");
+const { parsePage, isValidObjectId } = require("../utils/helpers");
+
+function serverError(res, error) {
+  const status = error.statusCode || 500;
+  if (status >= 500) console.error(error);
+  return res.status(status).send({ success: false, message: error.message });
+}
 
 async function savePosts(req, res) {
   try {
     const { _id } = req.user;
-    req.body.user_id = _id;
+    const { post_id } = req.body || {};
 
-    // Creating a new SavedPost
-    await SavedPostsModel.create(req.body);
+    if (!isValidObjectId(post_id)) {
+      return res.status(400).send({ success: false, message: 'post_id is required' });
+    }
+    if (!(await PostsModel.exists({ _id: post_id }))) {
+      return res.status(404).send({ success: false, message: 'Post not found' });
+    }
+
+    const existing = await SavedPostsModel.findOne({ user_id: _id, post_id });
+    if (existing) {
+      return res.status(200).send({ success: true, message: "Post already saved" });
+    }
+
+    await SavedPostsModel.create({ user_id: _id, post_id });
 
     return res.status(201).send({
       success: true,
       message: "Post saved successfully",
     });
-
   } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    if (error.code === 11000) {
+      return res.status(200).send({ success: true, message: "Post already saved" });
+    }
+    return serverError(res, error);
+  }
+}
+
+async function unsavePosts(req, res) {
+  try {
+    const { _id } = req.user;
+    const { id } = req.params;
+    if (!isValidObjectId(id)) {
+      return res.status(400).send({ success: false, message: 'Invalid params parameters' });
+    }
+
+    await SavedPostsModel.deleteOne({ user_id: _id, post_id: id });
+    return res.status(200).send({ success: true, message: "Post removed from saved" });
+  } catch (error) {
+    return serverError(res, error);
   }
 }
 
@@ -25,84 +58,56 @@ async function hasSaved(req, res) {
   try {
     const { _id } = req.user;
     const { id } = req.params;
-
-    // If id is not specified
-    if(!id) {
-      return res.status(400).send({
-        success: false,
-        message: 'Invalid params parameters'
-      })
+    if (!isValidObjectId(id)) {
+      return res.status(400).send({ success: false, message: 'Invalid params parameters' });
     }
 
-    // Finding saved post
-    let savedPost = await SavedPostsModel.findOne({
-      post_id: id,
-      user_id: _id,
-    });
-
-    // If saved already
+    const savedPost = await SavedPostsModel.findOne({ post_id: id, user_id: _id });
     if (savedPost) {
-      return res.status(200).send({
-        success: true,
-        message: "Post is saved",
-      });
-    } else {
-      return res.status(200).send({
-        success: false,
-        message: "Post is not saved",
-      });
+      return res.status(200).send({ success: true, message: "Post is saved" });
     }
+    return res.status(200).send({ success: false, message: "Post is not saved" });
   } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: error.message,
-    });
+    return serverError(res, error);
   }
 }
 
 async function AllSavedPosts(req, res) {
   try {
-    const { page } = req.query;
+    const { _id } = req.user;
     const { id } = req.params;
+    const page = parsePage(req.query.page);
+    const limit = 20;
 
-    // If id is not specified
-    if(!id) {
-      return res.status(400).send({
-        success: false,
-        message: 'Invalid params parameters'
-      })
+    if (!isValidObjectId(id)) {
+      return res.status(400).send({ success: false, message: 'Invalid params parameters' });
+    }
+    // Saved posts are private to their owner
+    if (String(id) !== String(_id)) {
+      return res.status(403).send({ success: false, message: 'Not allowed' });
     }
 
-    // Finding total length of saved posts of a user
-    const totalLength = await SavedPostsModel.find({ user_id: id }).count();
-    let savedPost = await SavedPostsModel.find({ user_id: id })
-      .populate("post_id")
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * 20)
-      .limit(20);
+    const [totalLength, savedPost] = await Promise.all([
+      SavedPostsModel.countDocuments({ user_id: id }),
+      SavedPostsModel.find({ user_id: id })
+        .populate("post_id")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
+    ]);
 
-    // If user has saved posts  
-    if (savedPost) {
-      return res.status(200).send({
-        success: true,
-        message: "SavedPost data",
-        data: savedPost,
-        totalLength,
-      });
+    // Drop entries whose post has since been deleted
+    const data = savedPost.filter((el) => el.post_id);
 
-    // If user has not any saved post  
-    } else {
-      return res.status(200).send({
-        success: false,
-        message: "No Saved Post",
-      });
-    }
-  } catch (error) {
-    return res.status(500).send({
-      success: false,
-      message: error.message,
+    return res.status(200).send({
+      success: true,
+      message: "SavedPost data",
+      data,
+      totalLength,
     });
+  } catch (error) {
+    return serverError(res, error);
   }
 }
 
-module.exports = { savePosts, hasSaved, AllSavedPosts };
+module.exports = { savePosts, unsavePosts, hasSaved, AllSavedPosts };

@@ -1,54 +1,41 @@
-import {
-  Box,
-  CircularProgress,
-  Link,
-  Stack,
-  Typography,
-} from "@mui/material";
-import React, { useContext, useEffect } from "react";
-import { useState } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { root_url } from "../utils/url";
+import { Box, Stack, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { api } from "../utils/api";
 import { SinglePost } from "./SinglePost";
+import { UserName } from "./common/UserListItem";
+import { TextLineSkeleton } from "./common/Skeletons";
 
 export const RecentPostsComments = ({ el }) => {
   const [commentsData, setCommentsData] = useState([]);
   const [totalComments, setTotalComments] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [showSinglePostFromRecent, setShowSinglePostFromRecent] = useState(false);
-  const {userToken} = useContext(AuthContext);
+  const [showSinglePostFromRecent, setShowSinglePostFromRecent] =
+    useState(false);
 
-  const getComments = () => {
+  useEffect(() => {
+    let ignore = false;
     setIsLoading(true);
-    fetch(`${root_url}/api/comments/recent/get/${el._id}`, {
-      method: 'GET',
-      headers: {
-        authorization: `Bearer ${userToken}`
-      }
-    })
-      .then((res) => res.json())
+    api(`/api/comments/recent/get/${el._id}`)
       .then((res) => {
-        if (res.success) {
+        if (!ignore && res.success) {
           setTotalComments(res.totalComments);
           setCommentsData(res.data);
         }
       })
-      .catch((err) => {
-        console.log(err, "error");
-      })
+      .catch((err) => console.log(err, "error"))
       .finally(() => {
-        setIsLoading(false);
+        if (!ignore) setIsLoading(false);
       });
-  };
-  useEffect(() => {
-    getComments();
-  }, []);
+    return () => {
+      ignore = true;
+    };
+  }, [el._id, el.commentCount]);
 
   if (isLoading) {
     return (
-      <div style={{ display: "grid", placeContent: "center" }}>
-        <CircularProgress sx={{ color: "#bbbbbb" }} />
-      </div>
+      <Box sx={{ display: "flex", alignItems: "center", mt: 1, minHeight: 24 }}>
+        <TextLineSkeleton width="50%" />
+      </Box>
     );
   }
   return (
@@ -60,52 +47,45 @@ export const RecentPostsComments = ({ el }) => {
         />
       )}
       {commentsData.length > 0 ? (
-        <Box>
-          <Stack direction="column" gap="10px">
-            {commentsData.map((el) => (
-              <Stack
-                direction="row"
-                key={el._id}
-                alignItems="center"
-                gap="10px"
-              >
-                <Link
-                  href={`/${el.comment_by.username}`}
-                  underline="none"
-                  color="#000"
-                >
-                  <Typography
-                    fontFamily={"Dancing Script"}
-                    fontSize="22px"
-                    fontWeight="600"
-                  >
-                    {el.comment_by.username}
-                  </Typography>
-                </Link>
-                <Typography mt="5px" fontSize="15px">
-                  {el.title}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-          <Typography
-            sx={{ cursor: "pointer", mt: "5px" }}
-            onClick={() => setShowSinglePostFromRecent(true)}
-          >
-            {totalComments > 1 && "See all comments"}
-          </Typography>
-        </Box>
+        <Stack spacing={0.5} sx={{ mt: 1 }}>
+          {commentsData.map((c) => (
+            <Typography
+              key={c._id}
+              variant="body2"
+              sx={{ wordBreak: "break-word" }}
+            >
+              <UserName
+                user={c.comment_by}
+                sx={{ mr: 0.75, fontSize: "inherit" }}
+              />
+              {c.title}
+            </Typography>
+          ))}
+          {totalComments > 1 && (
+            <Typography
+              component="button"
+              type="button"
+              variant="body2"
+              onClick={() => setShowSinglePostFromRecent(true)}
+              sx={{
+                alignSelf: "flex-start",
+                border: 0,
+                background: "none",
+                p: 0,
+                cursor: "pointer",
+                font: "inherit",
+                color: "text.secondary",
+                "&:hover": { color: "primary.main" },
+              }}
+            >
+              View all {totalComments} comments
+            </Typography>
+          )}
+        </Stack>
       ) : (
-        <Box>
-          <Typography
-            textAlign="center"
-            fontSize={"20px"}
-            p="10px 0"
-            color="#a1a1a1"
-          >
-            Be the first to make a comment
-          </Typography>
-        </Box>
+        <Typography variant="caption" sx={{ display: "block", mt: 1 }}>
+          No comments yet
+        </Typography>
       )}
     </>
   );

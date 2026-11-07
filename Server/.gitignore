@@ -3,9 +3,13 @@
 
 # privacy
 .env
+.env.*
+!.env.example
 
 # private key
 /*.pem
 /*.txt
 /*.key
 /*.crt
+
+.DS_Store
