@@ -1,0 +1,14 @@
+# Netlify hosts the React client only. The API lives on Render.
+[build]
+  base = "Client"
+  command = "npm run build"
+  publish = "Client/build"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Single-page app: let React Router handle every path
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
